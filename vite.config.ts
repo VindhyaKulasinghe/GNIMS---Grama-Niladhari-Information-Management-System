@@ -17,6 +17,16 @@ export default defineConfig({
     },
   },
 
+  server: {
+    // Proxy API requests to the auth server during development
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
+  },
+
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
 })

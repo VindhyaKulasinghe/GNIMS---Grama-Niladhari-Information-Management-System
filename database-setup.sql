@@ -1,81 +1,81 @@
 -- Create households table
 CREATE TABLE IF NOT EXISTS households (
   id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  houseNumber VARCHAR(50) UNIQUE NOT NULL,
+  "houseNumber" VARCHAR(50) UNIQUE NOT NULL,
   address TEXT NOT NULL,
   telephone VARCHAR(20) NOT NULL,
   electricity BOOLEAN DEFAULT FALSE,
   water BOOLEAN DEFAULT FALSE,
   toilet BOOLEAN DEFAULT FALSE,
-  roofType VARCHAR(100) NOT NULL,
-  wallType VARCHAR(100) NOT NULL,
-  floorType VARCHAR(100) NOT NULL,
+  "roofType" VARCHAR(100) NOT NULL,
+  "wallType" VARCHAR(100) NOT NULL,
+  "floorType" VARCHAR(100) NOT NULL,
   cow INT DEFAULT 0,
   chicken INT DEFAULT 0,
   goat INT DEFAULT 0,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW()
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW()
 );
 
 -- Create family_members table
 CREATE TABLE IF NOT EXISTS family_members (
   id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  houseNumber VARCHAR(50) NOT NULL REFERENCES households(houseNumber) ON DELETE CASCADE,
-  uniqueNumber VARCHAR(50) UNIQUE NOT NULL,
-  fullName VARCHAR(255) NOT NULL,
-  nicNumber VARCHAR(20) NOT NULL,
-  birthYear INT NOT NULL,
+  "houseNumber" VARCHAR(50) NOT NULL REFERENCES households("houseNumber") ON DELETE CASCADE,
+  "uniqueNumber" VARCHAR(50) UNIQUE NOT NULL,
+  "fullName" VARCHAR(255) NOT NULL,
+  "nicNumber" VARCHAR(20) NOT NULL,
+  "birthYear" INT NOT NULL,
   age INT NOT NULL,
   nationality VARCHAR(100) NOT NULL,
   religion VARCHAR(50) NOT NULL,
   gender VARCHAR(20) NOT NULL,
-  maritalStatus VARCHAR(50) NOT NULL,
-  educationStatus VARCHAR(100) NOT NULL,
-  isHeadOfHousehold BOOLEAN DEFAULT FALSE,
-  memberType VARCHAR(20) NOT NULL DEFAULT 'regular',
-  jobType VARCHAR(100),
-  trainingReceived TEXT,
+  "maritalStatus" VARCHAR(50) NOT NULL,
+  "educationStatus" VARCHAR(100) NOT NULL,
+  "isHeadOfHousehold" BOOLEAN DEFAULT FALSE,
+  "memberType" VARCHAR(20) NOT NULL DEFAULT 'regular',
+  "jobType" VARCHAR(100),
+  "trainingReceived" TEXT,
   sector VARCHAR(100),
-  monthlyIncome VARCHAR(50),
+  "monthlyIncome" VARCHAR(50),
   grade VARCHAR(50),
-  institutionName VARCHAR(255),
+  "institutionName" VARCHAR(255),
   purpose VARCHAR(255),
-  boarderDistrict VARCHAR(100),
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW()
+  "boarderDistrict" VARCHAR(100),
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW()
 );
 
 -- Create vehicles table
 CREATE TABLE IF NOT EXISTS vehicles (
   id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  userId UUID,
-  houseNumber VARCHAR(50) NOT NULL REFERENCES households(houseNumber) ON DELETE CASCADE,
-  ownerName VARCHAR(255) NOT NULL,
-  ownerAddress TEXT NOT NULL,
-  ownerPhone VARCHAR(20) NOT NULL,
-  vehicleType VARCHAR(100) NOT NULL,
-  vehicleNumber VARCHAR(50) NOT NULL,
-  registrationYear INT NOT NULL,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW()
+  "userId" UUID,
+  "houseNumber" VARCHAR(50) NOT NULL REFERENCES households("houseNumber") ON DELETE CASCADE,
+  "ownerName" VARCHAR(255) NOT NULL,
+  "ownerAddress" TEXT NOT NULL,
+  "ownerPhone" VARCHAR(20) NOT NULL,
+  "vehicleType" VARCHAR(100) NOT NULL,
+  "vehicleNumber" VARCHAR(50) NOT NULL,
+  "registrationYear" INT NOT NULL,
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW()
 );
 
 -- Create properties table
 CREATE TABLE IF NOT EXISTS properties (
   id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  userId UUID,
-  houseNumber VARCHAR(50) NOT NULL REFERENCES households(houseNumber) ON DELETE CASCADE,
-  ownerName VARCHAR(255) NOT NULL,
-  ownerAddress TEXT NOT NULL,
-  ownerPhone VARCHAR(20) NOT NULL,
-  propertyType VARCHAR(100) NOT NULL,
-  propertyCategory VARCHAR(50) NOT NULL,
-  oppuNumber VARCHAR(50) NOT NULL UNIQUE,
-  landSize VARCHAR(100) NOT NULL,
+  "userId" UUID,
+  "houseNumber" VARCHAR(50) NOT NULL REFERENCES households("houseNumber") ON DELETE CASCADE,
+  "ownerName" VARCHAR(255) NOT NULL,
+  "ownerAddress" TEXT NOT NULL,
+  "ownerPhone" VARCHAR(20) NOT NULL,
+  "propertyType" VARCHAR(100) NOT NULL,
+  "propertyCategory" VARCHAR(50) NOT NULL,
+  "oppuNumber" VARCHAR(50) NOT NULL UNIQUE,
+  "landSize" VARCHAR(100) NOT NULL,
   ownership VARCHAR(100) NOT NULL,
-  agriculturalUse TEXT,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW()
+  "agriculturalUse" TEXT,
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW()
 );
 
 -- Create animals table
@@ -83,19 +83,19 @@ CREATE TABLE IF NOT EXISTS animals (
   id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   name VARCHAR(100) NOT NULL,
   category VARCHAR(100) NOT NULL,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW()
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW()
 );
 
 -- Create household_animals table (junction table)
 CREATE TABLE IF NOT EXISTS household_animals (
   id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  houseNumber VARCHAR(50) NOT NULL REFERENCES households(houseNumber) ON DELETE CASCADE,
-  animalId BIGINT NOT NULL REFERENCES animals(id) ON DELETE CASCADE,
+  "houseNumber" VARCHAR(50) NOT NULL REFERENCES households("houseNumber") ON DELETE CASCADE,
+  "animalId" BIGINT NOT NULL REFERENCES animals(id) ON DELETE CASCADE,
   count INT NOT NULL DEFAULT 1,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW(),
-  UNIQUE(houseNumber, animalId)
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW(),
+  UNIQUE("houseNumber", "animalId")
 );
 
 -- Create users table
@@ -106,16 +106,16 @@ CREATE TABLE IF NOT EXISTS users (
   role VARCHAR(50) NOT NULL CHECK (role IN ('Admin', 'GN Officer', 'Divisional Secretariat')),
   division VARCHAR(255) NOT NULL,
   status VARCHAR(50) NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive')),
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW()
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW()
 );
 
 -- Create indexes for better query performance
-CREATE INDEX IF NOT EXISTS idx_familymembers_houseNumber ON family_members(houseNumber);
-CREATE INDEX IF NOT EXISTS idx_familymembers_memberType ON family_members(memberType);
-CREATE INDEX IF NOT EXISTS idx_vehicles_houseNumber ON vehicles(houseNumber);
-CREATE INDEX IF NOT EXISTS idx_properties_houseNumber ON properties(houseNumber);
-CREATE INDEX IF NOT EXISTS idx_householdanimals_houseNumber ON household_animals(houseNumber);
+CREATE INDEX IF NOT EXISTS idx_familymembers_houseNumber ON family_members("houseNumber");
+CREATE INDEX IF NOT EXISTS idx_familymembers_memberType ON family_members("memberType");
+CREATE INDEX IF NOT EXISTS idx_vehicles_houseNumber ON vehicles("houseNumber");
+CREATE INDEX IF NOT EXISTS idx_properties_houseNumber ON properties("houseNumber");
+CREATE INDEX IF NOT EXISTS idx_householdanimals_houseNumber ON household_animals("houseNumber");
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 -- Enable RLS (Row Level Security)

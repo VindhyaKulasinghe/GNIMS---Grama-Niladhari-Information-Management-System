@@ -1,4 +1,6 @@
+import { useMemo } from "react";
 import { useLanguage } from "../context/LanguageContext";
+import { useHouseholdData } from "../context/HouseholdDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Home, Users, GraduationCap, Briefcase, UserCheck, Car } from "lucide-react";
 import {
@@ -15,79 +17,121 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const incomeData = [
-  { range: "<750", count: 45 },
-  { range: "751-1499", count: 78 },
-  { range: "1500-4999", count: 156 },
-  { range: "5000-7999", count: 89 },
-  { range: "8000-9999", count: 34 },
-  { range: ">10000", count: 28 },
-];
-
-const educationData = [
-  { name: "Primary", value: 89, color: "#3b82f6" },
-  { name: "Secondary", value: 234, color: "#10b981" },
-  { name: "A/L", value: 145, color: "#f59e0b" },
-  { name: "Diploma", value: 67, color: "#8b5cf6" },
-  { name: "Degree", value: 95, color: "#ec4899" },
-];
-
-const employmentData = [
-  { sector: "Government", count: 123 },
-  { sector: "Private", count: 198 },
-  { sector: "Self-Employed", count: 87 },
-  { sector: "Unemployed", count: 22 },
-];
-
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
 
 export function Dashboard() {
   const { t } = useLanguage();
+  const { households, familyMembers, vehicles, loading, error } = useHouseholdData();
 
-  const stats = [
-    { 
-      title: t("totalHouseholds"), 
-      value: "430", 
-      icon: Home, 
-      color: "bg-blue-500",
-      change: "+12 this month"
-    },
-    { 
-      title: t("totalResidents"), 
-      value: "1,856", 
-      icon: Users, 
-      color: "bg-green-500",
-      change: "+23 this month"
-    },
-    { 
-      title: t("studentsCount"), 
-      value: "342", 
-      icon: GraduationCap, 
-      color: "bg-orange-500",
-      change: "Active students"
-    },
-    { 
-      title: t("employedResidents"), 
-      value: "408", 
-      icon: Briefcase, 
-      color: "bg-purple-500",
-      change: "Currently employed"
-    },
-    { 
-      title: t("retiredPersons"), 
-      value: "89", 
-      icon: UserCheck, 
-      color: "bg-pink-500",
-      change: "Receiving pension"
-    },
-    { 
-      title: t("registeredVehicles"), 
-      value: "267", 
-      icon: Car, 
-      color: "bg-cyan-500",
-      change: "Total vehicles"
-    },
-  ];
+  // Calculate statistics from real data
+  const stats = useMemo(() => {
+    const totalHouseholds = households.length;
+    const totalResidents = familyMembers.length;
+    const students = familyMembers.filter(m => m.memberType === 'student').length;
+    const employed = familyMembers.filter(m => m.jobType && m.jobType.trim().length > 0).length;
+    const retired = familyMembers.filter(m => m.trainingReceived?.toLowerCase().includes('retired') || m.sector?.toLowerCase().includes('retired')).length;
+    const totalVehicles = vehicles.length;
+
+    return [
+      { 
+        title: t("totalHouseholds"), 
+        value: totalHouseholds.toString(), 
+        icon: Home, 
+        color: "bg-blue-500",
+        change: "Registered households"
+      },
+      { 
+        title: t("totalResidents"), 
+        value: totalResidents.toString(), 
+        icon: Users, 
+        color: "bg-green-500",
+        change: "Total members"
+      },
+      { 
+        title: t("studentsCount"), 
+        value: students.toString(), 
+        icon: GraduationCap, 
+        color: "bg-orange-500",
+        change: "Active students"
+      },
+      { 
+        title: t("employedResidents"), 
+        value: employed.toString(), 
+        icon: Briefcase, 
+        color: "bg-purple-500",
+        change: "Currently employed"
+      },
+      { 
+        title: t("retiredPersons"), 
+        value: retired.toString(), 
+        icon: UserCheck, 
+        color: "bg-pink-500",
+        change: "Retired persons"
+      },
+      { 
+        title: t("registeredVehicles"), 
+        value: totalVehicles.toString(), 
+        icon: Car, 
+        color: "bg-cyan-500",
+        change: "Total vehicles"
+      },
+    ];
+  }, [households, familyMembers, vehicles, t]);
+
+  // Calculate income distribution
+  const incomeData = useMemo(() => {
+    const ranges = {
+      "<750": 0,
+      "751-1499": 0,
+      "1500-4999": 0,
+      "5000-7999": 0,
+      "8000-9999": 0,
+      ">10000": 0,
+    };
+
+    familyMembers.forEach(member => {
+      if (member.monthlyIncome) {
+        const income = parseInt(member.monthlyIncome) || 0;
+        if (income < 750) ranges["<750"]++;
+        else if (income <= 1499) ranges["751-1499"]++;
+        else if (income <= 4999) ranges["1500-4999"]++;
+        else if (income <= 7999) ranges["5000-7999"]++;
+        else if (income <= 9999) ranges["8000-9999"]++;
+        else ranges[">10000"]++;
+      }
+    });
+
+    return Object.entries(ranges).map(([range, count]) => ({ range, count }));
+  }, [familyMembers]);
+
+  // Calculate education distribution
+  const educationData = useMemo(() => {
+    const education: Record<string, { value: number; color: string }> = {};
+    const colors = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
+    let colorIdx = 0;
+
+    familyMembers.forEach(member => {
+      const status = member.educationStatus || "Unknown";
+      if (!education[status]) {
+        education[status] = { value: 0, color: colors[colorIdx++ % colors.length] };
+      }
+      education[status].value++;
+    });
+
+    return Object.entries(education).map(([name, data]) => ({ name, ...data }));
+  }, [familyMembers]);
+
+  // Calculate employment sectors
+  const employmentData = useMemo(() => {
+    const sectors: Record<string, number> = {};
+
+    familyMembers.forEach(member => {
+      const sector = member.sector || "Unknown";
+      sectors[sector] = (sectors[sector] || 0) + 1;
+    });
+
+    return Object.entries(sectors).map(([sector, count]) => ({ sector, count }));
+  }, [familyMembers]);
 
   return (
     <div className="space-y-6">
@@ -96,95 +140,107 @@ export function Dashboard() {
         <p className="text-gray-600 mt-1">Overview of village statistics and data</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {stats.map((stat, idx) => (
-          <Card key={`stat-${idx}`} className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
-                  <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-                  <p className="text-xs text-gray-500 mt-2">{stat.change}</p>
-                </div>
-                <div className={`${stat.color} p-4 rounded-lg`}>
-                  <stat.icon className="h-8 w-8 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          Error loading data: {error}
+        </div>
+      )}
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Income Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("incomeDistribution")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart id="income-chart" data={incomeData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="range" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" fill="#3b82f6" name="Households" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {loading ? (
+        <div className="text-center py-12 text-gray-500">Loading dashboard data...</div>
+      ) : (
+        <>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {stats.map((stat, idx) => (
+              <Card key={`stat-${idx}`} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
+                      <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                      <p className="text-xs text-gray-500 mt-2">{stat.change}</p>
+                    </div>
+                    <div className={`${stat.color} p-4 rounded-lg`}>
+                      <stat.icon className="h-8 w-8 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-        {/* Education Levels */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("educationLevels")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart id="education-chart">
-                <Pie
-                  data={educationData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={(entry) => `${entry.name}: ${entry.value}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  nameKey="name"
-                >
-                  {educationData.map((entry, index) => (
-                    <Cell key={`edu-cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Income Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("incomeDistribution")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart id="income-chart" data={incomeData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="range" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="count" fill="#3b82f6" name="Households" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
 
-        {/* Employment Sectors */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>{t("employmentSectors")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart id="employment-chart" data={employmentData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="sector" type="category" />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" fill="#10b981" name="Count" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+            {/* Education Levels */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("educationLevels")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart id="education-chart">
+                    <Pie
+                      data={educationData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(entry) => `${entry.name}: ${entry.value}`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      nameKey="name"
+                    >
+                      {educationData.map((entry, index) => (
+                        <Cell key={`edu-cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Employment Sectors */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>{t("employmentSectors")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart id="employment-chart" data={employmentData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" />
+                    <YAxis dataKey="sector" type="category" />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="count" fill="#10b981" name="Count" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      )}
     </div>
   );
 }

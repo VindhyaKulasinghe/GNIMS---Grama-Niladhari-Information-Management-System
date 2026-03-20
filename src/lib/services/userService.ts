@@ -1,4 +1,4 @@
-import supabase from '../supabaseClient'
+import { supabase } from '../supabaseClient'
 import { User, UserSchema } from '../validationSchemas'
 
 export async function getUsers(): Promise<User[]> {

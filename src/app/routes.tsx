@@ -11,10 +11,12 @@ import { Animals } from "./pages/Animals";
 import { Vehicles } from "./pages/Vehicles";
 import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
+import { UserManagement } from "./pages/UserManagement";
 import { NotFound } from "./pages/NotFound";
 import { LanguageProvider } from "./context/LanguageContext";
 import { HouseholdDataProvider } from "./context/HouseholdDataContext";
 import { AuthProvider } from "./context/AuthContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 function RootWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -29,24 +31,105 @@ function RootWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export const router = createBrowserRouter([
-  {
-    element: <RootWrapper><Layout /></RootWrapper>,
-    children: [
-      { index: true, element: <Dashboard /> },
-      { path: "households", element: <HouseholdManagement /> },
-      { path: "family-members", element: <FamilyMembers /> },
-      { path: "students", element: <Students /> },
-      { path: "property-land", element: <PropertyLand /> },
-      { path: "boarders", element: <Boarders /> },
-      { path: "animals", element: <Animals /> },
-      { path: "vehicles", element: <Vehicles /> },
-      { path: "reports", element: <Reports /> },
-      { path: "settings", element: <Settings /> },
-      { path: "*", element: <NotFound /> },
-    ],
-  },
+  // Public login route
   {
     path: "/login",
     element: <RootWrapper><Login /></RootWrapper>,
+  },
+
+  // Protected routes
+  {
+    element: <RootWrapper><Layout /></RootWrapper>,
+    children: [
+      { 
+        index: true, 
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        )
+      },
+      { 
+        path: "households", 
+        element: (
+          <ProtectedRoute>
+            <HouseholdManagement />
+          </ProtectedRoute>
+        )
+      },
+      { 
+        path: "family-members", 
+        element: (
+          <ProtectedRoute>
+            <FamilyMembers />
+          </ProtectedRoute>
+        )
+      },
+      { 
+        path: "students", 
+        element: (
+          <ProtectedRoute>
+            <Students />
+          </ProtectedRoute>
+        )
+      },
+      { 
+        path: "property-land", 
+        element: (
+          <ProtectedRoute>
+            <PropertyLand />
+          </ProtectedRoute>
+        )
+      },
+      { 
+        path: "boarders", 
+        element: (
+          <ProtectedRoute>
+            <Boarders />
+          </ProtectedRoute>
+        )
+      },
+      { 
+        path: "animals", 
+        element: (
+          <ProtectedRoute>
+            <Animals />
+          </ProtectedRoute>
+        )
+      },
+      { 
+        path: "vehicles", 
+        element: (
+          <ProtectedRoute>
+            <Vehicles />
+          </ProtectedRoute>
+        )
+      },
+      { 
+        path: "reports", 
+        element: (
+          <ProtectedRoute>
+            <Reports />
+          </ProtectedRoute>
+        )
+      },
+      { 
+        path: "settings", 
+        element: (
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        )
+      },
+      { 
+        path: "user-management", 
+        element: (
+          <ProtectedRoute requiredRole={["Admin"]}>
+            <UserManagement />
+          </ProtectedRoute>
+        )
+      },
+      { path: "*", element: <NotFound /> },
+    ],
   },
 ]);

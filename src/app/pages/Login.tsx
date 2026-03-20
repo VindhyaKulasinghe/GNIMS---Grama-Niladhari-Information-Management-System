@@ -1,66 +1,83 @@
-import { useState, FormEvent } from "react";
-import { useNavigate } from "react-router";
-import { useAuth } from "../context/AuthContext";
-import { useLanguage } from "../context/LanguageContext";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
+import { useState, FormEvent } from 'react'
+import { useNavigate, useLocation } from 'react-router'
+import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../components/ui/select";
+} from '../components/ui/select'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "../components/ui/dialog";
-import { Globe, Lock, User, Building2, ShieldCheck } from "lucide-react";
-import { Language } from "../context/LanguageContext";
+} from '../components/ui/dialog'
+import { Globe, Lock, Mail, Building2, ShieldCheck, AlertCircle } from 'lucide-react'
+import { Alert, AlertDescription } from '../components/ui/alert'
+import { Language } from '../context/LanguageContext'
 
 export function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
-  const { t, language, setLanguage } = useLanguage();
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false)
+  const { login, error, clearError, loading: authLoading } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { t, language, setLanguage } = useLanguage()
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    clearError()
 
-    if (!username || !password) {
-      setError(t("pleaseEnterCredentials"));
-      return;
+    if (!email || !password) {
+      return
     }
 
-    const success = login(username, password);
-    if (success) {
-      navigate("/");
-    } else {
-      setError(t("invalidCredentials"));
+    if (!email.includes('@')) {
+      return
     }
-  };
+
+    setLoading(true)
+    try {
+      const success = await login(email, password)
+      if (success) {
+        const from = location.state?.from?.pathname || '/'
+        navigate(from, { replace: true })
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const isSubmitting = loading || authLoading
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.05) 35px, rgba(255,255,255,.05) 70px)`
-        }}></div>
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.05) 35px, rgba(255,255,255,.05) 70px)`,
+          }}
+        ></div>
       </div>
 
       {/* Language selector */}
       <div className="absolute top-6 right-6 z-10">
-        <Select value={language} onValueChange={(val) => setLanguage(val as Language)}>
+        <Select
+          value={language}
+          onValueChange={(val) => setLanguage(val as Language)}
+        >
           <SelectTrigger className="w-[160px] bg-slate-800/80 border-slate-700 text-white backdrop-blur-sm">
             <Globe className="h-5 w-5 mr-2" />
             <SelectValue />
@@ -80,7 +97,9 @@ export function Login() {
             <Building2 className="h-10 w-10 text-white" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold text-slate-900">GNIMS</CardTitle>
+            <CardTitle className="text-2xl font-bold text-slate-900">
+              GNIMS
+            </CardTitle>
             <p className="text-sm font-medium text-slate-600 mt-1">
               Grama Niladhari Information Management System
             </p>
@@ -89,42 +108,65 @@ export function Login() {
             <div className="flex items-center justify-center gap-2 text-slate-700">
               <ShieldCheck className="h-4 w-4" />
               <p className="text-sm font-medium">
-                {t("southernProvinceHambantota")}
+                {t('southernProvinceHambantota')}
               </p>
             </div>
           </div>
         </CardHeader>
+
         <CardContent className="pb-6">
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Error Alert */}
+            {error && (
+              <Alert className="bg-red-50 border-red-200">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-800">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Email Field */}
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-slate-700">{t("username")}</Label>
+              <Label htmlFor="email" className="text-slate-700">
+                Email
+              </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Mail className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
                 <Input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="pl-10 h-11 border-slate-300 focus:border-slate-800 focus:ring-slate-800"
-                  placeholder={t("enterUsername")}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-slate-700">{t("password")}</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 h-11 border-slate-300 focus:border-slate-800 focus:ring-slate-800"
-                  placeholder={t("enterPassword")}
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isSubmitting}
+                  className="pl-10 border-slate-300 focus:border-slate-900 focus:ring-slate-900"
+                  required
                 />
               </div>
             </div>
 
+            {/* Password Field */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-slate-700">
+                Password
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isSubmitting}
+                  className="pl-10 border-slate-300 focus:border-slate-900 focus:ring-slate-900"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Forgot Password Link */}
             <div className="flex justify-end">
               <button
                 type="button"
@@ -135,23 +177,15 @@ export function Login() {
               </button>
             </div>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-            <Button type="submit" className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white">
-              {t("login")}
+            {/* Login Button */}
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white font-semibold"
+            >
+              {isSubmitting ? 'Signing In...' : 'Sign In'}
             </Button>
-            
-            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-              <p className="text-xs text-slate-600 text-center mb-2">{t("defaultCredentials")}</p>
-              <div className="bg-white px-3 py-2 rounded border border-slate-300 text-center">
-                <p className="font-mono text-sm text-slate-800">
-                  {t("usernameExample")} / {t("passwordExample")}
-                </p>
-              </div>
-            </div>
+
           </form>
         </CardContent>
       </Card>
@@ -167,7 +201,9 @@ export function Login() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-              <h4 className="font-medium text-slate-900 mb-2">Contact Information:</h4>
+              <h4 className="font-medium text-slate-900 mb-2">
+                Contact Information:
+              </h4>
               <div className="space-y-1 text-sm text-slate-600">
                 <p>📞 District Office: 047-222-0000</p>
                 <p>📧 Email: gn.hambantota@district.gov.lk</p>
@@ -175,14 +211,20 @@ export function Login() {
               </div>
             </div>
             <p className="text-xs text-slate-500">
-              For security purposes, password resets must be done through official channels only.
+              For security purposes, password resets must be done through official
+              channels only.
             </p>
           </div>
-          <Button onClick={() => setForgotPasswordOpen(false)} className="w-full bg-slate-800 hover:bg-slate-900">
+          <Button
+            onClick={() => setForgotPasswordOpen(false)}
+            className="w-full bg-slate-800 hover:bg-slate-900"
+          >
             Close
           </Button>
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
+
+export default Login
