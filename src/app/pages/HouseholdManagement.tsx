@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLanguage } from "../context/LanguageContext";
+import { toast } from "sonner";
 import { useHouseholdData, Household } from "../context/HouseholdDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -116,28 +117,42 @@ export function HouseholdManagement() {
   };
 
   const handleSave = async () => {
+    const errors: { [key: string]: string } = {};
+
     if (!formData.houseNumber) {
-      alert("House number is required");
-      return;
+      errors.houseNumber = "House number is required";
     }
 
     if (!formData.address || !formData.telephone) {
-      alert("Address and telephone are required");
-      return;
+      if (!formData.address) {
+        errors.address = "Address is required";
+      }
+      if (!formData.telephone) {
+        errors.telephone = "Telephone is required";
+      }
     }
 
     const phone = formData.telephone || "";
     if (!/^\d{10}$/.test(phone)) {
-      alert("Telephone must be exactly 10 digits (e.g. 0712345678)");
-      return;
+      errors.telephone = "Telephone must be exactly 10 digits (e.g. 0712345678)";
     }
 
     if (!formData.roofType || !formData.wallType || !formData.floorType) {
-      alert("Roof, wall, and floor types are required");
+      errors.roofType = "Roof type is required";
+      errors.wallType = "Wall type is required";
+      errors.floorType = "Floor type is required";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      // Simple way to surface all current validation errors inline + toast
+      toast.error("Please fix the highlighted household form errors.");
+      // Store errors on formData via a helper key so we can read them below
+      (formData as any).__errors = errors;
       return;
     }
 
-    const coreData = formData as Household;
+    const { __errors, ...cleanForm } = formData as any;
+    const coreData = cleanForm as Household;
 
     if (editingHousehold) {
       await updateHousehold(editingHousehold.id, coreData);
@@ -168,6 +183,7 @@ export function HouseholdManagement() {
           addHouseholdAnimal(houseNumber, d.animalId, d.count)
         )
       );
+      toast.success("Household updated successfully.");
     } else {
       const { id, createdAt, updatedAt, ...rest } = coreData as any;
       await addHousehold(rest);
@@ -186,6 +202,7 @@ export function HouseholdManagement() {
           addHouseholdAnimal(houseNumber, d.animalId, d.count)
         )
       );
+      toast.success("Household added successfully.");
     }
     setDialogOpen(false);
   };
@@ -577,6 +594,11 @@ export function HouseholdManagement() {
                   }
                   placeholder="e.g. 23/A"
                 />
+                {(formData as any).__errors?.houseNumber && (
+                  <p className="text-xs text-red-500">
+                    {(formData as any).__errors.houseNumber}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>{t("telephone")}</Label>
@@ -587,6 +609,11 @@ export function HouseholdManagement() {
                   }
                   placeholder="0XX XXXXXXX"
                 />
+                {(formData as any).__errors?.telephone && (
+                  <p className="text-xs text-red-500">
+                    {(formData as any).__errors.telephone}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -599,6 +626,11 @@ export function HouseholdManagement() {
                 }
                 placeholder="Street, Village, Town"
               />
+              {(formData as any).__errors?.address && (
+                <p className="text-xs text-red-500">
+                  {(formData as any).__errors.address}
+                </p>
+              )}
             </div>
 
             <div className="space-y-3">

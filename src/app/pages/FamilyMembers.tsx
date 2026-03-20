@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLanguage } from "../context/LanguageContext";
+import { toast } from "sonner";
 import { useHouseholdData, FamilyMember, MemberType, Household } from "../context/HouseholdDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -160,19 +161,28 @@ export function FamilyMembers() {
 
   // ---- Save member ----
   const handleSave = async () => {
+    const errors: { [key: string]: string } = {};
+
     if (!formData.nicNumber) {
-      alert("NIC number is required");
-      return;
+      errors.nicNumber = "NIC number is required";
+    } else if (!/^(\d{9}[VvXx]|\d{12})$/.test(formData.nicNumber)) {
+      errors.nicNumber = "NIC must be 9 digits plus letter (V/X) or 12 digits";
     }
 
     if (!formData.birthYear) {
-      alert("Birth year is required");
+      errors.birthYear = "Birth year is required";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      toast.error("Please fix the highlighted member form errors.");
+      (formData as any).__errors = errors;
       return;
     }
 
     const age = formData.birthYear ? calculateAge(formData.birthYear) : 0;
 
-    const payload = { ...(formData as FamilyMember), age };
+    const { __errors, ...cleanForm } = formData as any;
+    const payload = { ...(cleanForm as FamilyMember), age };
 
     if (editingMember) {
       if (payload.isHeadOfHousehold) {
@@ -187,6 +197,7 @@ export function FamilyMembers() {
 
       const { id, createdAt, updatedAt, ...rest } = payload as any;
       await updateFamilyMember(editingMember.id, rest);
+      toast.success("Family member updated successfully.");
     } else {
       if (payload.isHeadOfHousehold) {
         const others = familyMembers.filter(
@@ -199,6 +210,7 @@ export function FamilyMembers() {
 
       const { id, createdAt, updatedAt, ...rest } = payload as any;
       await addFamilyMember(rest);
+      toast.success("Family member added successfully.");
     }
     setDialogOpen(false);
   };
@@ -857,6 +869,11 @@ export function FamilyMembers() {
                     }
                     placeholder="850123456V or 198512300890"
                   />
+                  {(formData as any).__errors?.nicNumber && (
+                    <p className="text-xs text-red-500">
+                      {(formData as any).__errors.nicNumber}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -886,6 +903,11 @@ export function FamilyMembers() {
                       })
                     }
                   />
+                  {(formData as any).__errors?.birthYear && (
+                    <p className="text-xs text-red-500">
+                      {(formData as any).__errors.birthYear}
+                    </p>
+                  )}
                   {formData.birthYear && formData.birthYear > 1900 && (
                     <p className="text-xs text-blue-600">
                       Age: {calculateAge(formData.birthYear)} years

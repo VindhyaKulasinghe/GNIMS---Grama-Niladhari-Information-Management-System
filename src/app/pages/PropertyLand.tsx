@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLanguage } from "../context/LanguageContext";
+import { toast } from "sonner";
 import {
   useHouseholdData,
   Property,
@@ -160,10 +161,10 @@ export function PropertyLand() {
 
     setUserValidation("validating");
 
-    // Simulate async validation
+    // Simulate async validation against NIC number
     setTimeout(() => {
       const member = familyMembers.find(
-        (m) => m.id.toString() === value,
+        (m) => m.nicNumber === value,
       );
       if (member) {
         const household = households.find(
@@ -191,6 +192,8 @@ export function PropertyLand() {
   };
 
   const handleSave = async () => {
+    const errors: { [key: string]: string } = {};
+
     if (
       !formData.propertyType ||
       !formData.oppuNumber ||
@@ -198,18 +201,27 @@ export function PropertyLand() {
       !formData.ownership ||
       userValidation !== "valid"
     ) {
-      alert(
-        "Please fill in all required fields (property type, OPPU number, land size, ownership) and ensure user ID is valid",
-      );
+      if (!formData.propertyType) errors.propertyType = "Property type is required";
+      if (!formData.oppuNumber) errors.oppuNumber = "OPPU number is required";
+      if (!formData.landSize) errors.landSize = "Land size is required";
+      if (!formData.ownership) errors.ownership = "Ownership type is required";
+      if (userValidation !== "valid") errors.userId = "Please validate the NIC before saving";
+
+      (formData as any).__errors = errors;
+      toast.error("Please fix the highlighted property form errors.");
       return;
     }
 
+    const { __errors, ...cleanForm } = formData as any;
+
     if (editingProperty) {
-      const { id, createdAt, updatedAt, userId, ...rest } = (formData as Property) as any;
+      const { id, createdAt, updatedAt, userId, ...rest } = (cleanForm as Property) as any;
       await updateProperty(editingProperty.id, rest);
+      toast.success("Property updated successfully.");
     } else {
-      const { id, createdAt, updatedAt, userId, ...rest } = (formData as Property) as any;
+      const { id, createdAt, updatedAt, userId, ...rest } = (cleanForm as Property) as any;
       await addProperty(rest);
+      toast.success("Property added successfully.");
     }
     setDialogOpen(false);
   };
@@ -565,16 +577,16 @@ export function PropertyLand() {
           </DialogHeader>
 
           <div className="grid gap-6 py-4">
-            {/* User ID Validation Section */}
+            {/* NIC Validation Section */}
             <div className="space-y-2">
-              <Label>User ID / Family Member ID *</Label>
+              <Label>NIC Number *</Label>
               <div className="relative">
                 <Input
                   value={userId}
                   onChange={(e) =>
                     handleUserIdChange(e.target.value)
                   }
-                  placeholder="Enter User ID (e.g., 1, 2, 3...)"
+                  placeholder="Enter NIC (e.g., 850123456V or 198512300890)"
                   disabled={!!editingProperty}
                   className="pr-10"
                 />
@@ -592,8 +604,7 @@ export function PropertyLand() {
               </div>
               {userValidation === "invalid" && (
                 <p className="text-sm text-red-500">
-                  User ID not found. Please enter a valid family
-                  member ID.
+                  NIC not found. Please enter a valid family member NIC.
                 </p>
               )}
             </div>
@@ -735,6 +746,11 @@ export function PropertyLand() {
                             </SelectItem>
                           </SelectContent>
                         </Select>
+                        {(formData as any).__errors?.propertyType && (
+                          <p className="text-xs text-red-500">
+                            {(formData as any).__errors.propertyType}
+                          </p>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label>Oppu Number *</Label>
@@ -748,6 +764,11 @@ export function PropertyLand() {
                           }
                           placeholder="e.g., OPPU12345"
                         />
+                        {(formData as any).__errors?.oppuNumber && (
+                          <p className="text-xs text-red-500">
+                            {(formData as any).__errors.oppuNumber}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -764,6 +785,11 @@ export function PropertyLand() {
                           }
                           placeholder="e.g., 5 acres, 30 perches"
                         />
+                        {(formData as any).__errors?.landSize && (
+                          <p className="text-xs text-red-500">
+                            {(formData as any).__errors.landSize}
+                          </p>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label>Ownership Type *</Label>
@@ -794,6 +820,11 @@ export function PropertyLand() {
                             </SelectItem>
                           </SelectContent>
                         </Select>
+                        {(formData as any).__errors?.ownership && (
+                          <p className="text-xs text-red-500">
+                            {(formData as any).__errors.ownership}
+                          </p>
+                        )}
                       </div>
                     </div>
 

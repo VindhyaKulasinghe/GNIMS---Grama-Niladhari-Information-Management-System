@@ -1,4 +1,5 @@
 import { useLanguage } from "../context/LanguageContext";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { FileText, Download, Printer, BarChart3 } from "lucide-react";
@@ -46,7 +47,7 @@ export function Reports() {
   ];
 
   const handleGenerateReport = (reportTitle: string) => {
-    alert(`Generating ${reportTitle}...`);
+    toast.info(`Generating ${reportTitle}...`);
   };
 
   return (

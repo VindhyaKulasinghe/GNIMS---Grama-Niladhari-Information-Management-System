@@ -29,6 +29,7 @@ import {
   DialogFooter,
 } from "../components/ui/dialog";
 import { Plus, Pencil, Trash2, Search, PawPrint, BarChart3, List } from "lucide-react";
+import { toast } from "sonner";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export function Animals() {
@@ -68,17 +69,26 @@ export function Animals() {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.category) {
-      alert("Please fill in all required fields");
+    const errors: { [key: string]: string } = {};
+    if (!formData.name) errors.name = "Animal name is required";
+    if (!formData.category) errors.category = "Category is required";
+
+    if (Object.keys(errors).length > 0) {
+      (formData as any).__errors = errors;
+      toast.error("Please fill in all required animal fields.");
       return;
     }
 
+    const { __errors, ...cleanForm } = formData as any;
+
     if (editingAnimal) {
-      const { id, createdAt, updatedAt, ...rest } = (formData as Animal) as any;
+      const { id, createdAt, updatedAt, ...rest } = (cleanForm as Animal) as any;
       await updateAnimal(editingAnimal.id, rest);
+      toast.success("Animal type updated successfully.");
     } else {
-      const { id, createdAt, updatedAt, ...rest } = (formData as Animal) as any;
+      const { id, createdAt, updatedAt, ...rest } = (cleanForm as Animal) as any;
       await addAnimal(rest);
+      toast.success("Animal type added successfully.");
     }
     setDialogOpen(false);
   };
@@ -413,6 +423,11 @@ export function Animals() {
                 }
                 placeholder="e.g. Horse, Rabbit, Duck"
               />
+              {(formData as any).__errors?.name && (
+                <p className="text-xs text-red-500">
+                  {(formData as any).__errors.name}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -434,6 +449,11 @@ export function Animals() {
                   <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
+              {(formData as any).__errors?.category && (
+                <p className="text-xs text-red-500">
+                  {(formData as any).__errors.category}
+                </p>
+              )}
             </div>
           </div>
 

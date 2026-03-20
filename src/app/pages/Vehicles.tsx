@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLanguage } from "../context/LanguageContext";
+import { toast } from "sonner";
 import { useHouseholdData, Vehicle } from "../context/HouseholdDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -95,10 +96,10 @@ export function Vehicles() {
     }
 
     setUserValidation("validating");
-    
-    // Simulate async validation
+
+    // Simulate async validation against NIC number
     setTimeout(() => {
-      const member = familyMembers.find(m => m.id.toString() === value);
+      const member = familyMembers.find(m => m.nicNumber === value);
       if (member) {
         const household = households.find(h => h.houseNumber === member.houseNumber);
         setUserValidation("valid");
@@ -123,17 +124,29 @@ export function Vehicles() {
   };
 
   const handleSave = async () => {
-    if (!formData.vehicleType || !formData.vehicleNumber || userValidation !== "valid") {
-      alert("Please fill in all required fields and ensure user ID is valid");
+    const errors: { [key: string]: string } = {};
+
+    if (!formData.vehicleType) errors.vehicleType = "Vehicle type is required";
+    if (!formData.vehicleNumber) errors.vehicleNumber = "Vehicle number is required";
+    if (!formData.registrationYear) errors.registrationYear = "Registration year is required";
+    if (userValidation !== "valid") errors.userId = "Please validate the NIC before saving";
+
+    if (Object.keys(errors).length > 0) {
+      (formData as any).__errors = errors;
+      toast.error("Please fix the highlighted vehicle form errors.");
       return;
     }
 
+    const { __errors, ...cleanForm } = formData as any;
+
     if (editingVehicle) {
-      const { id, createdAt, updatedAt, userId, ...rest } = (formData as Vehicle) as any;
+      const { id, createdAt, updatedAt, userId, ...rest } = (cleanForm as Vehicle) as any;
       await updateVehicle(editingVehicle.id, rest);
+      toast.success("Vehicle updated successfully.");
     } else {
-      const { id, createdAt, updatedAt, userId, ...rest } = (formData as Vehicle) as any;
+      const { id, createdAt, updatedAt, userId, ...rest } = (cleanForm as Vehicle) as any;
       await addVehicle(rest);
+      toast.success("Vehicle added successfully.");
     }
     setDialogOpen(false);
   };
@@ -403,14 +416,14 @@ export function Vehicles() {
           </DialogHeader>
 
           <div className="grid gap-6 py-4">
-            {/* User ID Validation Section */}
+            {/* NIC Validation Section */}
             <div className="space-y-2">
-              <Label>User ID / Family Member ID *</Label>
+              <Label>NIC Number *</Label>
               <div className="relative">
                 <Input
                   value={userId}
                   onChange={(e) => handleUserIdChange(e.target.value)}
-                  placeholder="Enter User ID (e.g., 1, 2, 3...)"
+                  placeholder="Enter NIC (e.g., 850123456V or 198512300890)"
                   disabled={!!editingVehicle}
                   className="pr-10"
                 />
@@ -421,7 +434,7 @@ export function Vehicles() {
                 </div>
               </div>
               {userValidation === "invalid" && (
-                <p className="text-sm text-red-500">User ID not found. Please enter a valid family member ID.</p>
+                <p className="text-sm text-red-500">NIC not found. Please enter a valid family member NIC.</p>
               )}
             </div>
 
@@ -475,6 +488,11 @@ export function Vehicles() {
                           <SelectItem value="Other">Other</SelectItem>
                         </SelectContent>
                       </Select>
+                      {(formData as any).__errors?.vehicleType && (
+                        <p className="text-xs text-red-500">
+                          {(formData as any).__errors.vehicleType}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label>Vehicle Number *</Label>
@@ -484,6 +502,11 @@ export function Vehicles() {
                         placeholder="e.g., ABC1234"
                         className="font-mono"
                       />
+                      {(formData as any).__errors?.vehicleNumber && (
+                        <p className="text-xs text-red-500">
+                          {(formData as any).__errors.vehicleNumber}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label>Registration Year *</Label>
@@ -495,6 +518,11 @@ export function Vehicles() {
                         min="1900"
                         max="2026"
                       />
+                      {(formData as any).__errors?.registrationYear && (
+                        <p className="text-xs text-red-500">
+                          {(formData as any).__errors.registrationYear}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
