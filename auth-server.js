@@ -9,10 +9,16 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const app = express()
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_KEY || ''
-)
+
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
+const supabaseKey = process.env.SUPABASE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || ''
+
+console.log('Auth server Supabase config loaded:', {
+  supabaseUrlPresent: !!supabaseUrl,
+  supabaseKeyPresent: !!supabaseKey,
+})
+
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
 const REFRESH_SECRET = process.env.REFRESH_SECRET || 'your-refresh-secret'

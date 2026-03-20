@@ -103,9 +103,11 @@ export interface FamilyMember {
 interface HouseholdDataContextType {
   // State
   households: Household[];
+  setHouseholds: React.Dispatch<React.SetStateAction<Household[]>>;
   familyMembers: FamilyMember[];
   animals: Animal[];
   householdAnimals: HouseholdAnimal[];
+  setHouseholdAnimals: React.Dispatch<React.SetStateAction<HouseholdAnimal[]>>;
   vehicles: Vehicle[];
   properties: Property[];
   loading: boolean;
@@ -420,9 +422,11 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     <HouseholdDataContext.Provider
       value={{
         households,
+        setHouseholds,
         familyMembers,
         animals,
         householdAnimals,
+        setHouseholdAnimals,
         vehicles,
         properties,
         loading,
