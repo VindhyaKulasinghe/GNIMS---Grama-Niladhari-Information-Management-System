@@ -72,7 +72,9 @@ export function PropertyLand() {
   const { t } = useLanguage();
   const {
     properties,
-    setProperties,
+    addProperty,
+    updateProperty,
+    deleteProperty,
     familyMembers,
     households,
   } = useHouseholdData();
@@ -138,13 +140,13 @@ export function PropertyLand() {
     setDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (
       confirm(
         "Are you sure you want to delete this property record?",
       )
     ) {
-      setProperties(properties.filter((p) => p.id !== id));
+      await deleteProperty(id);
     }
   };
 
@@ -189,7 +191,7 @@ export function PropertyLand() {
     }, 800);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (
       !formData.propertyType ||
       !formData.oppuNumber ||
@@ -202,19 +204,11 @@ export function PropertyLand() {
     }
 
     if (editingProperty) {
-      setProperties(
-        properties.map((p) =>
-          p.id === editingProperty.id
-            ? { ...(formData as Property), id: p.id }
-            : p,
-        ),
-      );
+      const { id, createdAt, updatedAt, ...rest } = (formData as Property) as any;
+      await updateProperty(editingProperty.id, rest);
     } else {
-      const newProperty: Property = {
-        ...(formData as Property),
-        id: Math.max(...properties.map((p) => p.id), 0) + 1,
-      };
-      setProperties([...properties, newProperty]);
+      const { id, createdAt, updatedAt, ...rest } = (formData as Property) as any;
+      await addProperty(rest);
     }
     setDialogOpen(false);
   };

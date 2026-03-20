@@ -70,7 +70,7 @@ const MEMBER_TYPE_CONFIG: Record<MemberType, { label: string; color: string; ico
 
 export function FamilyMembers() {
   const { t } = useLanguage();
-  const { households, familyMembers, setFamilyMembers, getMembersForHouse } =
+  const { households, familyMembers, addFamilyMember, updateFamilyMember, deleteFamilyMember, getMembersForHouse } =
     useHouseholdData();
 
   const [view, setView] = useState<ViewState>("search");
@@ -152,49 +152,43 @@ export function FamilyMembers() {
   };
 
   // ---- Delete member ----
-  const handleDeleteMember = (id: number) => {
+  const handleDeleteMember = async (id: number) => {
     if (confirm("Are you sure you want to delete this member?")) {
-      setFamilyMembers(familyMembers.filter((m) => m.id !== id));
+      await deleteFamilyMember(id);
     }
   };
 
   // ---- Save member ----
-  const handleSave = () => {
+  const handleSave = async () => {
     const age = formData.birthYear ? calculateAge(formData.birthYear) : 0;
 
+    const payload = { ...(formData as FamilyMember), age };
+
     if (editingMember) {
-      setFamilyMembers(
-        familyMembers.map((m) => {
-          if (m.id === editingMember.id) {
-            return { ...formData as FamilyMember, id: m.id, age };
-          }
-          // If this member is being set as head, remove head from others in same house
-          if (
-            formData.isHeadOfHousehold &&
-            m.houseNumber === formData.houseNumber &&
-            m.id !== editingMember.id
-          ) {
-            return { ...m, isHeadOfHousehold: false };
-          }
-          return m;
-        })
-      );
-    } else {
-      const newMember: FamilyMember = {
-        ...formData as FamilyMember,
-        id: Math.max(...familyMembers.map((m) => m.id), 0) + 1,
-        age,
-      };
-      let updatedMembers = [...familyMembers];
-      // If new member is head, remove head from others in same house
-      if (newMember.isHeadOfHousehold) {
-        updatedMembers = updatedMembers.map((m) =>
-          m.houseNumber === newMember.houseNumber
-            ? { ...m, isHeadOfHousehold: false }
-            : m
+      if (payload.isHeadOfHousehold) {
+        const others = familyMembers.filter(
+          (m) =>
+            m.houseNumber === payload.houseNumber && m.id !== editingMember.id
+        );
+        await Promise.all(
+          others.map((m) => updateFamilyMember(m.id, { isHeadOfHousehold: false }))
         );
       }
-      setFamilyMembers([...updatedMembers, newMember]);
+
+      const { id, createdAt, updatedAt, ...rest } = payload as any;
+      await updateFamilyMember(editingMember.id, rest);
+    } else {
+      if (payload.isHeadOfHousehold) {
+        const others = familyMembers.filter(
+          (m) => m.houseNumber === payload.houseNumber
+        );
+        await Promise.all(
+          others.map((m) => updateFamilyMember(m.id, { isHeadOfHousehold: false }))
+        );
+      }
+
+      const { id, createdAt, updatedAt, ...rest } = payload as any;
+      await addFamilyMember(rest);
     }
     setDialogOpen(false);
   };

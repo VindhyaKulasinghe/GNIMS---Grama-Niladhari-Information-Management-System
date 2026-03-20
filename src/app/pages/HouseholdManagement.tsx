@@ -41,11 +41,14 @@ export function HouseholdManagement() {
   const { t } = useLanguage();
   const {
     households,
-    setHouseholds,
     getMembersForHouse,
     animals,
     householdAnimals,
-    setHouseholdAnimals,
+    addHousehold,
+    updateHousehold,
+    deleteHousehold,
+    addHouseholdAnimal,
+    deleteHouseholdAnimal,
   } = useHouseholdData();
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -106,59 +109,83 @@ export function HouseholdManagement() {
     setDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Are you sure you want to delete this household?")) {
-      setHouseholds(households.filter((h) => h.id !== id));
+      await deleteHousehold(id);
     }
   };
 
-  const handleSave = () => {
-    if (editingHousehold) {
-      setHouseholds(
-        households.map((h) =>
-          h.id === editingHousehold.id
-            ? { ...formData as Household, id: h.id }
-            : h
-        )
-      );
+  const handleSave = async () => {
+    if (!formData.houseNumber) {
+      alert("House number is required");
+      return;
+    }
 
-      // Update animals for this household
+    if (!formData.address || !formData.telephone) {
+      alert("Address and telephone are required");
+      return;
+    }
+
+    const phone = formData.telephone || "";
+    if (!/^\d{10}$/.test(phone)) {
+      alert("Telephone must be exactly 10 digits (e.g. 0712345678)");
+      return;
+    }
+
+    if (!formData.roofType || !formData.wallType || !formData.floorType) {
+      alert("Roof, wall, and floor types are required");
+      return;
+    }
+
+    const coreData = formData as Household;
+
+    if (editingHousehold) {
+      await updateHousehold(editingHousehold.id, coreData);
+
       const houseNumber = editingHousehold.houseNumber;
 
-      // Remove old animals for this household
-      const filteredAnimals = householdAnimals.filter(
-        (ha) => ha.houseNumber !== houseNumber
+      const existing = householdAnimals.filter(
+        (ha) => ha.houseNumber === houseNumber
       );
 
-      // Add new animals
-      const newAnimals = formAnimals
+      const desired = formAnimals
         .filter((fa) => fa.animalId && fa.count > 0)
         .map((fa) => ({
-          houseNumber,
           animalId: parseInt(fa.animalId),
           count: fa.count,
         }));
 
-      setHouseholdAnimals([...filteredAnimals, ...newAnimals]);
+      const desiredIds = new Set(desired.map((d) => d.animalId));
+
+      await Promise.all(
+        existing
+          .filter((ha) => !desiredIds.has(ha.animalId))
+          .map((ha) => deleteHouseholdAnimal(houseNumber, ha.animalId))
+      );
+
+      await Promise.all(
+        desired.map((d) =>
+          addHouseholdAnimal(houseNumber, d.animalId, d.count)
+        )
+      );
     } else {
-      const newHousehold: Household = {
-        ...formData as Household,
-        id: Math.max(...households.map((h) => h.id), 0) + 1,
-      };
-      setHouseholds([...households, newHousehold]);
+      const { id, createdAt, updatedAt, ...rest } = coreData as any;
+      await addHousehold(rest);
 
-      // Add animals for new household
-      if (formData.houseNumber) {
-        const newAnimals = formAnimals
-          .filter((fa) => fa.animalId && fa.count > 0)
-          .map((fa) => ({
-            houseNumber: formData.houseNumber!,
-            animalId: parseInt(fa.animalId),
-            count: fa.count,
-          }));
+      const houseNumber = coreData.houseNumber;
 
-        setHouseholdAnimals([...householdAnimals, ...newAnimals]);
-      }
+      const desired = formAnimals
+        .filter((fa) => fa.animalId && fa.count > 0)
+        .map((fa) => ({
+          animalId: parseInt(fa.animalId),
+          count: fa.count,
+        }));
+
+      await Promise.all(
+        desired.map((d) =>
+          addHouseholdAnimal(houseNumber, d.animalId, d.count)
+        )
+      );
     }
     setDialogOpen(false);
   };
@@ -198,38 +225,13 @@ export function HouseholdManagement() {
     return ha ? ha.count : 0;
   };
 
-  const handleAnimalCountChange = (animalId: number, count: number) => {
-    const existing = householdAnimals.find(
-      (item) =>
-        item.houseNumber === selectedHouseNumber && item.animalId === animalId
-    );
+  const handleAnimalCountChange = async (animalId: number, count: number) => {
+    if (!selectedHouseNumber) return;
 
     if (count === 0) {
-      // Remove if count is 0
-      setHouseholdAnimals(
-        householdAnimals.filter(
-          (item) =>
-            !(
-              item.houseNumber === selectedHouseNumber &&
-              item.animalId === animalId
-            )
-        )
-      );
-    } else if (existing) {
-      // Update existing
-      setHouseholdAnimals(
-        householdAnimals.map((item) =>
-          item.houseNumber === selectedHouseNumber && item.animalId === animalId
-            ? { ...item, count }
-            : item
-        )
-      );
+      await deleteHouseholdAnimal(selectedHouseNumber, animalId);
     } else {
-      // Add new
-      setHouseholdAnimals([
-        ...householdAnimals,
-        { houseNumber: selectedHouseNumber, animalId, count },
-      ]);
+      await addHouseholdAnimal(selectedHouseNumber, animalId, count);
     }
   };
 

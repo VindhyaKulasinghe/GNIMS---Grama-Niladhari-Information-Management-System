@@ -5,10 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite",
-    "auth-server": "node auth-server.js",
-    "dev:all": "concurrently \"npm run dev\" \"npm run auth-server\"",
-    "dev:server": "nodemon auth-server.js"
+    "dev": "vite"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

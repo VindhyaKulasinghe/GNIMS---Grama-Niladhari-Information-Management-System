@@ -33,7 +33,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 
 export function Animals() {
   const { t } = useLanguage();
-  const { animals, setAnimals, householdAnimals } = useHouseholdData();
+  const { animals, householdAnimals, addAnimal, updateAnimal, deleteAnimal } = useHouseholdData();
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAnimal, setEditingAnimal] = useState<Animal | null>(null);
@@ -61,30 +61,24 @@ export function Animals() {
     setDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Are you sure you want to delete this animal type?")) {
-      setAnimals(animals.filter((a) => a.id !== id));
+      await deleteAnimal(id);
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name || !formData.category) {
       alert("Please fill in all required fields");
       return;
     }
 
     if (editingAnimal) {
-      setAnimals(
-        animals.map((a) =>
-          a.id === editingAnimal.id ? { ...formData as Animal, id: a.id } : a
-        )
-      );
+      const { id, createdAt, updatedAt, ...rest } = (formData as Animal) as any;
+      await updateAnimal(editingAnimal.id, rest);
     } else {
-      const newAnimal: Animal = {
-        ...formData as Animal,
-        id: Math.max(...animals.map((a) => a.id), 0) + 1,
-      };
-      setAnimals([...animals, newAnimal]);
+      const { id, createdAt, updatedAt, ...rest } = (formData as Animal) as any;
+      await addAnimal(rest);
     }
     setDialogOpen(false);
   };

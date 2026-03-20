@@ -138,6 +138,9 @@ interface HouseholdDataContextType {
   refreshProperties: () => Promise<void>;
 
   // Animal CRUD
+  addAnimal: (animal: Omit<Animal, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateAnimal: (id: number, animal: Partial<Animal>) => Promise<void>;
+  deleteAnimal: (id: number) => Promise<void>;
   addHouseholdAnimal: (houseNumber: string, animalId: number, count: number) => Promise<void>;
   deleteHouseholdAnimal: (houseNumber: string, animalId: number) => Promise<void>;
   refreshAnimals: () => Promise<void>;
@@ -368,6 +371,39 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // Animal CRUD
+  const addAnimal = async (animal: Omit<Animal, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const newAnimal = await animalService.createAnimal(animal);
+      setAnimals([...animals, newAnimal]);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to add animal';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const updateAnimal = async (id: number, animal: Partial<Animal>) => {
+    try {
+      const updated = await animalService.updateAnimal(id, animal);
+      setAnimals(animals.map(a => a.id === id ? updated : a));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update animal';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const deleteAnimal = async (id: number) => {
+    try {
+      await animalService.deleteAnimal(id);
+      setAnimals(animals.filter(a => a.id !== id));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete animal';
+      setError(message);
+      throw err;
+    }
+  };
+
   const addHouseholdAnimal = async (houseNumber: string, animalId: number, count: number) => {
     try {
       const newAnimal = await animalService.upsertHouseholdAnimal(houseNumber, animalId, count);
@@ -447,6 +483,9 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
         updateProperty,
         deleteProperty,
         refreshProperties,
+        addAnimal,
+        updateAnimal,
+        deleteAnimal,
         addHouseholdAnimal,
         deleteHouseholdAnimal,
         refreshAnimals,

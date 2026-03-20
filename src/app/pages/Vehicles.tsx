@@ -33,7 +33,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 
 export function Vehicles() {
   const { t } = useLanguage();
-  const { vehicles, setVehicles, familyMembers, households } = useHouseholdData();
+  const { vehicles, addVehicle, updateVehicle, deleteVehicle, familyMembers, households } = useHouseholdData();
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
@@ -80,9 +80,9 @@ export function Vehicles() {
     setDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Are you sure you want to delete this vehicle record?")) {
-      setVehicles(vehicles.filter(v => v.id !== id));
+      await deleteVehicle(id);
     }
   };
 
@@ -123,22 +123,18 @@ export function Vehicles() {
     }, 800);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.vehicleType || !formData.vehicleNumber || userValidation !== "valid") {
       alert("Please fill in all required fields and ensure user ID is valid");
       return;
     }
 
     if (editingVehicle) {
-      setVehicles(vehicles.map(v => 
-        v.id === editingVehicle.id ? { ...formData as Vehicle, id: v.id } : v
-      ));
+      const { id, createdAt, updatedAt, ...rest } = (formData as Vehicle) as any;
+      await updateVehicle(editingVehicle.id, rest);
     } else {
-      const newVehicle: Vehicle = {
-        ...formData as Vehicle,
-        id: Math.max(...vehicles.map(v => v.id), 0) + 1,
-      };
-      setVehicles([...vehicles, newVehicle]);
+      const { id, createdAt, updatedAt, ...rest } = (formData as Vehicle) as any;
+      await addVehicle(rest);
     }
     setDialogOpen(false);
   };
