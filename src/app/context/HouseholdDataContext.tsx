@@ -1,20 +1,30 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import * as householdService from "../../lib/services/householdService";
+import * as familyMemberService from "../../lib/services/familyMemberService";
+import * as animalService from "../../lib/services/animalService";
+import * as vehicleService from "../../lib/services/vehicleService";
+import * as propertyService from "../../lib/services/propertyService";
 
 export interface Animal {
   id: number;
   name: string;
   category: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface HouseholdAnimal {
+  id?: number;
   houseNumber: string;
   animalId: number;
   count: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Vehicle {
   id: number;
-  userId: string;
+  userId?: string;
   houseNumber: string;
   ownerName: string;
   ownerAddress: string;
@@ -22,21 +32,25 @@ export interface Vehicle {
   vehicleType: string;
   vehicleNumber: string;
   registrationYear: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Property {
   id: number;
-  userId: string;
+  userId?: string;
   houseNumber: string;
   ownerName: string;
   ownerAddress: string;
   ownerPhone: string;
   propertyType: string;
-  propertyCategory: "living" | "additional"; // Living Property or Additional Property
+  propertyCategory: "living" | "additional";
   oppuNumber: string;
   landSize: string;
   ownership: string;
-  agriculturalUse: string;
+  agriculturalUse?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Household {
@@ -53,6 +67,8 @@ export interface Household {
   cow: number;
   chicken: number;
   goat: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type MemberType = "regular" | "student" | "boarder";
@@ -72,1270 +88,324 @@ export interface FamilyMember {
   educationStatus: string;
   isHeadOfHousehold: boolean;
   memberType: MemberType;
-  // Employment
   jobType?: string;
   trainingReceived?: string;
   sector?: string;
   monthlyIncome?: string;
-  // Student-specific
   grade?: string;
   institutionName?: string;
-  // Boarder-specific
   purpose?: string;
   boarderDistrict?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface HouseholdDataContextType {
+  // State
   households: Household[];
-  setHouseholds: React.Dispatch<React.SetStateAction<Household[]>>;
   familyMembers: FamilyMember[];
-  setFamilyMembers: React.Dispatch<React.SetStateAction<FamilyMember[]>>;
   animals: Animal[];
-  setAnimals: React.Dispatch<React.SetStateAction<Animal[]>>;
   householdAnimals: HouseholdAnimal[];
-  setHouseholdAnimals: React.Dispatch<React.SetStateAction<HouseholdAnimal[]>>;
   vehicles: Vehicle[];
-  setVehicles: React.Dispatch<React.SetStateAction<Vehicle[]>>;
   properties: Property[];
-  setProperties: React.Dispatch<React.SetStateAction<Property[]>>;
+  loading: boolean;
+  error: string | null;
+
+  // Household CRUD
+  addHousehold: (household: Omit<Household, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateHousehold: (id: number, household: Partial<Household>) => Promise<void>;
+  deleteHousehold: (id: number) => Promise<void>;
+  refreshHouseholds: () => Promise<void>;
+
+  // Family Member CRUD
+  addFamilyMember: (member: Omit<FamilyMember, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateFamilyMember: (id: number, member: Partial<FamilyMember>) => Promise<void>;
+  deleteFamilyMember: (id: number) => Promise<void>;
+  refreshFamilyMembers: () => Promise<void>;
+
+  // Vehicle CRUD
+  addVehicle: (vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateVehicle: (id: number, vehicle: Partial<Vehicle>) => Promise<void>;
+  deleteVehicle: (id: number) => Promise<void>;
+  refreshVehicles: () => Promise<void>;
+
+  // Property CRUD
+  addProperty: (property: Omit<Property, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateProperty: (id: number, property: Partial<Property>) => Promise<void>;
+  deleteProperty: (id: number) => Promise<void>;
+  refreshProperties: () => Promise<void>;
+
+  // Animal CRUD
+  addHouseholdAnimal: (houseNumber: string, animalId: number, count: number) => Promise<void>;
+  deleteHouseholdAnimal: (houseNumber: string, animalId: number) => Promise<void>;
+  refreshAnimals: () => Promise<void>;
+
+  // Helper functions
   getMembersForHouse: (houseNumber: string) => FamilyMember[];
   getStudents: () => FamilyMember[];
   getBoarders: () => FamilyMember[];
   getAnimalsForHouse: (houseNumber: string) => HouseholdAnimal[];
 }
 
-const initialHouseholds: Household[] = [
-  {
-    id: 1,
-    houseNumber: "23/A",
-    address: "Galle Road, Tangalle",
-    telephone: "0472240123",
-    electricity: true,
-    water: true,
-    toilet: true,
-    roofType: "Tiles",
-    wallType: "Brick",
-    floorType: "Cement",
-    cow: 0,
-    chicken: 5,
-    goat: 0,
-  },
-  {
-    id: 2,
-    houseNumber: "45/B",
-    address: "Matara Road, Hambantota",
-    telephone: "0472245678",
-    electricity: true,
-    water: true,
-    toilet: true,
-    roofType: "Asbestos",
-    wallType: "Brick",
-    floorType: "Tiles",
-    cow: 1,
-    chicken: 0,
-    goat: 2,
-  },
-  {
-    id: 3,
-    houseNumber: "12/C",
-    address: "Beliatta Road, Beliatta",
-    telephone: "0472231456",
-    electricity: true,
-    water: false,
-    toilet: true,
-    roofType: "Metal",
-    wallType: "Cement",
-    floorType: "Tiles",
-    cow: 2,
-    chicken: 10,
-    goat: 0,
-  },
-  {
-    id: 4,
-    houseNumber: "78/D",
-    address: "Weeraketiya Road, Weeraketiya",
-    telephone: "0472267890",
-    electricity: true,
-    water: true,
-    toilet: true,
-    roofType: "Tiles",
-    wallType: "Brick",
-    floorType: "Tiles",
-    cow: 0,
-    chicken: 8,
-    goat: 1,
-  },
-  {
-    id: 5,
-    houseNumber: "56/E",
-    address: "Ambalantota Road, Ambalantota",
-    telephone: "0472289012",
-    electricity: true,
-    water: true,
-    toilet: false,
-    roofType: "Asbestos",
-    wallType: "Cement",
-    floorType: "Cement",
-    cow: 3,
-    chicken: 15,
-    goat: 0,
-  },
-  {
-    id: 6,
-    houseNumber: "34/F",
-    address: "Tissamaharama Road, Tissamaharama",
-    telephone: "0472256789",
-    electricity: true,
-    water: true,
-    toilet: true,
-    roofType: "Tiles",
-    wallType: "Brick",
-    floorType: "Tiles",
-    cow: 0,
-    chicken: 0,
-    goat: 0,
-  },
-  {
-    id: 7,
-    houseNumber: "89/G",
-    address: "Kirinda Road, Kirinda",
-    telephone: "0472278901",
-    electricity: false,
-    water: false,
-    toilet: false,
-    roofType: "Cadjan",
-    wallType: "Mud",
-    floorType: "Earth",
-    cow: 1,
-    chicken: 20,
-    goat: 5,
-  },
-  {
-    id: 8,
-    houseNumber: "21/H",
-    address: "Sooriyawewa Road, Sooriyawewa",
-    telephone: "0472243210",
-    electricity: true,
-    water: true,
-    toilet: true,
-    roofType: "Metal",
-    wallType: "Brick",
-    floorType: "Cement",
-    cow: 0,
-    chicken: 5,
-    goat: 0,
-  },
-  {
-    id: 9,
-    houseNumber: "67/I",
-    address: "Lunugamvehera Road, Lunugamvehera",
-    telephone: "0472298765",
-    electricity: true,
-    water: true,
-    toilet: true,
-    roofType: "Asbestos",
-    wallType: "Cement",
-    floorType: "Tiles",
-    cow: 2,
-    chicken: 12,
-    goat: 3,
-  },
-  {
-    id: 10,
-    houseNumber: "91/J",
-    address: "Bundala Road, Bundala",
-    telephone: "0472254321",
-    electricity: true,
-    water: false,
-    toilet: true,
-    roofType: "Tiles",
-    wallType: "Brick",
-    floorType: "Tiles",
-    cow: 0,
-    chicken: 0,
-    goat: 0,
-  },
-];
-
-const initialFamilyMembers: FamilyMember[] = [
-  // House 23/A - Bandara Family
-  {
-    id: 1,
-    houseNumber: "23/A",
-    uniqueNumber: "23A-001",
-    fullName: "H.M. Bandara",
-    nicNumber: "850123456V",
-    birthYear: 1985,
-    age: 41,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Male",
-    maritalStatus: "Married",
-    educationStatus: "Degree",
-    isHeadOfHousehold: true,
-    memberType: "regular",
-    jobType: "Fisheries Officer",
-    trainingReceived: "Professional",
-    sector: "Government",
-    monthlyIncome: "5000-7999",
-  },
-  {
-    id: 2,
-    houseNumber: "23/A",
-    uniqueNumber: "23A-002",
-    fullName: "H.M. Sunethra",
-    nicNumber: "880234567V",
-    birthYear: 1988,
-    age: 38,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Female",
-    maritalStatus: "Married",
-    educationStatus: "A/L",
-    isHeadOfHousehold: false,
-    memberType: "regular",
-    jobType: "Teacher",
-    trainingReceived: "Diploma",
-    sector: "Government",
-    monthlyIncome: "1500-4999",
-  },
-  {
-    id: 3,
-    houseNumber: "23/A",
-    uniqueNumber: "23A-003",
-    fullName: "H.M. Kasun",
-    nicNumber: "",
-    birthYear: 2008,
-    age: 18,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Male",
-    maritalStatus: "Single",
-    educationStatus: "Secondary",
-    isHeadOfHousehold: false,
-    memberType: "student",
-    grade: "Grade 10",
-    institutionName: "Hambantota National School",
-  },
-  // House 45/B - Nishantha Family
-  {
-    id: 4,
-    houseNumber: "45/B",
-    uniqueNumber: "45B-001",
-    fullName: "S.P. Nishantha",
-    nicNumber: "780345678V",
-    birthYear: 1978,
-    age: 48,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Male",
-    maritalStatus: "Married",
-    educationStatus: "Secondary",
-    isHeadOfHousehold: true,
-    memberType: "regular",
-    jobType: "Farmer",
-    sector: "Self-Employed",
-    monthlyIncome: "<750",
-  },
-  {
-    id: 5,
-    houseNumber: "45/B",
-    uniqueNumber: "45B-002",
-    fullName: "S.K. Nimali",
-    nicNumber: "",
-    birthYear: 2010,
-    age: 16,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Female",
-    maritalStatus: "Single",
-    educationStatus: "Secondary",
-    isHeadOfHousehold: false,
-    memberType: "student",
-    grade: "Grade 8",
-    institutionName: "Tangalle Girls' College",
-  },
-  {
-    id: 6,
-    houseNumber: "45/B",
-    uniqueNumber: "45B-003",
-    fullName: "Ahmed Razik",
-    nicNumber: "920456789V",
-    birthYear: 1992,
-    age: 34,
-    nationality: "Sri Lankan",
-    religion: "Islam",
-    gender: "Male",
-    maritalStatus: "Single",
-    educationStatus: "Degree",
-    isHeadOfHousehold: false,
-    memberType: "boarder",
-    purpose: "Job",
-    boarderDistrict: "Hambantota",
-    jobType: "Factory Worker",
-    sector: "Private",
-    monthlyIncome: "1500-4999",
-  },
-  // House 12/C - Rajitha Family
-  {
-    id: 7,
-    houseNumber: "12/C",
-    uniqueNumber: "12C-001",
-    fullName: "P.A. Rajitha",
-    nicNumber: "700567890V",
-    birthYear: 1970,
-    age: 56,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Male",
-    maritalStatus: "Married",
-    educationStatus: "Primary",
-    isHeadOfHousehold: true,
-    memberType: "regular",
-    jobType: "Paddy Farmer",
-    sector: "Self-Employed",
-    monthlyIncome: "<750",
-  },
-  {
-    id: 8,
-    houseNumber: "12/C",
-    uniqueNumber: "12C-002",
-    fullName: "P.A. Chamari",
-    nicNumber: "",
-    birthYear: 2003,
-    age: 23,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Female",
-    maritalStatus: "Single",
-    educationStatus: "Degree",
-    isHeadOfHousehold: false,
-    memberType: "student",
-    grade: "University Year 1",
-    institutionName: "Ruhuna University",
-  },
-  {
-    id: 9,
-    houseNumber: "12/C",
-    uniqueNumber: "12C-003",
-    fullName: "P.A. Kumari",
-    nicNumber: "750987654V",
-    birthYear: 1975,
-    age: 51,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Female",
-    maritalStatus: "Married",
-    educationStatus: "Primary",
-    isHeadOfHousehold: false,
-    memberType: "regular",
-    jobType: "Homemaker",
-    sector: "Unemployed",
-    monthlyIncome: "<750",
-  },
-  // House 78/D - Perera Family
-  {
-    id: 10,
-    houseNumber: "78/D",
-    uniqueNumber: "78D-001",
-    fullName: "K.L. Perera",
-    nicNumber: "820654321V",
-    birthYear: 1982,
-    age: 44,
-    nationality: "Sri Lankan",
-    religion: "Christian",
-    gender: "Male",
-    maritalStatus: "Married",
-    educationStatus: "Degree",
-    isHeadOfHousehold: true,
-    memberType: "regular",
-    jobType: "Bank Manager",
-    trainingReceived: "Professional",
-    sector: "Private",
-    monthlyIncome: "8000+",
-  },
-  {
-    id: 11,
-    houseNumber: "78/D",
-    uniqueNumber: "78D-002",
-    fullName: "K.L. Sandya",
-    nicNumber: "840765432V",
-    birthYear: 1984,
-    age: 42,
-    nationality: "Sri Lankan",
-    religion: "Christian",
-    gender: "Female",
-    maritalStatus: "Married",
-    educationStatus: "Degree",
-    isHeadOfHousehold: false,
-    memberType: "regular",
-    jobType: "Nurse",
-    trainingReceived: "Professional",
-    sector: "Government",
-    monthlyIncome: "5000-7999",
-  },
-  {
-    id: 12,
-    houseNumber: "78/D",
-    uniqueNumber: "78D-003",
-    fullName: "K.L. Dineth",
-    nicNumber: "",
-    birthYear: 2012,
-    age: 14,
-    nationality: "Sri Lankan",
-    religion: "Christian",
-    gender: "Male",
-    maritalStatus: "Single",
-    educationStatus: "Secondary",
-    isHeadOfHousehold: false,
-    memberType: "student",
-    grade: "Grade 9",
-    institutionName: "Weeraketiya Central College",
-  },
-  {
-    id: 13,
-    houseNumber: "78/D",
-    uniqueNumber: "78D-004",
-    fullName: "K.L. Nethmi",
-    nicNumber: "",
-    birthYear: 2015,
-    age: 11,
-    nationality: "Sri Lankan",
-    religion: "Christian",
-    gender: "Female",
-    maritalStatus: "Single",
-    educationStatus: "Primary",
-    isHeadOfHousehold: false,
-    memberType: "student",
-    grade: "Grade 6",
-    institutionName: "Weeraketiya Central College",
-  },
-  // House 56/E - Fernando Family
-  {
-    id: 14,
-    houseNumber: "56/E",
-    uniqueNumber: "56E-001",
-    fullName: "M.A. Fernando",
-    nicNumber: "650876543V",
-    birthYear: 1965,
-    age: 61,
-    nationality: "Sri Lankan",
-    religion: "Catholic",
-    gender: "Male",
-    maritalStatus: "Married",
-    educationStatus: "O/L",
-    isHeadOfHousehold: true,
-    memberType: "regular",
-    jobType: "Dairy Farmer",
-    sector: "Self-Employed",
-    monthlyIncome: "1500-4999",
-  },
-  {
-    id: 15,
-    houseNumber: "56/E",
-    uniqueNumber: "56E-002",
-    fullName: "M.A. Ranjini",
-    nicNumber: "680987654V",
-    birthYear: 1968,
-    age: 58,
-    nationality: "Sri Lankan",
-    religion: "Catholic",
-    gender: "Female",
-    maritalStatus: "Married",
-    educationStatus: "O/L",
-    isHeadOfHousehold: false,
-    memberType: "regular",
-    jobType: "Homemaker",
-    sector: "Unemployed",
-    monthlyIncome: "<750",
-  },
-  {
-    id: 16,
-    houseNumber: "56/E",
-    uniqueNumber: "56E-003",
-    fullName: "J. Michael",
-    nicNumber: "950123789V",
-    birthYear: 1995,
-    age: 31,
-    nationality: "Sri Lankan",
-    religion: "Catholic",
-    gender: "Male",
-    maritalStatus: "Single",
-    educationStatus: "Degree",
-    isHeadOfHousehold: false,
-    memberType: "boarder",
-    purpose: "Education",
-    boarderDistrict: "Matara",
-    jobType: "NGO Worker",
-    sector: "Private",
-    monthlyIncome: "1500-4999",
-  },
-  // House 34/F - Silva Family
-  {
-    id: 17,
-    houseNumber: "34/F",
-    uniqueNumber: "34F-001",
-    fullName: "R.D. Silva",
-    nicNumber: "870234567V",
-    birthYear: 1987,
-    age: 39,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Male",
-    maritalStatus: "Married",
-    educationStatus: "A/L",
-    isHeadOfHousehold: true,
-    memberType: "regular",
-    jobType: "Three-wheeler Driver",
-    sector: "Self-Employed",
-    monthlyIncome: "750-1499",
-  },
-  {
-    id: 18,
-    houseNumber: "34/F",
-    uniqueNumber: "34F-002",
-    fullName: "R.D. Dilani",
-    nicNumber: "890345678V",
-    birthYear: 1989,
-    age: 37,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Female",
-    maritalStatus: "Married",
-    educationStatus: "O/L",
-    isHeadOfHousehold: false,
-    memberType: "regular",
-    jobType: "Shop Assistant",
-    sector: "Private",
-    monthlyIncome: "750-1499",
-  },
-  {
-    id: 19,
-    houseNumber: "34/F",
-    uniqueNumber: "34F-003",
-    fullName: "R.D. Tharindu",
-    nicNumber: "",
-    birthYear: 2014,
-    age: 12,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Male",
-    maritalStatus: "Single",
-    educationStatus: "Primary",
-    isHeadOfHousehold: false,
-    memberType: "student",
-    grade: "Grade 7",
-    institutionName: "Tissamaharama Maha Vidyalaya",
-  },
-  // House 89/G - Wickramasinghe Family
-  {
-    id: 20,
-    houseNumber: "89/G",
-    uniqueNumber: "89G-001",
-    fullName: "W.A. Wickramasinghe",
-    nicNumber: "620456789V",
-    birthYear: 1962,
-    age: 64,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Male",
-    maritalStatus: "Widowed",
-    educationStatus: "Primary",
-    isHeadOfHousehold: true,
-    memberType: "regular",
-    jobType: "Fisherman",
-    sector: "Self-Employed",
-    monthlyIncome: "<750",
-  },
-  {
-    id: 21,
-    houseNumber: "89/G",
-    uniqueNumber: "89G-002",
-    fullName: "W.A. Priyantha",
-    nicNumber: "900567890V",
-    birthYear: 1990,
-    age: 36,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Male",
-    maritalStatus: "Married",
-    educationStatus: "O/L",
-    isHeadOfHousehold: false,
-    memberType: "regular",
-    jobType: "Fisherman",
-    sector: "Self-Employed",
-    monthlyIncome: "750-1499",
-  },
-  {
-    id: 22,
-    houseNumber: "89/G",
-    uniqueNumber: "89G-003",
-    fullName: "W.A. Malani",
-    nicNumber: "920678901V",
-    birthYear: 1992,
-    age: 34,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Female",
-    maritalStatus: "Married",
-    educationStatus: "O/L",
-    isHeadOfHousehold: false,
-    memberType: "regular",
-    jobType: "Fish Vendor",
-    sector: "Self-Employed",
-    monthlyIncome: "750-1499",
-  },
-  // House 21/H - Dissanayake Family
-  {
-    id: 23,
-    houseNumber: "21/H",
-    uniqueNumber: "21H-001",
-    fullName: "T.B. Dissanayake",
-    nicNumber: "830789012V",
-    birthYear: 1983,
-    age: 43,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Male",
-    maritalStatus: "Married",
-    educationStatus: "A/L",
-    isHeadOfHousehold: true,
-    memberType: "regular",
-    jobType: "Engineer",
-    trainingReceived: "Professional",
-    sector: "Government",
-    monthlyIncome: "8000+",
-  },
-  {
-    id: 24,
-    houseNumber: "21/H",
-    uniqueNumber: "21H-002",
-    fullName: "T.B. Madhavi",
-    nicNumber: "850890123V",
-    birthYear: 1985,
-    age: 41,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Female",
-    maritalStatus: "Married",
-    educationStatus: "Degree",
-    isHeadOfHousehold: false,
-    memberType: "regular",
-    jobType: "Accountant",
-    trainingReceived: "Professional",
-    sector: "Private",
-    monthlyIncome: "5000-7999",
-  },
-  {
-    id: 25,
-    houseNumber: "21/H",
-    uniqueNumber: "21H-003",
-    fullName: "T.B. Sithija",
-    nicNumber: "",
-    birthYear: 2009,
-    age: 17,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Female",
-    maritalStatus: "Single",
-    educationStatus: "Secondary",
-    isHeadOfHousehold: false,
-    memberType: "student",
-    grade: "Grade 11",
-    institutionName: "Sooriyawewa National School",
-  },
-  {
-    id: 26,
-    houseNumber: "21/H",
-    uniqueNumber: "21H-004",
-    fullName: "Fatima Hassan",
-    nicNumber: "940901234V",
-    birthYear: 1994,
-    age: 32,
-    nationality: "Sri Lankan",
-    religion: "Islam",
-    gender: "Female",
-    maritalStatus: "Single",
-    educationStatus: "Degree",
-    isHeadOfHousehold: false,
-    memberType: "boarder",
-    purpose: "Job",
-    boarderDistrict: "Colombo",
-    jobType: "Software Engineer",
-    sector: "Private",
-    monthlyIncome: "8000+",
-  },
-  // House 67/I - Jayawardena Family
-  {
-    id: 27,
-    houseNumber: "67/I",
-    uniqueNumber: "67I-001",
-    fullName: "N.K. Jayawardena",
-    nicNumber: "751012345V",
-    birthYear: 1975,
-    age: 51,
-    nationality: "Sri Lankan",
-    religion: "Hindu",
-    gender: "Male",
-    maritalStatus: "Married",
-    educationStatus: "Secondary",
-    isHeadOfHousehold: true,
-    memberType: "regular",
-    jobType: "Shop Owner",
-    sector: "Self-Employed",
-    monthlyIncome: "5000-7999",
-  },
-  {
-    id: 28,
-    houseNumber: "67/I",
-    uniqueNumber: "67I-002",
-    fullName: "N.K. Kamala",
-    nicNumber: "771123456V",
-    birthYear: 1977,
-    age: 49,
-    nationality: "Sri Lankan",
-    religion: "Hindu",
-    gender: "Female",
-    maritalStatus: "Married",
-    educationStatus: "O/L",
-    isHeadOfHousehold: false,
-    memberType: "regular",
-    jobType: "Shop Assistant",
-    sector: "Self-Employed",
-    monthlyIncome: "1500-4999",
-  },
-  {
-    id: 29,
-    houseNumber: "67/I",
-    uniqueNumber: "67I-003",
-    fullName: "N.K. Aravind",
-    nicNumber: "",
-    birthYear: 2006,
-    age: 20,
-    nationality: "Sri Lankan",
-    religion: "Hindu",
-    gender: "Male",
-    maritalStatus: "Single",
-    educationStatus: "Degree",
-    isHeadOfHousehold: false,
-    memberType: "student",
-    grade: "University Year 2",
-    institutionName: "University of Colombo",
-  },
-  {
-    id: 30,
-    houseNumber: "67/I",
-    uniqueNumber: "67I-004",
-    fullName: "N.K. Priya",
-    nicNumber: "",
-    birthYear: 2011,
-    age: 15,
-    nationality: "Sri Lankan",
-    religion: "Hindu",
-    gender: "Female",
-    maritalStatus: "Single",
-    educationStatus: "Secondary",
-    isHeadOfHousehold: false,
-    memberType: "student",
-    grade: "Grade 10",
-    institutionName: "Lunugamvehera Girls' School",
-  },
-  // House 91/J - Gamage Family
-  {
-    id: 31,
-    houseNumber: "91/J",
-    uniqueNumber: "91J-001",
-    fullName: "D.M. Gamage",
-    nicNumber: "881234567V",
-    birthYear: 1988,
-    age: 38,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Male",
-    maritalStatus: "Married",
-    educationStatus: "Degree",
-    isHeadOfHousehold: true,
-    memberType: "regular",
-    jobType: "Wildlife Officer",
-    trainingReceived: "Professional",
-    sector: "Government",
-    monthlyIncome: "5000-7999",
-  },
-  {
-    id: 32,
-    houseNumber: "91/J",
-    uniqueNumber: "91J-002",
-    fullName: "D.M. Nirosha",
-    nicNumber: "900345678V",
-    birthYear: 1990,
-    age: 36,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Female",
-    maritalStatus: "Married",
-    educationStatus: "A/L",
-    isHeadOfHousehold: false,
-    memberType: "regular",
-    jobType: "Hotel Receptionist",
-    sector: "Private",
-    monthlyIncome: "1500-4999",
-  },
-  {
-    id: 33,
-    houseNumber: "91/J",
-    uniqueNumber: "91J-003",
-    fullName: "D.M. Hasitha",
-    nicNumber: "",
-    birthYear: 2013,
-    age: 13,
-    nationality: "Sri Lankan",
-    religion: "Buddhist",
-    gender: "Male",
-    maritalStatus: "Single",
-    educationStatus: "Secondary",
-    isHeadOfHousehold: false,
-    memberType: "student",
-    grade: "Grade 8",
-    institutionName: "Bundala Secondary School",
-  },
-  {
-    id: 34,
-    houseNumber: "91/J",
-    uniqueNumber: "91J-004",
-    fullName: "Kumar Patel",
-    nicNumber: "960456789V",
-    birthYear: 1996,
-    age: 30,
-    nationality: "Indian",
-    religion: "Hindu",
-    gender: "Male",
-    maritalStatus: "Single",
-    educationStatus: "Degree",
-    isHeadOfHousehold: false,
-    memberType: "boarder",
-    purpose: "Job",
-    boarderDistrict: "India",
-    jobType: "Wildlife Researcher",
-    sector: "Private",
-    monthlyIncome: "5000-7999",
-  },
-];
-
-const initialAnimals: Animal[] = [
-  { id: 1, name: "Cow", category: "Livestock" },
-  { id: 2, name: "Buffalo", category: "Livestock" },
-  { id: 3, name: "Goat", category: "Livestock" },
-  { id: 4, name: "Sheep", category: "Livestock" },
-  { id: 5, name: "Chicken", category: "Poultry" },
-  { id: 6, name: "Duck", category: "Poultry" },
-  { id: 7, name: "Turkey", category: "Poultry" },
-  { id: 8, name: "Pig", category: "Livestock" },
-  { id: 9, name: "Rabbit", category: "Small Animals" },
-  { id: 10, name: "Dog", category: "Pets" },
-  { id: 11, name: "Cat", category: "Pets" },
-];
-
-const initialHouseholdAnimals: HouseholdAnimal[] = [
-  { houseNumber: "23/A", animalId: 5, count: 5 },
-  { houseNumber: "45/B", animalId: 1, count: 1 },
-  { houseNumber: "45/B", animalId: 3, count: 2 },
-  { houseNumber: "12/C", animalId: 1, count: 2 },
-  { houseNumber: "12/C", animalId: 5, count: 10 },
-  { houseNumber: "78/D", animalId: 5, count: 8 },
-  { houseNumber: "78/D", animalId: 3, count: 1 },
-  { houseNumber: "56/E", animalId: 1, count: 3 },
-  { houseNumber: "56/E", animalId: 5, count: 15 },
-  { houseNumber: "89/G", animalId: 1, count: 1 },
-  { houseNumber: "89/G", animalId: 5, count: 20 },
-  { houseNumber: "89/G", animalId: 3, count: 5 },
-  { houseNumber: "21/H", animalId: 5, count: 5 },
-  { houseNumber: "67/I", animalId: 1, count: 2 },
-  { houseNumber: "67/I", animalId: 5, count: 12 },
-  { houseNumber: "67/I", animalId: 3, count: 3 },
-  { houseNumber: "67/I", animalId: 10, count: 1 },
-  { houseNumber: "67/I", animalId: 11, count: 2 },
-];
-
-const initialVehicles: Vehicle[] = [
-  {
-    id: 1,
-    userId: "1",
-    houseNumber: "23/A",
-    ownerName: "H.M. Bandara",
-    ownerAddress: "Galle Road, Tangalle",
-    ownerPhone: "0472240123",
-    vehicleType: "Car",
-    vehicleNumber: "ABC-1234",
-    registrationYear: 2015,
-  },
-  {
-    id: 2,
-    userId: "4",
-    houseNumber: "45/B",
-    ownerName: "S.P. Nishantha",
-    ownerAddress: "Matara Road, Hambantota",
-    ownerPhone: "0472245678",
-    vehicleType: "Motorcycle",
-    vehicleNumber: "XYZ-5678",
-    registrationYear: 2018,
-  },
-  {
-    id: 3,
-    userId: "7",
-    houseNumber: "12/C",
-    ownerName: "P.A. Rajitha",
-    ownerAddress: "Beliatta Road, Beliatta",
-    ownerPhone: "0472231456",
-    vehicleType: "Tractor",
-    vehicleNumber: "LMN-9012",
-    registrationYear: 2010,
-  },
-  {
-    id: 4,
-    userId: "10",
-    houseNumber: "78/D",
-    ownerName: "K.L. Perera",
-    ownerAddress: "Weeraketiya Road, Weeraketiya",
-    ownerPhone: "0472267890",
-    vehicleType: "Car",
-    vehicleNumber: "CAR-2468",
-    registrationYear: 2020,
-  },
-  {
-    id: 5,
-    userId: "11",
-    houseNumber: "78/D",
-    ownerName: "K.L. Sandya",
-    ownerAddress: "Weeraketiya Road, Weeraketiya",
-    ownerPhone: "0472267890",
-    vehicleType: "Car",
-    vehicleNumber: "PQR-1357",
-    registrationYear: 2019,
-  },
-  {
-    id: 6,
-    userId: "14",
-    houseNumber: "56/E",
-    ownerName: "M.A. Fernando",
-    ownerAddress: "Ambalantota Road, Ambalantota",
-    ownerPhone: "0472289012",
-    vehicleType: "Tractor",
-    vehicleNumber: "FRM-8899",
-    registrationYear: 2012,
-  },
-  {
-    id: 7,
-    userId: "14",
-    houseNumber: "56/E",
-    ownerName: "M.A. Fernando",
-    ownerAddress: "Ambalantota Road, Ambalantota",
-    ownerPhone: "0472289012",
-    vehicleType: "Van",
-    vehicleNumber: "VAN-3344",
-    registrationYear: 2016,
-  },
-  {
-    id: 8,
-    userId: "17",
-    houseNumber: "34/F",
-    ownerName: "R.D. Silva",
-    ownerAddress: "Tissamaharama Road, Tissamaharama",
-    ownerPhone: "0472256789",
-    vehicleType: "Three Wheeler",
-    vehicleNumber: "TRI-5566",
-    registrationYear: 2017,
-  },
-  {
-    id: 9,
-    userId: "21",
-    houseNumber: "89/G",
-    ownerName: "W.A. Priyantha",
-    ownerAddress: "Kirinda Road, Kirinda",
-    ownerPhone: "0472278901",
-    vehicleType: "Motorcycle",
-    vehicleNumber: "MTR-7788",
-    registrationYear: 2014,
-  },
-  {
-    id: 10,
-    userId: "23",
-    houseNumber: "21/H",
-    ownerName: "T.B. Dissanayake",
-    ownerAddress: "Sooriyawewa Road, Sooriyawewa",
-    ownerPhone: "0472243210",
-    vehicleType: "Car",
-    vehicleNumber: "BMW-9900",
-    registrationYear: 2021,
-  },
-  {
-    id: 11,
-    userId: "24",
-    houseNumber: "21/H",
-    ownerName: "T.B. Madhavi",
-    ownerAddress: "Sooriyawewa Road, Sooriyawewa",
-    ownerPhone: "0472243210",
-    vehicleType: "Car",
-    vehicleNumber: "HON-1122",
-    registrationYear: 2022,
-  },
-  {
-    id: 12,
-    userId: "27",
-    houseNumber: "67/I",
-    ownerName: "N.K. Jayawardena",
-    ownerAddress: "Lunugamvehera Road, Lunugamvehera",
-    ownerPhone: "0472298765",
-    vehicleType: "Van",
-    vehicleNumber: "SHP-4455",
-    registrationYear: 2013,
-  },
-  {
-    id: 13,
-    userId: "31",
-    houseNumber: "91/J",
-    ownerName: "D.M. Gamage",
-    ownerAddress: "Bundala Road, Bundala",
-    ownerPhone: "0472254321",
-    vehicleType: "Jeep",
-    vehicleNumber: "JEP-6677",
-    registrationYear: 2019,
-  },
-  {
-    id: 14,
-    userId: "4",
-    houseNumber: "45/B",
-    ownerName: "S.P. Nishantha",
-    ownerAddress: "Matara Road, Hambantota",
-    ownerPhone: "0472245678",
-    vehicleType: "Tractor",
-    vehicleNumber: "TRC-8800",
-    registrationYear: 2008,
-  },
-];
-
-const initialProperties: Property[] = [
-  {
-    id: 1,
-    userId: "1",
-    houseNumber: "23/A",
-    ownerName: "H.M. Bandara",
-    ownerAddress: "Galle Road, Tangalle",
-    ownerPhone: "0472240123",
-    propertyType: "Land",
-    propertyCategory: "living",
-    oppuNumber: "OPPU12345",
-    landSize: "5 acres",
-    ownership: "Private",
-    agriculturalUse: "Paddy Farming",
-  },
-  {
-    id: 2,
-    userId: "4",
-    houseNumber: "45/B",
-    ownerName: "S.P. Nishantha",
-    ownerAddress: "Matara Road, Hambantota",
-    ownerPhone: "0472245678",
-    propertyType: "Land",
-    propertyCategory: "additional",
-    oppuNumber: "OPPU67890",
-    landSize: "3 acres",
-    ownership: "Private",
-    agriculturalUse: "Goat Farming",
-  },
-  {
-    id: 3,
-    userId: "7",
-    houseNumber: "12/C",
-    ownerName: "P.A. Rajitha",
-    ownerAddress: "Beliatta Road, Beliatta",
-    ownerPhone: "0472231456",
-    propertyType: "Land",
-    propertyCategory: "living",
-    oppuNumber: "OPPU54321",
-    landSize: "4 acres",
-    ownership: "Private",
-    agriculturalUse: "Paddy Farming",
-  },
-  {
-    id: 4,
-    userId: "10",
-    houseNumber: "78/D",
-    ownerName: "K.L. Perera",
-    ownerAddress: "Weeraketiya Road, Weeraketiya",
-    ownerPhone: "0472267890",
-    propertyType: "House",
-    propertyCategory: "living",
-    oppuNumber: "OPPU78901",
-    landSize: "20 perches",
-    ownership: "Private",
-    agriculturalUse: "None",
-  },
-  {
-    id: 5,
-    userId: "14",
-    houseNumber: "56/E",
-    ownerName: "M.A. Fernando",
-    ownerAddress: "Ambalantota Road, Ambalantota",
-    ownerPhone: "0472289012",
-    propertyType: "Agricultural",
-    propertyCategory: "living",
-    oppuNumber: "OPPU23456",
-    landSize: "8 acres",
-    ownership: "Private",
-    agriculturalUse: "Dairy Farming, Coconut Plantation",
-  },
-  {
-    id: 6,
-    userId: "14",
-    houseNumber: "56/E",
-    ownerName: "M.A. Fernando",
-    ownerAddress: "Ambalantota Road, Ambalantota",
-    ownerPhone: "0472289012",
-    propertyType: "Land",
-    propertyCategory: "additional",
-    oppuNumber: "OPPU34567",
-    landSize: "2 acres",
-    ownership: "Private",
-    agriculturalUse: "Vegetable Cultivation",
-  },
-  {
-    id: 7,
-    userId: "17",
-    houseNumber: "34/F",
-    ownerName: "R.D. Silva",
-    ownerAddress: "Tissamaharama Road, Tissamaharama",
-    ownerPhone: "0472256789",
-    propertyType: "House",
-    propertyCategory: "living",
-    oppuNumber: "OPPU45678",
-    landSize: "15 perches",
-    ownership: "Private",
-    agriculturalUse: "None",
-  },
-  {
-    id: 8,
-    userId: "20",
-    houseNumber: "89/G",
-    ownerName: "W.A. Wickramasinghe",
-    ownerAddress: "Kirinda Road, Kirinda",
-    ownerPhone: "0472278901",
-    propertyType: "Land",
-    propertyCategory: "living",
-    oppuNumber: "OPPU56789",
-    landSize: "1 acre",
-    ownership: "Private",
-    agriculturalUse: "Coconut Trees",
-  },
-  {
-    id: 9,
-    userId: "23",
-    houseNumber: "21/H",
-    ownerName: "T.B. Dissanayake",
-    ownerAddress: "Sooriyawewa Road, Sooriyawewa",
-    ownerPhone: "0472243210",
-    propertyType: "House",
-    propertyCategory: "living",
-    oppuNumber: "OPPU67890",
-    landSize: "25 perches",
-    ownership: "Private",
-    agriculturalUse: "None",
-  },
-  {
-    id: 10,
-    userId: "23",
-    houseNumber: "21/H",
-    ownerName: "T.B. Dissanayake",
-    ownerAddress: "Sooriyawewa Road, Sooriyawewa",
-    ownerPhone: "0472243210",
-    propertyType: "Commercial",
-    propertyCategory: "additional",
-    oppuNumber: "OPPU78902",
-    landSize: "30 perches",
-    ownership: "Private",
-    agriculturalUse: "None",
-  },
-  {
-    id: 11,
-    userId: "27",
-    houseNumber: "67/I",
-    ownerName: "N.K. Jayawardena",
-    ownerAddress: "Lunugamvehera Road, Lunugamvehera",
-    ownerPhone: "0472298765",
-    propertyType: "Commercial",
-    propertyCategory: "living",
-    oppuNumber: "OPPU89012",
-    landSize: "18 perches",
-    ownership: "Private",
-    agriculturalUse: "None",
-  },
-  {
-    id: 12,
-    userId: "27",
-    houseNumber: "67/I",
-    ownerName: "N.K. Jayawardena",
-    ownerAddress: "Lunugamvehera Road, Lunugamvehera",
-    ownerPhone: "0472298765",
-    propertyType: "Land",
-    propertyCategory: "additional",
-    oppuNumber: "OPPU90123",
-    landSize: "6 acres",
-    ownership: "Private",
-    agriculturalUse: "Mixed Farming",
-  },
-  {
-    id: 13,
-    userId: "31",
-    houseNumber: "91/J",
-    ownerName: "D.M. Gamage",
-    ownerAddress: "Bundala Road, Bundala",
-    ownerPhone: "0472254321",
-    propertyType: "House",
-    propertyCategory: "living",
-    oppuNumber: "OPPU01234",
-    landSize: "22 perches",
-    ownership: "Private",
-    agriculturalUse: "None",
-  },
-  {
-    id: 14,
-    userId: "4",
-    houseNumber: "45/B",
-    ownerName: "S.P. Nishantha",
-    ownerAddress: "Matara Road, Hambantota",
-    ownerPhone: "0472245678",
-    propertyType: "Land",
-    propertyCategory: "living",
-    oppuNumber: "OPPU11234",
-    landSize: "7 acres",
-    ownership: "Leasehold",
-    agriculturalUse: "Paddy Farming",
-  },
-  {
-    id: 15,
-    userId: "7",
-    houseNumber: "12/C",
-    ownerName: "P.A. Rajitha",
-    ownerAddress: "Beliatta Road, Beliatta",
-    ownerPhone: "0472231456",
-    propertyType: "Agricultural",
-    propertyCategory: "additional",
-    oppuNumber: "OPPU22345",
-    landSize: "10 acres",
-    ownership: "Private",
-    agriculturalUse: "Paddy Farming, Buffalo Rearing",
-  },
-];
-
 const HouseholdDataContext = createContext<HouseholdDataContextType | undefined>(undefined);
 
 export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [households, setHouseholds] = useState<Household[]>(initialHouseholds);
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(initialFamilyMembers);
-  const [animals, setAnimals] = useState<Animal[]>(initialAnimals);
-  const [householdAnimals, setHouseholdAnimals] = useState<HouseholdAnimal[]>(initialHouseholdAnimals);
-  const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
-  const [properties, setProperties] = useState<Property[]>(initialProperties);
+  const [households, setHouseholds] = useState<Household[]>([]);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [animals, setAnimals] = useState<Animal[]>([]);
+  const [householdAnimals, setHouseholdAnimals] = useState<HouseholdAnimal[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Load all data on mount
+  useEffect(() => {
+    loadAllData();
+  }, []);
+
+  const loadAllData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [hh, fm, a, v, p] = await Promise.all([
+        householdService.getHouseholds(),
+        familyMemberService.getFamilyMembers(),
+        animalService.getAnimals(),
+        vehicleService.getVehicles(),
+        propertyService.getProperties(),
+      ]);
+      setHouseholds(hh);
+      setFamilyMembers(fm);
+      setAnimals(a);
+      setVehicles(v);
+      setProperties(p);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load data';
+      setError(message);
+      console.error('Error loading data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Household CRUD
+  const addHousehold = async (household: Omit<Household, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const newHousehold = await householdService.createHousehold(household);
+      setHouseholds([...households, newHousehold]);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to add household';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const updateHousehold = async (id: number, household: Partial<Household>) => {
+    try {
+      const updated = await householdService.updateHousehold(id, household);
+      setHouseholds(households.map(h => h.id === id ? updated : h));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update household';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const deleteHousehold = async (id: number) => {
+    try {
+      await householdService.deleteHousehold(id);
+      setHouseholds(households.filter(h => h.id !== id));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete household';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const refreshHouseholds = async () => {
+    try {
+      const hh = await householdService.getHouseholds();
+      setHouseholds(hh);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to refresh households';
+      setError(message);
+    }
+  };
+
+  // Family Member CRUD
+  const addFamilyMember = async (member: Omit<FamilyMember, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const newMember = await familyMemberService.createFamilyMember(member);
+      setFamilyMembers([...familyMembers, newMember]);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to add family member';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const updateFamilyMember = async (id: number, member: Partial<FamilyMember>) => {
+    try {
+      const updated = await familyMemberService.updateFamilyMember(id, member);
+      setFamilyMembers(familyMembers.map(m => m.id === id ? updated : m));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update family member';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const deleteFamilyMember = async (id: number) => {
+    try {
+      await familyMemberService.deleteFamilyMember(id);
+      setFamilyMembers(familyMembers.filter(m => m.id !== id));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete family member';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const refreshFamilyMembers = async () => {
+    try {
+      const fm = await familyMemberService.getFamilyMembers();
+      setFamilyMembers(fm);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to refresh family members';
+      setError(message);
+    }
+  };
+
+  // Vehicle CRUD
+  const addVehicle = async (vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const newVehicle = await vehicleService.createVehicle(vehicle);
+      setVehicles([...vehicles, newVehicle]);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to add vehicle';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const updateVehicle = async (id: number, vehicle: Partial<Vehicle>) => {
+    try {
+      const updated = await vehicleService.updateVehicle(id, vehicle);
+      setVehicles(vehicles.map(v => v.id === id ? updated : v));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update vehicle';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const deleteVehicle = async (id: number) => {
+    try {
+      await vehicleService.deleteVehicle(id);
+      setVehicles(vehicles.filter(v => v.id !== id));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete vehicle';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const refreshVehicles = async () => {
+    try {
+      const v = await vehicleService.getVehicles();
+      setVehicles(v);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to refresh vehicles';
+      setError(message);
+    }
+  };
+
+  // Property CRUD
+  const addProperty = async (property: Omit<Property, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const newProperty = await propertyService.createProperty(property);
+      setProperties([...properties, newProperty]);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to add property';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const updateProperty = async (id: number, property: Partial<Property>) => {
+    try {
+      const updated = await propertyService.updateProperty(id, property);
+      setProperties(properties.map(p => p.id === id ? updated : p));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update property';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const deleteProperty = async (id: number) => {
+    try {
+      await propertyService.deleteProperty(id);
+      setProperties(properties.filter(p => p.id !== id));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete property';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const refreshProperties = async () => {
+    try {
+      const p = await propertyService.getProperties();
+      setProperties(p);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to refresh properties';
+      setError(message);
+    }
+  };
+
+  // Animal CRUD
+  const addHouseholdAnimal = async (houseNumber: string, animalId: number, count: number) => {
+    try {
+      const newAnimal = await animalService.upsertHouseholdAnimal(houseNumber, animalId, count);
+      const existing = householdAnimals.findIndex(ha => ha.houseNumber === houseNumber && ha.animalId === animalId);
+      if (existing >= 0) {
+        const updated = [...householdAnimals];
+        updated[existing] = newAnimal;
+        setHouseholdAnimals(updated);
+      } else {
+        setHouseholdAnimals([...householdAnimals, newAnimal]);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to add household animal';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const deleteHouseholdAnimal = async (houseNumber: string, animalId: number) => {
+    try {
+      await animalService.deleteHouseholdAnimal(houseNumber, animalId);
+      setHouseholdAnimals(householdAnimals.filter(ha => !(ha.houseNumber === houseNumber && ha.animalId === animalId)));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete household animal';
+      setError(message);
+      throw err;
+    }
+  };
+
+  const refreshAnimals = async () => {
+    try {
+      const a = await animalService.getAnimals();
+      setAnimals(a);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to refresh animals';
+      setError(message);
+    }
+  };
+
+  // Helper functions
   const getMembersForHouse = (houseNumber: string) =>
     familyMembers.filter((m) => m.houseNumber === houseNumber);
 
@@ -1350,17 +420,32 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     <HouseholdDataContext.Provider
       value={{
         households,
-        setHouseholds,
         familyMembers,
-        setFamilyMembers,
         animals,
-        setAnimals,
         householdAnimals,
-        setHouseholdAnimals,
         vehicles,
-        setVehicles,
         properties,
-        setProperties,
+        loading,
+        error,
+        addHousehold,
+        updateHousehold,
+        deleteHousehold,
+        refreshHouseholds,
+        addFamilyMember,
+        updateFamilyMember,
+        deleteFamilyMember,
+        refreshFamilyMembers,
+        addVehicle,
+        updateVehicle,
+        deleteVehicle,
+        refreshVehicles,
+        addProperty,
+        updateProperty,
+        deleteProperty,
+        refreshProperties,
+        addHouseholdAnimal,
+        deleteHouseholdAnimal,
+        refreshAnimals,
         getMembersForHouse,
         getStudents,
         getBoarders,
