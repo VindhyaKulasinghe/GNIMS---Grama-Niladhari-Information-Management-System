@@ -178,7 +178,6 @@ export function PropertyLand() {
         });
         setFormData((prev) => ({
           ...prev,
-          userId: value,
           houseNumber: member.houseNumber,
           ownerName: member.fullName,
           ownerAddress: household?.address || "",
@@ -195,19 +194,21 @@ export function PropertyLand() {
     if (
       !formData.propertyType ||
       !formData.oppuNumber ||
+      !formData.landSize ||
+      !formData.ownership ||
       userValidation !== "valid"
     ) {
       alert(
-        "Please fill in all required fields and ensure user ID is valid",
+        "Please fill in all required fields (property type, OPPU number, land size, ownership) and ensure user ID is valid",
       );
       return;
     }
 
     if (editingProperty) {
-      const { id, createdAt, updatedAt, ...rest } = (formData as Property) as any;
+      const { id, createdAt, updatedAt, userId, ...rest } = (formData as Property) as any;
       await updateProperty(editingProperty.id, rest);
     } else {
-      const { id, createdAt, updatedAt, ...rest } = (formData as Property) as any;
+      const { id, createdAt, updatedAt, userId, ...rest } = (formData as Property) as any;
       await addProperty(rest);
     }
     setDialogOpen(false);

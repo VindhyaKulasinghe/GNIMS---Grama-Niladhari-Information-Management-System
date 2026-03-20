@@ -110,7 +110,6 @@ export function Vehicles() {
         });
         setFormData(prev => ({
           ...prev,
-          userId: value,
           houseNumber: member.houseNumber,
           ownerName: member.fullName,
           ownerAddress: household?.address || "",
@@ -130,10 +129,10 @@ export function Vehicles() {
     }
 
     if (editingVehicle) {
-      const { id, createdAt, updatedAt, ...rest } = (formData as Vehicle) as any;
+      const { id, createdAt, updatedAt, userId, ...rest } = (formData as Vehicle) as any;
       await updateVehicle(editingVehicle.id, rest);
     } else {
-      const { id, createdAt, updatedAt, ...rest } = (formData as Vehicle) as any;
+      const { id, createdAt, updatedAt, userId, ...rest } = (formData as Vehicle) as any;
       await addVehicle(rest);
     }
     setDialogOpen(false);

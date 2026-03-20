@@ -160,6 +160,16 @@ export function FamilyMembers() {
 
   // ---- Save member ----
   const handleSave = async () => {
+    if (!formData.nicNumber) {
+      alert("NIC number is required");
+      return;
+    }
+
+    if (!formData.birthYear) {
+      alert("Birth year is required");
+      return;
+    }
+
     const age = formData.birthYear ? calculateAge(formData.birthYear) : 0;
 
     const payload = { ...(formData as FamilyMember), age };

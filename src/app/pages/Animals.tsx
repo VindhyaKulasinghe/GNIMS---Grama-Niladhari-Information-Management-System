@@ -398,6 +398,9 @@ export function Animals() {
             <DialogTitle>
               {editingAnimal ? t("edit") : t("add")} Animal Type
             </DialogTitle>
+            <p className="text-sm text-slate-600">
+              Define a named animal type and its category for use across households.
+            </p>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
@@ -450,6 +453,9 @@ export function Animals() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Animal Details - {viewingAnimal?.name}</DialogTitle>
+            <p className="text-sm text-slate-600">
+              Review summary information and statistics for this animal type.
+            </p>
           </DialogHeader>
 
           <div className="py-4">
