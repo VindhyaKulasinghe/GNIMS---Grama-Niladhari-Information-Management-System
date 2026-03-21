@@ -5,6 +5,7 @@ import { useHouseholdData, FamilyMember, MemberType, Household } from "../contex
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
 import { Label } from "../components/ui/label";
 import {
   Select,
@@ -1050,12 +1051,14 @@ export function FamilyMembers() {
 
               <div className="space-y-2">
                 <Label>{t("trainingReceived")}</Label>
-                <Input
+                <Textarea
                   value={formData.trainingReceived || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, trainingReceived: e.target.value })
                   }
                   placeholder={t("trainingReceivedPlaceholder")}
+                  className="resize-none"
+                  rows={3}
                 />
               </div>
 
@@ -1199,7 +1202,7 @@ export function FamilyMembers() {
 
       {/* View Household Details Dialog */}
       <Dialog open={viewHouseDialog} onOpenChange={setViewHouseDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Home className="h-5 w-5 text-blue-600" />
@@ -1501,7 +1504,7 @@ export function FamilyMembers() {
       </Dialog>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
               <AlertTriangle className="h-5 w-5" />

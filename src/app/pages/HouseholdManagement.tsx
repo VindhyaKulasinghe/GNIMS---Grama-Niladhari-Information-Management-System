@@ -5,6 +5,7 @@ import { useHouseholdData, Household } from "../context/HouseholdDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
 import { Label } from "../components/ui/label";
 import { Switch } from "../components/ui/switch";
 import {
@@ -683,12 +684,14 @@ export function HouseholdManagement() {
 
             <div className="space-y-2">
               <Label>{t("address")}</Label>
-              <Input
+              <Textarea
                 value={formData.address || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })
                 }
                 placeholder="Street, Village, Town"
+                className="resize-none"
+                rows={3}
               />
               {(formData as any).__errors?.address && (
                 <p className="text-xs text-red-500">
@@ -1054,7 +1057,7 @@ export function HouseholdManagement() {
         </DialogContent>
       </Dialog>
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
               <AlertTriangle className="h-5 w-5" />
