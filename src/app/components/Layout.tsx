@@ -67,8 +67,8 @@ export function Layout() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-slate-900 text-white shadow-lg fixed top-0 left-0 right-0 z-50 border-b border-slate-800">
-        <div className="flex items-center justify-between px-6 py-5">
+      <header className="bg-slate-900/95 backdrop-blur-md text-white shadow-sm fixed top-0 left-0 right-0 z-50 border-b border-slate-800">
+        <div className="flex items-center justify-between px-6 h-16">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -79,8 +79,8 @@ export function Layout() {
               {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
             <div>
-              <h1 className="font-bold text-base lg:text-lg">{t("appName")}</h1>
-              <p className="text-xs text-slate-300 hidden sm:block">{t("southernProvinceHambantota")}</p>
+              <h1 className="font-extrabold text-xl lg:text-2xl tracking-tight text-white">{t("appName")}</h1>
+              <p className="text-[10px] uppercase tracking-[0.1em] font-semibold text-slate-400 hidden sm:block leading-none mt-0.5">{t("southernProvinceHambantota")}</p>
             </div>
           </div>
 
@@ -120,10 +120,10 @@ export function Layout() {
         </div>
       </header>
 
-      <div className="flex pt-[80px]">
+      <div className="flex pt-16">
         {/* Sidebar - Fixed */}
         <aside className={`
-          fixed top-[75px] bottom-0 left-0 z-40 w-64 bg-slate-900 shadow-lg transform transition-transform duration-300 ease-in-out border-r border-slate-800
+          fixed top-16 bottom-0 left-0 z-40 w-64 bg-slate-900 shadow-xl transform transition-transform duration-300 ease-in-out border-r border-slate-800
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
           <nav className="h-full overflow-y-auto py-10 p-4 space-y-2">
@@ -159,7 +159,7 @@ export function Layout() {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 lg:ml-64 pt-8 px-4 lg:pt-10 lg:px-10">
+        <main className="flex-1 lg:ml-64 p-6 lg:p-10 min-h-[calc(100vh-64px)]">
           <Outlet />
         </main>
       </div>
