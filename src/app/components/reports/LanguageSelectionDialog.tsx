@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -38,6 +39,12 @@ export function LanguageSelectionDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("selectLanguage")}</DialogTitle>
+          <DialogDescription>
+            {t(
+              "chooseLanguageForReport",
+              "Choose the language for your report generation.",
+            )}
+          </DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <Label htmlFor="language-select">{t("chooseLanguage")}</Label>

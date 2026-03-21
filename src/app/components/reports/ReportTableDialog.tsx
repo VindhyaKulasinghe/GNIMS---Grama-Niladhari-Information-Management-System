@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -75,6 +76,9 @@ export function ReportTableDialog({
       <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{getTitle()}</DialogTitle>
+          <DialogDescription>
+            {t("viewReportData", "View and download the report data.")}
+          </DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <div>{renderTable()}</div>
