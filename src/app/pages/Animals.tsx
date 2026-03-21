@@ -100,7 +100,7 @@ export function Animals() {
   }, {} as Record<string, number>);
 
   const categoryData = Object.entries(categoryCounts).map(([name, value]) => ({
-    name,
+    name: t(name.toLowerCase().replace(" ", "")) || name,
     value,
   }));
 
@@ -273,7 +273,7 @@ export function Animals() {
                           <div>
                             <h4 className="font-semibold text-slate-900">{animal.name}</h4>
                             <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
-                              {animal.category}
+                              {t(animal.category.toLowerCase().replace(" ", ""))}
                             </span>
                           </div>
                         </div>
@@ -360,7 +360,7 @@ export function Animals() {
                           </TableCell>
                           <TableCell>
                             <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">
-                              {animal.category}
+                              {t(animal.category.toLowerCase().replace(" ", ""))}
                             </span>
                           </TableCell>
                           <TableCell className="text-right font-semibold">{totalCount}</TableCell>

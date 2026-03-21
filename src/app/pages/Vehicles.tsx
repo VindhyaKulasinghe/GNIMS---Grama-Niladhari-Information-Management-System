@@ -158,7 +158,7 @@ export function Vehicles() {
   }, {} as Record<string, number>);
 
   const vehicleTypeData = Object.entries(vehicleTypeCounts).map(([name, value]) => ({
-    name: t(name.toLowerCase().replace("-", "")) || name,
+    name: t(name.toLowerCase().replace(/[- ]/g, "")) || name,
     value,
   }));
 

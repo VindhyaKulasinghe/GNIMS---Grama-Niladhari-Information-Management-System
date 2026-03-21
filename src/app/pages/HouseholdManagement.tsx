@@ -684,6 +684,7 @@ export function HouseholdManagement() {
                       <SelectItem value="Tiles">{t("tiles")}</SelectItem>
                       <SelectItem value="Asbestos">{t("asbestos")}</SelectItem>
                       <SelectItem value="Metal">{t("metal")}</SelectItem>
+                      <SelectItem value="Concrete">{t("concrete")}</SelectItem>
                       <SelectItem value="Cadjan">{t("cadjan")}</SelectItem>
                     </SelectContent>
                   </Select>
@@ -701,6 +702,7 @@ export function HouseholdManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Brick">{t("brick")}</SelectItem>
+                      <SelectItem value="Stone">{t("stone")}</SelectItem>
                       <SelectItem value="Cement">{t("cement")}</SelectItem>
                       <SelectItem value="Wood">{t("wood")}</SelectItem>
                       <SelectItem value="Cadjan">{t("cadjan")}</SelectItem>
@@ -758,7 +760,7 @@ export function HouseholdManagement() {
                       <div className="flex-1 grid grid-cols-2 gap-3">
                         <div className="space-y-2">
                           <Label className="text-xs text-gray-500">
-                            Select Animal
+                            {t("selectAnimal")}
                           </Label>
                           <Select
                             value={formAnimal.animalId}
@@ -782,7 +784,7 @@ export function HouseholdManagement() {
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs text-gray-500">Count</Label>
+                          <Label className="text-xs text-gray-500">{t("count")}</Label>
                           <Input
                             type="number"
                             min="0"
@@ -830,13 +832,13 @@ export function HouseholdManagement() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Manage Animals - House {selectedHouseNumber}
+              {t("manageAnimals")} - {t("house")} {selectedHouseNumber}
             </DialogTitle>
           </DialogHeader>
 
           <div className="py-4">
             <p className="text-sm text-gray-600 mb-4">
-              Select animals and enter the count for this household
+              {t("manageAnimalsSubtitle")}
             </p>
 
             <div className="space-y-3">
@@ -855,7 +857,7 @@ export function HouseholdManagement() {
                       <p className="text-xs text-gray-500">{animal.category}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Label className="text-xs text-gray-500">Count:</Label>
+                      <Label className="text-xs text-gray-500">{t("count")}:</Label>
                       <Input
                         type="number"
                         min="0"
@@ -888,19 +890,19 @@ export function HouseholdManagement() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Household Details - {viewingHousehold?.houseNumber}
+              {t("householdDetails")} - {viewingHousehold?.houseNumber}
             </DialogTitle>
           </DialogHeader>
 
           <div className="py-4">
             <p className="text-sm text-gray-600 mb-4">
-              View detailed information about this household
+              {t("viewDetailedHouseholdInfo")}
             </p>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">House Number</p>
+                  <p className="font-medium">{t("houseNumber")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -909,7 +911,7 @@ export function HouseholdManagement() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Address</p>
+                  <p className="font-medium">{t("address")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -918,7 +920,7 @@ export function HouseholdManagement() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Telephone</p>
+                  <p className="font-medium">{t("telephone")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -927,7 +929,7 @@ export function HouseholdManagement() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Utilities</p>
+                  <p className="font-medium">{t("utilities")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -946,20 +948,20 @@ export function HouseholdManagement() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Housing Materials</p>
+                  <p className="font-medium">{t("housingMaterials")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
                   <div className="text-xs text-gray-600 space-y-0.5">
-                    <div>Roof: {viewingHousehold?.roofType || "-"}</div>
-                    <div>Wall: {viewingHousehold?.wallType || "-"}</div>
-                    <div>Floor: {viewingHousehold?.floorType || "-"}</div>
+                    <div>{t("roof")}: {viewingHousehold?.roofType ? t(viewingHousehold.roofType.toLowerCase()) : "-"}</div>
+                    <div>{t("wall")}: {viewingHousehold?.wallType ? t(viewingHousehold.wallType.toLowerCase()) : "-"}</div>
+                    <div>{t("floor")}: {viewingHousehold?.floorType ? t(viewingHousehold.floorType.toLowerCase()) : "-"}</div>
                   </div>
                 </div>
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Animals</p>
+                  <p className="font-medium">{t("animals")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
