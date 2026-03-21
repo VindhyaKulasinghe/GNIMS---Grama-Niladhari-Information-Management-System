@@ -6,17 +6,16 @@ import { Home, BarChart3, FileText, Car } from "lucide-react";
 import {
   ReportTypeCard,
   RecentReports,
-  LanguageSelectionDialog,
   ReportTableDialog,
 } from "../components/reports";
 
+import { generateReport } from "../../lib/reportGenerator";
+
 export function Reports() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { households, familyMembers, vehicles, properties } =
     useHouseholdData();
-  const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const [selectedReportType, setSelectedReportType] = useState<string | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
   const [showReportTable, setShowReportTable] = useState<string | null>(null);
 
   const reportTypes = [
@@ -51,13 +50,18 @@ export function Reports() {
   ];
 
   const handleGenerateReport = (reportType: string) => {
-    setSelectedReportType(reportType);
-    setShowLanguageDialog(true);
-  };
-
-  const handleLanguageConfirm = () => {
-    setShowLanguageDialog(false);
-    toast.info("Report generation is currently disabled.");
+    try {
+      generateReport(
+        reportType,
+        { households, familyMembers, properties, vehicles },
+        "en",
+        t
+      );
+      toast.success(t("reportGenerated", "Report generated successfully"));
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      toast.error(t("reportGenerationError", "Error generating report"));
+    }
   };
 
   const handleViewReport = (reportType: string) => {
@@ -90,15 +94,6 @@ export function Reports() {
         <RecentReports />
       </div>
 
-      {/* Language Selection Dialog */}
-      <LanguageSelectionDialog
-        open={showLanguageDialog}
-        onOpenChange={setShowLanguageDialog}
-        selectedLanguage={selectedLanguage}
-        onLanguageChange={setSelectedLanguage}
-        onConfirm={handleLanguageConfirm}
-      />
-
       {/* Report Table Dialog */}
       <ReportTableDialog
         showReportTable={showReportTable}
@@ -108,10 +103,12 @@ export function Reports() {
         properties={properties}
         vehicles={vehicles}
         onDownload={() => {
-          setSelectedReportType(showReportTable);
-          setShowLanguageDialog(true);
+          if (showReportTable) {
+            handleGenerateReport(showReportTable);
+          }
         }}
       />
     </>
   );
 }
+
