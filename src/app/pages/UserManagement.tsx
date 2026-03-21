@@ -26,7 +26,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "../components/ui/dialog";
-import { Plus, Pencil, Trash2, Search, Shield, User, AlertTriangle } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  Shield,
+  User,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "../components/ui/badge";
 import * as userService from "../../lib/services/userService";
@@ -43,6 +52,10 @@ export function UserManagement() {
   const [formData, setFormData] = useState<Partial<UserType>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Loading states for operations
+  const [savingUser, setSavingUser] = useState(false);
+  const [deletingUser, setDeletingUser] = useState(false);
 
   // Load users on mount
   useEffect(() => {
@@ -63,9 +76,10 @@ export function UserManagement() {
     }
   };
 
-  const filteredUsers = users.filter(u =>
-    u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredUsers = users.filter(
+    (u) =>
+      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleAdd = () => {
@@ -88,22 +102,31 @@ export function UserManagement() {
 
   const confirmDelete = async () => {
     if (userToDelete) {
+      setDeletingUser(true);
       try {
         await userService.deleteUser(userToDelete);
-        setUsers(users.filter(u => u.id !== userToDelete));
+        setUsers(users.filter((u) => u.id !== userToDelete));
         toast.success(t("userDeleted") || "User deleted successfully.");
       } catch (err) {
         setError(err instanceof Error ? err.message : t("failedDeleteUser"));
       } finally {
         setDeleteDialogOpen(false);
         setUserToDelete(null);
+        setDeletingUser(false);
       }
     }
   };
 
   const handleSave = async () => {
+    setSavingUser(true);
     try {
-      if (!formData.name || !formData.email || !formData.role || !formData.division || !formData.status) {
+      if (
+        !formData.name ||
+        !formData.email ||
+        !formData.role ||
+        !formData.division ||
+        !formData.status
+      ) {
         setError(t("allFieldsRequired"));
         return;
       }
@@ -116,7 +139,7 @@ export function UserManagement() {
           division: formData.division,
           status: formData.status,
         });
-        setUsers(users.map(u => u.id === editingUser.id ? updated : u));
+        setUsers(users.map((u) => (u.id === editingUser.id ? updated : u)));
       } else {
         const newUser = await userService.createUser({
           name: formData.name!,
@@ -132,12 +155,14 @@ export function UserManagement() {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("failedSaveUser"));
+    } finally {
+      setSavingUser(false);
     }
   };
 
   const getRoleBadge = (role: string) => {
     const colors: Record<string, string> = {
-      "Admin": "bg-red-100 text-red-700",
+      Admin: "bg-red-100 text-red-700",
       "GN Officer": "bg-blue-100 text-blue-700",
       "Divisional Secretariat": "bg-purple-100 text-purple-700",
     };
@@ -148,7 +173,9 @@ export function UserManagement() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t("userManagement")}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {t("userManagement")}
+          </h1>
           <p className="text-gray-600 mt-1">{t("userManagementDescription")}</p>
         </div>
         <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700">
@@ -160,7 +187,9 @@ export function UserManagement() {
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error}
-          <button onClick={() => setError(null)} className="float-right">Ã—</button>
+          <button onClick={() => setError(null)} className="float-right">
+            Ã—
+          </button>
         </div>
       )}
 
@@ -178,7 +207,9 @@ export function UserManagement() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8">{t("loading") || "Loading..."}</div>
+            <div className="text-center py-8">
+              {t("loading") || "Loading..."}
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -209,16 +240,30 @@ export function UserManagement() {
                     </TableCell>
                     <TableCell>{user.division}</TableCell>
                     <TableCell>
-                      <Badge className={user.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
+                      <Badge
+                        className={
+                          user.status === "Active"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-700"
+                        }
+                      >
                         {user.status === "Active" ? t("active") : t("inactive")}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(user)}
+                        >
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(user.id)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteClick(user.id)}
+                        >
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>
                       </div>
@@ -238,13 +283,15 @@ export function UserManagement() {
               {editingUser ? t("edit") : t("add")} {t("user") || "User"}
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label>{t("name")}</Label>
               <Input
                 value={formData.name || ""}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
               />
             </div>
             <div className="space-y-2">
@@ -252,19 +299,28 @@ export function UserManagement() {
               <Input
                 type="email"
                 value={formData.email || ""}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
               />
             </div>
             <div className="space-y-2">
               <Label>{t("role")}</Label>
-              <Select value={formData.role || ""} onValueChange={(val) => setFormData({ ...formData, role: val as any })}>
+              <Select
+                value={formData.role || ""}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, role: val as any })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder={t("selectRole")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Admin">{t("admin")}</SelectItem>
                   <SelectItem value="GN Officer">{t("gnOfficer")}</SelectItem>
-                  <SelectItem value="Divisional Secretariat">{t("divisionalSecretariatLabel")}</SelectItem>
+                  <SelectItem value="Divisional Secretariat">
+                    {t("divisionalSecretariatLabel")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -272,12 +328,19 @@ export function UserManagement() {
               <Label>{t("division")}</Label>
               <Input
                 value={formData.division || ""}
-                onChange={(e) => setFormData({ ...formData, division: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, division: e.target.value })
+                }
               />
             </div>
             <div className="space-y-2">
               <Label>{t("status")}</Label>
-              <Select value={formData.status || ""} onValueChange={(val) => setFormData({ ...formData, status: val as any })}>
+              <Select
+                value={formData.status || ""}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, status: val as any })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder={t("selectStatus")} />
                 </SelectTrigger>
@@ -293,7 +356,12 @@ export function UserManagement() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               {t("cancel")}
             </Button>
-            <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              onClick={handleSave}
+              disabled={savingUser}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {savingUser && <Loader2 className="h-4 w-4 animate-spin" />}
               {t("save")}
             </Button>
           </DialogFooter>
@@ -311,10 +379,19 @@ export function UserManagement() {
             <p className="text-gray-600 text-sm">{t("confirmDeleteUser")}</p>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
               {t("cancel")}
             </Button>
-            <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmDelete}>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={confirmDelete}
+              disabled={deletingUser}
+            >
+              {deletingUser && <Loader2 className="h-4 w-4 animate-spin" />}
               {t("delete")}
             </Button>
           </DialogFooter>

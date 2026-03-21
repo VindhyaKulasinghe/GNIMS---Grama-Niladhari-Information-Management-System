@@ -57,6 +57,7 @@ import {
   AlertTriangle,
   Activity,
   Users,
+  Loader2,
 } from "lucide-react";
 import {
   PieChart,
@@ -114,6 +115,11 @@ export function HouseholdManagement() {
     null,
   );
 
+  // Loading states
+  const [savingHousehold, setSavingHousehold] = useState(false);
+  const [deletingHousehold, setDeletingHousehold] = useState(false);
+  const [updatingAnimals, setUpdatingAnimals] = useState(false);
+
   const filteredHouseholds = households.filter(
     (h) =>
       h.houseNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -161,102 +167,114 @@ export function HouseholdManagement() {
 
   const confirmDelete = async () => {
     if (householdToDelete !== null) {
-      await deleteHousehold(householdToDelete);
-      toast.success(t("householdDeleted") || "Household deleted successfully.");
-      setDeleteDialogOpen(false);
-      setHouseholdToDelete(null);
+      setDeletingHousehold(true);
+      try {
+        await deleteHousehold(householdToDelete);
+        toast.success(
+          t("householdDeleted") || "Household deleted successfully.",
+        );
+        setDeleteDialogOpen(false);
+        setHouseholdToDelete(null);
+      } finally {
+        setDeletingHousehold(false);
+      }
     }
   };
 
   const handleSave = async () => {
-    const errors: { [key: string]: string } = {};
+    setSavingHousehold(true);
+    try {
+      const errors: { [key: string]: string } = {};
 
-    if (!formData.houseNumber) {
-      errors.houseNumber = t("houseNumberRequired");
-    }
-
-    if (!formData.address || !formData.telephone) {
-      if (!formData.address) {
-        errors.address = t("addressRequired");
+      if (!formData.houseNumber) {
+        errors.houseNumber = t("houseNumberRequired");
       }
-      if (!formData.telephone) {
-        errors.telephone = t("telephoneRequired");
+
+      if (!formData.address || !formData.telephone) {
+        if (!formData.address) {
+          errors.address = t("addressRequired");
+        }
+        if (!formData.telephone) {
+          errors.telephone = t("telephoneRequired");
+        }
       }
+
+      const phone = formData.telephone || "";
+      if (!/^\d{10}$/.test(phone)) {
+        errors.telephone = t("telephoneInvalid");
+      }
+
+      if (!formData.roofType || !formData.wallType || !formData.floorType) {
+        errors.roofType = t("roofTypeRequired");
+        errors.wallType = t("wallTypeRequired");
+        errors.floorType = t("floorTypeRequired");
+      }
+
+      if (Object.keys(errors).length > 0) {
+        // Simple way to surface all current validation errors inline + toast
+        toast.error(t("fixHouseholdFormErrors"));
+        // Store errors on formData via a helper key so we can read them below
+        setFormData({ ...formData, __errors: errors } as any);
+        return;
+      }
+
+      const { __errors, ...cleanForm } = formData as any;
+      const coreData = cleanForm as Household;
+
+      if (editingHousehold) {
+        await updateHousehold(editingHousehold.id, coreData);
+
+        const houseNumber = editingHousehold.houseNumber;
+
+        const existing = householdAnimals.filter(
+          (ha) => ha.houseNumber === houseNumber,
+        );
+
+        const desired = formAnimals
+          .filter((fa) => fa.animalId && fa.count > 0)
+          .map((fa) => ({
+            animalId: parseInt(fa.animalId),
+            count: fa.count,
+          }));
+
+        const desiredIds = new Set(desired.map((d) => d.animalId));
+
+        await Promise.all(
+          existing
+            .filter((ha) => !desiredIds.has(ha.animalId))
+            .map((ha) => deleteHouseholdAnimal(houseNumber, ha.animalId)),
+        );
+
+        await Promise.all(
+          desired.map((d) =>
+            addHouseholdAnimal(houseNumber, d.animalId, d.count),
+          ),
+        );
+        toast.success("Household updated successfully.");
+      } else {
+        const { id, createdAt, updatedAt, ...rest } = coreData as any;
+        await addHousehold(rest);
+
+        const houseNumber = coreData.houseNumber;
+
+        const desired = formAnimals
+          .filter((fa) => fa.animalId && fa.count > 0)
+          .map((fa) => ({
+            animalId: parseInt(fa.animalId),
+            count: fa.count,
+          }));
+
+        await Promise.all(
+          desired.map((d) =>
+            addHouseholdAnimal(houseNumber, d.animalId, d.count),
+          ),
+        );
+        toast.success("Household added successfully.");
+      }
+      setDialogOpen(false);
+    } finally {
+      setSavingHousehold(false);
     }
-
-    const phone = formData.telephone || "";
-    if (!/^\d{10}$/.test(phone)) {
-      errors.telephone = t("telephoneInvalid");
-    }
-
-    if (!formData.roofType || !formData.wallType || !formData.floorType) {
-      errors.roofType = t("roofTypeRequired");
-      errors.wallType = t("wallTypeRequired");
-      errors.floorType = t("floorTypeRequired");
-    }
-
-    if (Object.keys(errors).length > 0) {
-      // Simple way to surface all current validation errors inline + toast
-      toast.error(t("fixHouseholdFormErrors"));
-      // Store errors on formData via a helper key so we can read them below
-      setFormData({ ...formData, __errors: errors } as any);
-      return;
-    }
-
-    const { __errors, ...cleanForm } = formData as any;
-    const coreData = cleanForm as Household;
-
-    if (editingHousehold) {
-      await updateHousehold(editingHousehold.id, coreData);
-
-      const houseNumber = editingHousehold.houseNumber;
-
-      const existing = householdAnimals.filter(
-        (ha) => ha.houseNumber === houseNumber,
-      );
-
-      const desired = formAnimals
-        .filter((fa) => fa.animalId && fa.count > 0)
-        .map((fa) => ({
-          animalId: parseInt(fa.animalId),
-          count: fa.count,
-        }));
-
-      const desiredIds = new Set(desired.map((d) => d.animalId));
-
-      await Promise.all(
-        existing
-          .filter((ha) => !desiredIds.has(ha.animalId))
-          .map((ha) => deleteHouseholdAnimal(houseNumber, ha.animalId)),
-      );
-
-      await Promise.all(
-        desired.map((d) =>
-          addHouseholdAnimal(houseNumber, d.animalId, d.count),
-        ),
-      );
-      toast.success("Household updated successfully.");
-    } else {
-      const { id, createdAt, updatedAt, ...rest } = coreData as any;
-      await addHousehold(rest);
-
-      const houseNumber = coreData.houseNumber;
-
-      const desired = formAnimals
-        .filter((fa) => fa.animalId && fa.count > 0)
-        .map((fa) => ({
-          animalId: parseInt(fa.animalId),
-          count: fa.count,
-        }));
-
-      await Promise.all(
-        desired.map((d) =>
-          addHouseholdAnimal(houseNumber, d.animalId, d.count),
-        ),
-      );
-      toast.success("Household added successfully.");
-    }
-    setDialogOpen(false);
   };
 
   const handleAddAnimalField = () => {
@@ -295,10 +313,15 @@ export function HouseholdManagement() {
   const handleAnimalCountChange = async (animalId: number, count: number) => {
     if (!selectedHouseNumber) return;
 
-    if (count === 0) {
-      await deleteHouseholdAnimal(selectedHouseNumber, animalId);
-    } else {
-      await addHouseholdAnimal(selectedHouseNumber, animalId, count);
+    setUpdatingAnimals(true);
+    try {
+      if (count === 0) {
+        await deleteHouseholdAnimal(selectedHouseNumber, animalId);
+      } else {
+        await addHouseholdAnimal(selectedHouseNumber, animalId, count);
+      }
+    } finally {
+      setUpdatingAnimals(false);
     }
   };
 
@@ -1111,8 +1134,10 @@ export function HouseholdManagement() {
             </Button>
             <Button
               onClick={handleSave}
+              disabled={savingHousehold}
               className="bg-blue-600 hover:bg-blue-700"
             >
+              {savingHousehold && <Loader2 className="h-4 w-4 animate-spin" />}
               {t("save")}
             </Button>
           </DialogFooter>
@@ -1186,6 +1211,7 @@ export function HouseholdManagement() {
                                 Math.max(0, currentCount - 1),
                               )
                             }
+                            disabled={updatingAnimals}
                             className="h-8 w-8 p-0"
                           >
                             -
@@ -1211,6 +1237,7 @@ export function HouseholdManagement() {
                                 currentCount + 1,
                               )
                             }
+                            disabled={updatingAnimals}
                             className="h-8 w-8 p-0"
                           >
                             +
@@ -1220,6 +1247,7 @@ export function HouseholdManagement() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleAnimalCountChange(animal.id, 0)}
+                          disabled={updatingAnimals}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -1619,7 +1647,11 @@ export function HouseholdManagement() {
               variant="destructive"
               className="bg-red-600 hover:bg-red-700 text-white"
               onClick={confirmDelete}
+              disabled={deletingHousehold}
             >
+              {deletingHousehold && (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
               {t("delete")}
             </Button>
           </DialogFooter>

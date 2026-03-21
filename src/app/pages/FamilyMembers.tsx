@@ -138,6 +138,10 @@ export function FamilyMembers() {
   const [viewMemberDialog, setViewMemberDialog] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<number | null>(null);
+
+  // Loading states
+  const [savingMember, setSavingMember] = useState(false);
+  const [deletingMember, setDeletingMember] = useState(false);
   const [viewingMember, setViewingMember] = useState<FamilyMember | null>(null);
 
   // Filtered houses in search view
@@ -202,73 +206,84 @@ export function FamilyMembers() {
 
   const confirmDelete = async () => {
     if (memberToDelete !== null) {
-      await deleteFamilyMember(memberToDelete);
-      toast.success(
-        t("memberDeleted") || "Family member deleted successfully.",
-      );
-      setDeleteDialogOpen(false);
-      setMemberToDelete(null);
+      setDeletingMember(true);
+      try {
+        await deleteFamilyMember(memberToDelete);
+        toast.success(
+          t("memberDeleted") || "Family member deleted successfully.",
+        );
+        setDeleteDialogOpen(false);
+        setMemberToDelete(null);
+      } finally {
+        setDeletingMember(false);
+      }
     }
   };
 
   // ---- Save member ----
   const handleSave = async () => {
-    const errors: { [key: string]: string } = {};
+    setSavingMember(true);
+    try {
+      const errors: { [key: string]: string } = {};
 
-    if (!formData.nicNumber) {
-      errors.nicNumber = t("nicRequired");
-    } else if (!/^(\d{9}[VvXx]|\d{12})$/.test(formData.nicNumber)) {
-      errors.nicNumber = t("nicInvalid");
-    }
-
-    if (!formData.birthYear) {
-      errors.birthYear = t("birthYearRequired");
-    }
-
-    if (Object.keys(errors).length > 0) {
-      toast.error(t("fixFormErrors"));
-      (formData as any).__errors = errors;
-      return;
-    }
-
-    const age = formData.birthYear ? calculateAge(formData.birthYear) : 0;
-
-    const { __errors, ...cleanForm } = formData as any;
-    const payload = { ...(cleanForm as FamilyMember), age };
-
-    if (editingMember) {
-      if (payload.isHeadOfHousehold) {
-        const others = familyMembers.filter(
-          (m) =>
-            m.houseNumber === payload.houseNumber && m.id !== editingMember.id,
-        );
-        await Promise.all(
-          others.map((m) =>
-            updateFamilyMember(m.id, { isHeadOfHousehold: false }),
-          ),
-        );
+      if (!formData.nicNumber) {
+        errors.nicNumber = t("nicRequired");
+      } else if (!/^(\d{9}[VvXx]|\d{12})$/.test(formData.nicNumber)) {
+        errors.nicNumber = t("nicInvalid");
       }
 
-      const { id, createdAt, updatedAt, ...rest } = payload as any;
-      await updateFamilyMember(editingMember.id, rest);
-      toast.success(t("memberUpdated"));
-    } else {
-      if (payload.isHeadOfHousehold) {
-        const others = familyMembers.filter(
-          (m) => m.houseNumber === payload.houseNumber,
-        );
-        await Promise.all(
-          others.map((m) =>
-            updateFamilyMember(m.id, { isHeadOfHousehold: false }),
-          ),
-        );
+      if (!formData.birthYear) {
+        errors.birthYear = t("birthYearRequired");
       }
 
-      const { id, createdAt, updatedAt, ...rest } = payload as any;
-      await addFamilyMember(rest);
-      toast.success(t("memberAdded"));
+      if (Object.keys(errors).length > 0) {
+        toast.error(t("fixFormErrors"));
+        (formData as any).__errors = errors;
+        return;
+      }
+
+      const age = formData.birthYear ? calculateAge(formData.birthYear) : 0;
+
+      const { __errors, ...cleanForm } = formData as any;
+      const payload = { ...(cleanForm as FamilyMember), age };
+
+      if (editingMember) {
+        if (payload.isHeadOfHousehold) {
+          const others = familyMembers.filter(
+            (m) =>
+              m.houseNumber === payload.houseNumber &&
+              m.id !== editingMember.id,
+          );
+          await Promise.all(
+            others.map((m) =>
+              updateFamilyMember(m.id, { isHeadOfHousehold: false }),
+            ),
+          );
+        }
+
+        const { id, createdAt, updatedAt, ...rest } = payload as any;
+        await updateFamilyMember(editingMember.id, rest);
+        toast.success(t("memberUpdated"));
+      } else {
+        if (payload.isHeadOfHousehold) {
+          const others = familyMembers.filter(
+            (m) => m.houseNumber === payload.houseNumber,
+          );
+          await Promise.all(
+            others.map((m) =>
+              updateFamilyMember(m.id, { isHeadOfHousehold: false }),
+            ),
+          );
+        }
+
+        const { id, createdAt, updatedAt, ...rest } = payload as any;
+        await addFamilyMember(rest);
+        toast.success(t("memberAdded"));
+      }
+      setDialogOpen(false);
+    } finally {
+      setSavingMember(false);
     }
-    setDialogOpen(false);
   };
 
   const memberTypeValue = formData.memberType as MemberType;
@@ -1488,8 +1503,10 @@ export function FamilyMembers() {
             </Button>
             <Button
               onClick={handleSave}
+              disabled={savingMember}
               className="bg-blue-600 hover:bg-blue-700"
             >
+              {savingMember && <Loader2 className="h-4 w-4 animate-spin" />}
               {t("saveMember")}
             </Button>
           </DialogFooter>
@@ -1936,7 +1953,9 @@ export function FamilyMembers() {
               variant="destructive"
               className="bg-red-600 hover:bg-red-700 text-white"
               onClick={confirmDelete}
+              disabled={deletingMember}
             >
+              {deletingMember && <Loader2 className="h-4 w-4 animate-spin" />}
               {t("delete")}
             </Button>
           </DialogFooter>

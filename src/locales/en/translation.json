@@ -432,6 +432,7 @@
   "utilities": "Utilities",
   "utilitiesDistribution": "Utilities Distribution",
   "validatedUserDetails": "Validated User Details",
+  "currentOwnerDetails": "Current Owner Details",
   "validateNicPrompt": "Please validate user by NIC first",
   "van": "Van",
   "vehicleAdded": "Vehicle added successfully.",

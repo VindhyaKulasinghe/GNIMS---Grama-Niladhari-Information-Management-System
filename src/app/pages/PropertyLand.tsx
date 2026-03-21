@@ -94,6 +94,10 @@ export function PropertyLand() {
   const [viewDialog, setViewDialog] = useState(false);
   const [viewingProperty, setViewingProperty] = useState<Property | null>(null);
 
+  // Loading states
+  const [savingProperty, setSavingProperty] = useState(false);
+  const [deletingProperty, setDeletingProperty] = useState(false);
+
   const filteredProperties = properties.filter(
     (p) =>
       p.ownerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -114,22 +118,14 @@ export function PropertyLand() {
     setEditingProperty(property);
     setFormData(property);
     setUserId(property.userId || "");
-    // Auto-validate for editing
-    const member = familyMembers.find(
-      (m) => m.id.toString() === property.userId,
-    );
-    if (member) {
-      setUserValidation("valid");
-      const household = households.find(
-        (h) => h.houseNumber === member.houseNumber,
-      );
-      setValidatedUser({
-        name: member.fullName,
-        address: household?.address || "",
-        phone: household?.telephone || "",
-        houseNumber: member.houseNumber,
-      });
-    }
+    // For editing, use the owner info from the property record
+    setValidatedUser({
+      name: property.ownerName,
+      address: property.ownerAddress,
+      phone: property.ownerPhone,
+      houseNumber: property.houseNumber,
+    });
+    setUserValidation("valid");
     setDialogOpen(true);
   };
 
@@ -140,10 +136,15 @@ export function PropertyLand() {
 
   const confirmDelete = async () => {
     if (propertyToDelete !== null) {
-      await deleteProperty(propertyToDelete);
-      toast.success(t("propertyDeleted") || "Property deleted successfully.");
-      setDeleteDialogOpen(false);
-      setPropertyToDelete(null);
+      setDeletingProperty(true);
+      try {
+        await deleteProperty(propertyToDelete);
+        toast.success(t("propertyDeleted") || "Property deleted successfully.");
+        setDeleteDialogOpen(false);
+        setPropertyToDelete(null);
+      } finally {
+        setDeletingProperty(false);
+      }
     }
   };
 
@@ -186,43 +187,49 @@ export function PropertyLand() {
   };
 
   const handleSave = async () => {
-    const errors: { [key: string]: string } = {};
+    setSavingProperty(true);
+    try {
+      const errors: { [key: string]: string } = {};
 
-    if (
-      !formData.propertyType ||
-      !formData.oppuNumber ||
-      !formData.landSize ||
-      !formData.ownership ||
-      userValidation !== "valid"
-    ) {
-      if (!formData.propertyType)
-        errors.propertyType = t("propertyTypeRequired");
-      if (!formData.oppuNumber) errors.oppuNumber = t("oppuNumberRequired");
-      if (!formData.landSize) errors.landSize = t("landSizeRequired");
-      if (!formData.ownership) errors.ownership = t("ownershipTypeRequired");
-      if (userValidation !== "valid") errors.userId = t("validateNicPrompt");
+      // Only require NIC validation when adding (not editing)
+      if (
+        !formData.propertyType ||
+        !formData.oppuNumber ||
+        !formData.landSize ||
+        !formData.ownership ||
+        (!editingProperty && userValidation !== "valid")
+      ) {
+        if (!formData.propertyType)
+          errors.propertyType = t("propertyTypeRequired");
+        if (!formData.oppuNumber) errors.oppuNumber = t("oppuNumberRequired");
+        if (!formData.landSize) errors.landSize = t("landSizeRequired");
+        if (!formData.ownership) errors.ownership = t("ownershipTypeRequired");
+        if (userValidation !== "valid") errors.userId = t("validateNicPrompt");
 
-      if (Object.keys(errors).length > 0) {
-        (formData as any).__errors = errors;
-        toast.error(t("fixFormErrors"));
-        return;
+        if (Object.keys(errors).length > 0) {
+          (formData as any).__errors = errors;
+          toast.error(t("fixFormErrors"));
+          return;
+        }
       }
-    }
 
-    const { __errors, ...cleanForm } = formData as any;
+      const { __errors, ...cleanForm } = formData as any;
 
-    if (editingProperty) {
-      const { id, createdAt, updatedAt, userId, ...rest } =
-        cleanForm as Property as any; // Kept Property type
-      await updateProperty(editingProperty.id, rest); // Kept updateProperty
-      toast.success(t("propertyUpdated"));
-    } else {
-      const { id, createdAt, updatedAt, userId, ...rest } =
-        cleanForm as Property as any; // Kept Property type
-      await addProperty(rest); // Kept addProperty
-      toast.success(t("propertyAdded"));
+      if (editingProperty) {
+        const { id, createdAt, updatedAt, userId, ...rest } =
+          cleanForm as Property as any; // Kept Property type
+        await updateProperty(editingProperty.id, rest); // Kept updateProperty
+        toast.success(t("propertyUpdated"));
+      } else {
+        const { id, createdAt, updatedAt, userId, ...rest } =
+          cleanForm as Property as any; // Kept Property type
+        await addProperty(rest); // Kept addProperty
+        toast.success(t("propertyAdded"));
+      }
+      setDialogOpen(false);
+    } finally {
+      setSavingProperty(false);
     }
-    setDialogOpen(false);
   };
 
   // Analytics calculations
@@ -616,69 +623,78 @@ export function PropertyLand() {
           </DialogHeader>
 
           <div className="grid gap-6 py-4">
-            {/* NIC Validation Section */}
-            <div className="space-y-2">
-              <Label>{t("nicNumber")} *</Label>
-              <div className="relative">
-                <Input
-                  value={userId}
-                  onChange={(e) => handleUserIdChange(e.target.value)}
-                  placeholder={t("nicPlaceholder")}
-                  disabled={!!editingProperty}
-                  className="pr-10"
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {userValidation === "validating" && (
-                    <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
-                  )}
-                  {userValidation === "valid" && (
-                    <Check className="h-5 w-5 text-green-600" />
-                  )}
-                  {userValidation === "invalid" && (
-                    <AlertCircle className="h-5 w-5 text-red-500" />
-                  )}
-                </div>
-              </div>
-              {userValidation === "invalid" && (
-                <p className="text-sm text-red-500">{t("nicNotFound")}</p>
-              )}
-            </div>
-
-            {/* User Details Display */}
-            {userValidation === "valid" && validatedUser && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-900 mb-2">
-                  {t("validatedUserDetails")}
-                </h4>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-green-700 font-medium">{t("name")}:</p>
-                    <p className="text-green-900">{validatedUser.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-green-700 font-medium">
-                      {t("houseNumber")}:
-                    </p>
-                    <p className="text-green-900">
-                      {validatedUser.houseNumber}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-green-700 font-medium">
-                      {t("address")}:
-                    </p>
-                    <p className="text-green-900">{validatedUser.address}</p>
-                  </div>
-                  <div>
-                    <p className="text-green-700 font-medium">{t("phone")}:</p>
-                    <p className="text-green-900">{validatedUser.phone}</p>
+            {/* NIC Validation Section - Only show when adding */}
+            {!editingProperty && (
+              <div className="space-y-2">
+                <Label>{t("nicNumber")} *</Label>
+                <div className="relative">
+                  <Input
+                    value={userId}
+                    onChange={(e) => handleUserIdChange(e.target.value)}
+                    placeholder={t("nicPlaceholder")}
+                    disabled={!!editingProperty}
+                    className="pr-10"
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {userValidation === "validating" && (
+                      <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                    )}
+                    {userValidation === "valid" && (
+                      <Check className="h-5 w-5 text-green-600" />
+                    )}
+                    {userValidation === "invalid" && (
+                      <AlertCircle className="h-5 w-5 text-red-500" />
+                    )}
                   </div>
                 </div>
+                {userValidation === "invalid" && (
+                  <p className="text-sm text-red-500">{t("nicNotFound")}</p>
+                )}
               </div>
             )}
 
+            {/* User Details Display */}
+            {((!editingProperty && userValidation === "valid") ||
+              editingProperty) &&
+              validatedUser && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-green-900 mb-2">
+                    {editingProperty
+                      ? t("currentOwnerDetails")
+                      : t("validatedUserDetails")}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-green-700 font-medium">{t("name")}:</p>
+                      <p className="text-green-900">{validatedUser.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-green-700 font-medium">
+                        {t("houseNumber")}:
+                      </p>
+                      <p className="text-green-900">
+                        {validatedUser.houseNumber}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-green-700 font-medium">
+                        {t("address")}:
+                      </p>
+                      <p className="text-green-900">{validatedUser.address}</p>
+                    </div>
+                    <div>
+                      <p className="text-green-700 font-medium">
+                        {t("phone")}:
+                      </p>
+                      <p className="text-green-900">{validatedUser.phone}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             {/* Property Category Selector */}
-            {userValidation === "valid" && (
+            {(!editingProperty && userValidation === "valid") ||
+            editingProperty ? (
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
                 <Label className="text-base font-semibold text-slate-900 mb-3 block">
                   {t("propertyCategory")} *
@@ -728,10 +744,11 @@ export function PropertyLand() {
                   </button>
                 </div>
               </div>
-            )}
+            ) : null}
 
             {/* Property Details Section */}
-            {userValidation === "valid" && (
+            {(!editingProperty && userValidation === "valid") ||
+            editingProperty ? (
               <>
                 <div className="border-t pt-4">
                   <h4 className="font-semibold text-slate-900 mb-4">
@@ -877,7 +894,7 @@ export function PropertyLand() {
                   </div>
                 </div>
               </>
-            )}
+            ) : null}
           </div>
 
           <DialogFooter>
@@ -886,9 +903,13 @@ export function PropertyLand() {
             </Button>
             <Button
               onClick={handleSave}
-              disabled={userValidation !== "valid"}
+              disabled={
+                (!editingProperty && userValidation !== "valid") ||
+                savingProperty
+              }
               className="bg-slate-900 hover:bg-slate-800"
             >
+              {savingProperty && <Loader2 className="h-4 w-4 animate-spin" />}
               {t("save")}
             </Button>
           </DialogFooter>
@@ -1053,7 +1074,9 @@ export function PropertyLand() {
               variant="destructive"
               className="bg-red-600 hover:bg-red-700 text-white"
               onClick={confirmDelete}
+              disabled={deletingProperty}
             >
+              {deletingProperty && <Loader2 className="h-4 w-4 animate-spin" />}
               {t("delete")}
             </Button>
           </DialogFooter>
