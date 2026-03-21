@@ -67,6 +67,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 
 export function PropertyLand() {
@@ -198,7 +199,7 @@ export function PropertyLand() {
       !formData.propertyType ||
       !formData.oppuNumber ||
       !formData.landSize ||
-      !formData.ownershipType || // Changed from ownership to ownershipType
+      !formData.ownership ||
       userValidation !== "valid"
     ) {
       if (!formData.propertyType) errors.propertyType = t("propertyTypeRequired");
@@ -303,128 +304,112 @@ export function PropertyLand() {
         <TabsContent value="overview" className="space-y-6">
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-blue-600 text-white border-blue-700">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <Landmark className="h-10 w-10 text-white/90" />
+            <Card className="hover:shadow-lg hover:scale-[1.02] transition-all bg-gradient-to-br from-white to-blue-50/50">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-blue-100">
-                      {t("totalProperties")}
-                    </p>
-                    <p className="text-3xl font-bold">
-                      {properties.length}
-                    </p>
+                    <p className="text-xs font-semibold text-blue-600/80 uppercase tracking-wider mb-1">{t("totalProperties")}</p>
+                    <p className="text-3xl font-bold text-slate-800">{properties.length}</p>
+                    <p className="text-xs text-slate-500 mt-1">{t("recorded") || "Recorded"}</p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-green-600 text-white border-green-700">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
-                    <BarChart3 className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-green-100">
-                      {t("propertyTypes")}
-                    </p>
-                    <p className="text-3xl font-bold">
-                      {Object.keys(propertyTypeCounts).length}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-orange-600 text-white border-orange-700">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
+                  <div className="bg-blue-500 p-3 rounded-2xl shadow-sm text-white">
                     <Landmark className="h-6 w-6" />
                   </div>
-                  <div>
-                    <p className="text-sm text-orange-100">
-                      {t("agriculturalUse")}
-                    </p>
-                    <p className="text-3xl font-bold">
-                      {agriculturalUseCount}
-                    </p>
-                  </div>
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-purple-600 text-white border-purple-700">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
-                    <Users className="h-6 w-6" />
+            
+            <Card className="hover:shadow-lg hover:scale-[1.02] transition-all bg-gradient-to-br from-white to-emerald-50/50">
+               <CardContent className="p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-emerald-600/80 uppercase tracking-wider mb-1">{t("propertyTypes")}</p>
+                      <p className="text-3xl font-bold text-slate-800">{Object.keys(propertyTypeCounts).length}</p>
+                      <p className="text-xs text-slate-500 mt-1">{t("categories") || "Categories"}</p>
+                    </div>
+                    <div className="bg-emerald-500 p-3 rounded-2xl shadow-sm text-white">
+                      <BarChart3 className="h-6 w-6" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-purple-100">
-                      {t("uniqueOwners")}
-                    </p>
-                    <p className="text-3xl font-bold">
-                      {
-                        new Set(
-                          properties.map((p) => p.ownerName),
-                        ).size
-                      }
-                    </p>
+                </CardContent>
+            </Card>
+            
+            <Card className="hover:shadow-lg hover:scale-[1.02] transition-all bg-gradient-to-br from-white to-amber-50/50">
+               <CardContent className="p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-amber-600/80 uppercase tracking-wider mb-1">{t("agriculturalUse")}</p>
+                      <p className="text-3xl font-bold text-slate-800">{agriculturalUseCount}</p>
+                      <p className="text-xs text-slate-500 mt-1">{t("properties") || "Properties"}</p>
+                    </div>
+                    <div className="bg-amber-500 p-3 rounded-2xl shadow-sm text-white">
+                      <Landmark className="h-6 w-6" />
+                    </div>
                   </div>
-                </div>
-              </CardContent>
+                </CardContent>
+            </Card>
+            
+            <Card className="hover:shadow-lg hover:scale-[1.02] transition-all bg-gradient-to-br from-white to-purple-50/50">
+               <CardContent className="p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-purple-600/80 uppercase tracking-wider mb-1">{t("uniqueOwners")}</p>
+                      <p className="text-3xl font-bold text-slate-800">{new Set(properties.map((p) => p.ownerName)).size}</p>
+                      <p className="text-xs text-slate-500 mt-1">{t("owners") || "Owners"}</p>
+                    </div>
+                    <div className="bg-purple-500 p-3 rounded-2xl shadow-sm text-white">
+                      <Users className="h-6 w-6" />
+                    </div>
+                  </div>
+                </CardContent>
             </Card>
           </div>
 
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Pie Chart - Property Types */}
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  {t("propertyDistributionByType")}
-                </CardTitle>
+            <Card className="hover:shadow-md transition-all border-slate-200">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
+                <CardTitle className="text-lg text-slate-800 font-semibold">{t("propertyDistributionByType")}</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
                       data={propertyTypeData}
                       cx="50%"
                       cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={5}
                       labelLine={false}
-                      label={({ name, value }) =>
-                        `${name}: ${value}`
-                      }
-                      outerRadius={100}
-                      fill="#8884d8"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       dataKey="value"
                     >
                       {propertyTypeData.map((entry, index) => (
-                        <Cell
-                          key={`property-type-${entry.name}-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
+                        <Cell key={`property-type-${entry.name}-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip cursor={{fill: 'transparent'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
             {/* Bar Chart - Ownership Types */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{t("ownershipTypes")}</CardTitle>
+            <Card className="hover:shadow-md transition-all border-slate-200">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
+                <CardTitle className="text-lg text-slate-800 font-semibold">{t("ownershipTypes")}</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={ownershipChartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#3b82f6" />
+                  <BarChart data={ownershipChartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                    <Tooltip cursor={{fill: '#f1f5f9'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                    <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={50} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>

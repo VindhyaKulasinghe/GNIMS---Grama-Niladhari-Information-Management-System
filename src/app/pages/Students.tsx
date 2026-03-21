@@ -26,7 +26,7 @@ import {
 } from "../components/ui/dialog";
 import { Button } from "../components/ui/button";
 import { Search, GraduationCap, Home, Users, BarChart3, List, MapPin, Phone } from "lucide-react";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 export function Students() {
   const { t } = useTranslation();
@@ -118,108 +118,115 @@ export function Students() {
         <TabsContent value="overview" className="space-y-6">
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-blue-600 text-white border-blue-700">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <GraduationCap className="h-10 w-10 text-white/90" />
+            <Card className="hover:shadow-lg hover:scale-[1.02] transition-all bg-gradient-to-br from-white to-blue-50/50">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-blue-100">{t("totalStudents")}</p>
-                    <p className="text-3xl font-bold">{students.length}</p>
+                    <p className="text-xs font-semibold text-blue-600/80 uppercase tracking-wider mb-1">{t("totalStudents")}</p>
+                    <p className="text-3xl font-bold text-slate-800">{students.length}</p>
+                    <p className="text-xs text-slate-500 mt-1">{t("active") || "Active"}</p>
+                  </div>
+                  <div className="bg-blue-500 p-3 rounded-2xl shadow-sm text-white">
+                    <GraduationCap className="h-6 w-6" />
                   </div>
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-green-600 text-white border-green-700">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
-                    <Home className="h-6 w-6" />
+            
+            <Card className="hover:shadow-lg hover:scale-[1.02] transition-all bg-gradient-to-br from-white to-emerald-50/50">
+               <CardContent className="p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-emerald-600/80 uppercase tracking-wider mb-1">{t("institutions")}</p>
+                      <p className="text-3xl font-bold text-slate-800">{new Set(students.map((s) => s.institutionName)).size}</p>
+                      <p className="text-xs text-slate-500 mt-1">{t("schools") || "Schools/Universities"}</p>
+                    </div>
+                    <div className="bg-emerald-500 p-3 rounded-2xl shadow-sm text-white">
+                      <Users className="h-6 w-6" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-green-100">{t("households")}</p>
-                    <p className="text-3xl font-bold">
-                      {new Set(students.map((s) => s.houseNumber)).size}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
+                </CardContent>
             </Card>
-            <Card className="bg-orange-600 text-white border-orange-700">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
-                    <Users className="h-6 w-6" />
+            
+            <Card className="hover:shadow-lg hover:scale-[1.02] transition-all bg-gradient-to-br from-white to-amber-50/50">
+               <CardContent className="p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-amber-600/80 uppercase tracking-wider mb-1">{t("households")}</p>
+                      <p className="text-3xl font-bold text-slate-800">{new Set(students.map((s) => s.houseNumber)).size}</p>
+                      <p className="text-xs text-slate-500 mt-1">{t("withStudents") || "With Students"}</p>
+                    </div>
+                    <div className="bg-amber-500 p-3 rounded-2xl shadow-sm text-white">
+                      <Home className="h-6 w-6" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-orange-100">{t("institutions")}</p>
-                    <p className="text-3xl font-bold">
-                      {new Set(students.map((s) => s.institutionName)).size}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
+                </CardContent>
             </Card>
-            <Card className="bg-purple-600 text-white border-purple-700">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
-                    <span className="text-2xl font-bold">{Object.keys(gradeGroups).length}</span>
+            
+            <Card className="hover:shadow-lg hover:scale-[1.02] transition-all bg-gradient-to-br from-white to-purple-50/50">
+               <CardContent className="p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-purple-600/80 uppercase tracking-wider mb-1">{t("gradeLevels")}</p>
+                      <p className="text-3xl font-bold text-slate-800">{Object.keys(gradeGroups).length}</p>
+                      <p className="text-xs text-slate-500 mt-1">{t("differentGrades") || "Different Grades"}</p>
+                    </div>
+                    <div className="bg-purple-500 p-3 rounded-2xl shadow-sm text-white">
+                      <GraduationCap className="h-6 w-6" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-purple-100">{t("gradeLevels")}</p>
-                    <p className="text-xl font-semibold">{t("tracked")}</p>
-                  </div>
-                </div>
-              </CardContent>
+                </CardContent>
             </Card>
           </div>
 
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Pie Chart - Gender Distribution */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{t("genderDistribution")}</CardTitle>
+            <Card className="hover:shadow-md transition-all border-slate-200">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
+                <CardTitle className="text-lg text-slate-800 font-semibold">{t("genderDistribution")}</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
                       data={genderData}
                       cx="50%"
                       cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={5}
                       labelLine={false}
-                      label={({ name, value }) => `${name}: ${value}`}
-                      outerRadius={100}
-                      fill="#8884d8"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       dataKey="value"
                     >
                       {genderData.map((entry, index) => (
                         <Cell
                           key={`gender-${entry.name}-${index}`}
-                          fill={COLORS[index % COLORS.length]}
+                          fill={index === 0 ? "#3b82f6" : "#ec4899"} // Male / Female
                         />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip cursor={{fill: 'transparent'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
             {/* Bar Chart - Top Institutions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{t("topInstitutions")}</CardTitle>
+            <Card className="hover:shadow-md transition-all border-slate-200">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
+                <CardTitle className="text-lg text-slate-800 font-semibold">{t("topInstitutions")}</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={institutionData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" angle={-15} textAnchor="end" height={80} fontSize={11} />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#10b981" />
+                  <BarChart data={institutionData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="name" angle={-15} textAnchor="end" height={80} fontSize={11} axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                    <Tooltip cursor={{fill: '#f1f5f9'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                    <Bar dataKey="value" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={50} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -228,18 +235,18 @@ export function Students() {
 
           {/* Grade Distribution Chart */}
           {gradeData.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{t("studentsByGrade")}</CardTitle>
+            <Card className="hover:shadow-md transition-all border-slate-200 mt-6">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
+                <CardTitle className="text-lg text-slate-800 font-semibold">{t("studentsByGrade")}</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={gradeData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#3b82f6" />
+                  <BarChart data={gradeData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                    <Tooltip cursor={{fill: '#f1f5f9'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                    <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={50} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
