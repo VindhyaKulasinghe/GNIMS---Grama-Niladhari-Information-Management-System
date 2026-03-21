@@ -471,5 +471,9 @@
   "removeAnimal": "සතෙක් ඉවත් කරන්න",
   "increaseCount": "ගණන වැඩි කරන්න",
   "decreaseCount": "ගණන අඩු කරන්න",
-  "noAssignedAnimals": "මෙම නිවාසයට සතුන් අනුවාදනය කර නොමැත"
+  "noAssignedAnimals": "මෙම නිවාසයට සතුන් අනුවාදනය කර නොමැත",
+  "basicInformation": "මූලික තොරතුරු",
+  "noUtilitiesAvailable": "උපයෝගිතා නොමැත",
+  "householdMembers": "ගෘහස්ථ සාමාජිකයින්",
+  "head": "මූලිකයා"
 }

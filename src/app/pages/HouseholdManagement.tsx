@@ -1265,114 +1265,226 @@ export function HouseholdManagement() {
 
       {/* View Dialog */}
       <Dialog open={viewDialog} onOpenChange={setViewDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {t("householdDetails")} - {viewingHousehold?.houseNumber}
-            </DialogTitle>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl font-bold text-blue-700">
+                {t("householdDetails")}
+              </DialogTitle>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-blue-600">
+                  {viewingHousehold?.houseNumber}
+                </p>
+                <p className="text-sm text-gray-500">{t("houseNumber")}</p>
+              </div>
+            </div>
           </DialogHeader>
 
-          <div className="py-4">
-            <p className="text-sm text-gray-600 mb-4">
-              {t("viewDetailedHouseholdInfo")}
-            </p>
+          <div className="py-4 space-y-6">
+            {/* Quick Stats Header */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {(() => {
+                const householdMembers = getMembersForHouse(
+                  viewingHousehold?.houseNumber || "",
+                );
+                const head = householdMembers.find((m) => m.isHeadOfHousehold);
+                const totalAnimals = householdAnimals
+                  .filter(
+                    (ha) => ha.houseNumber === viewingHousehold?.houseNumber,
+                  )
+                  .reduce((sum, ha) => sum + ha.count, 0);
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                <div>
-                  <p className="font-medium">{t("houseNumber")}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Label className="text-xs text-gray-500">:</Label>
-                  <p className="font-medium">{viewingHousehold?.houseNumber}</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                <div>
-                  <p className="font-medium">{t("address")}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Label className="text-xs text-gray-500">:</Label>
-                  <p className="font-medium">{viewingHousehold?.address}</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                <div>
-                  <p className="font-medium">{t("telephone")}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Label className="text-xs text-gray-500">:</Label>
-                  <p className="font-medium">{viewingHousehold?.telephone}</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                <div>
-                  <p className="font-medium">{t("utilities")}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Label className="text-xs text-gray-500">:</Label>
-                  <div className="flex gap-1 text-xs">
+                return (
+                  <>
+                    <div className="bg-blue-50 p-4 rounded-lg text-center">
+                      <Users className="h-6 w-6 mx-auto mb-2 text-blue-600" />
+                      <p className="text-2xl font-bold text-blue-700">
+                        {householdMembers.length}
+                      </p>
+                      <p className="text-xs text-blue-600">{t("members")}</p>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-lg text-center">
+                      <PawPrint className="h-6 w-6 mx-auto mb-2 text-green-600" />
+                      <p className="text-2xl font-bold text-green-700">
+                        {totalAnimals}
+                      </p>
+                      <p className="text-xs text-green-600">{t("animals")}</p>
+                    </div>
+                    <div className="bg-purple-50 p-4 rounded-lg text-center">
+                      <Activity className="h-6 w-6 mx-auto mb-2 text-purple-600" />
+                      <p className="text-2xl font-bold text-purple-700">
+                        {viewingHousehold?.electricity &&
+                        viewingHousehold?.water &&
+                        viewingHousehold?.toilet
+                          ? "3"
+                          : (viewingHousehold?.electricity ? 1 : 0) +
+                            (viewingHousehold?.water ? 1 : 0) +
+                            (viewingHousehold?.toilet ? 1 : 0)}
+                      </p>
+                      <p className="text-xs text-purple-600">
+                        {t("utilities")}
+                      </p>
+                    </div>
+                    <div className="bg-orange-50 p-4 rounded-lg text-center">
+                      <Home className="h-6 w-6 mx-auto mb-2 text-orange-600" />
+                      <p className="text-2xl font-bold text-orange-700">
+                        {viewingHousehold?.roofType &&
+                        viewingHousehold?.wallType &&
+                        viewingHousehold?.floorType
+                          ? "3"
+                          : (viewingHousehold?.roofType ? 1 : 0) +
+                            (viewingHousehold?.wallType ? 1 : 0) +
+                            (viewingHousehold?.floorType ? 1 : 0)}
+                      </p>
+                      <p className="text-xs text-orange-600">
+                        {t("housingMaterials")}
+                      </p>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Main Content Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Basic Information Card */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Home className="h-5 w-5 text-blue-600" />
+                    {t("basicInformation")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm font-medium text-gray-600">
+                      {t("address")}
+                    </span>
+                    <span className="text-sm font-semibold">
+                      {viewingHousehold?.address}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm font-medium text-gray-600">
+                      {t("telephone")}
+                    </span>
+                    <span className="text-sm font-semibold">
+                      {viewingHousehold?.telephone}
+                    </span>
+                  </div>
+                  {(() => {
+                    const householdMembers = getMembersForHouse(
+                      viewingHousehold?.houseNumber || "",
+                    );
+                    const head = householdMembers.find(
+                      (m) => m.isHeadOfHousehold,
+                    );
+                    return (
+                      head && (
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-sm font-medium text-gray-600">
+                            {t("headOfHouseholdLabel")}
+                          </span>
+                          <span className="text-sm font-semibold text-blue-700">
+                            {head.fullName}
+                          </span>
+                        </div>
+                      )
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+
+              {/* Utilities Card */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Droplets className="h-5 w-5 text-blue-600" />
+                    {t("utilities")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
                     {viewingHousehold?.electricity && (
-                      <span
-                        className="bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded"
-                        title="Electricity"
-                      >
-                        ⚡
+                      <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+                        <Zap className="h-3 w-3" />
+                        {t("electricity")}
                       </span>
                     )}
                     {viewingHousehold?.water && (
-                      <span
-                        className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded"
-                        title="Water"
-                      >
-                        💧
+                      <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+                        <Droplets className="h-3 w-3" />
+                        {t("water")}
                       </span>
                     )}
                     {viewingHousehold?.toilet && (
-                      <span
-                        className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded"
-                        title="Toilet"
-                      >
-                        🚽
+                      <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+                        <Bath className="h-3 w-3" />
+                        {t("toilet")}
                       </span>
                     )}
+                    {!viewingHousehold?.electricity &&
+                      !viewingHousehold?.water &&
+                      !viewingHousehold?.toilet && (
+                        <p className="text-gray-500 text-sm italic w-full text-center py-2">
+                          {t("noUtilitiesAvailable")}
+                        </p>
+                      )}
                   </div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                <div>
-                  <p className="font-medium">{t("housingMaterials")}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Label className="text-xs text-gray-500">:</Label>
-                  <div className="text-xs text-gray-600 space-y-0.5">
-                    <div>
-                      {t("roof")}:{" "}
+                </CardContent>
+              </Card>
+
+              {/* Housing Materials Card */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Home className="h-5 w-5 text-orange-600" />
+                    {t("housingMaterials")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm font-medium text-gray-600">
+                      {t("roof")}
+                    </span>
+                    <span className="text-sm font-semibold">
                       {viewingHousehold?.roofType
                         ? t(viewingHousehold.roofType.toLowerCase())
-                        : "-"}
-                    </div>
-                    <div>
-                      {t("wall")}:{" "}
+                        : t("notSpecified")}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm font-medium text-gray-600">
+                      {t("wall")}
+                    </span>
+                    <span className="text-sm font-semibold">
                       {viewingHousehold?.wallType
                         ? t(viewingHousehold.wallType.toLowerCase())
-                        : "-"}
-                    </div>
-                    <div>
-                      {t("floor")}:{" "}
+                        : t("notSpecified")}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm font-medium text-gray-600">
+                      {t("floor")}
+                    </span>
+                    <span className="text-sm font-semibold">
                       {viewingHousehold?.floorType
                         ? t(viewingHousehold.floorType.toLowerCase())
-                        : "-"}
-                    </div>
+                        : t("notSpecified")}
+                    </span>
                   </div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                <div>
-                  <p className="font-medium">{t("assignedAnimals")}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Label className="text-xs text-gray-500">:</Label>
+                </CardContent>
+              </Card>
+
+              {/* Animals Card */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <PawPrint className="h-5 w-5 text-green-600" />
+                    {t("assignedAnimals")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   <div className="flex flex-wrap gap-2">
                     {householdAnimals
                       .filter(
@@ -1382,14 +1494,14 @@ export function HouseholdManagement() {
                       .map((ha) => (
                         <div
                           key={ha.animalId}
-                          className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm font-medium border border-green-200"
+                          className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-2 rounded-lg text-sm font-medium border border-green-200"
                         >
                           <PawPrint className="h-3 w-3" />
                           <span>
                             {animals.find((a) => a.id === ha.animalId)?.name ||
                               "Unknown"}
                           </span>
-                          <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs font-bold">
+                          <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs font-bold ml-1">
                             {ha.count}
                           </span>
                         </div>
@@ -1397,17 +1509,73 @@ export function HouseholdManagement() {
                     {householdAnimals.filter(
                       (ha) => ha.houseNumber === viewingHousehold?.houseNumber,
                     ).length === 0 && (
-                      <p className="text-gray-500 text-sm italic">
+                      <p className="text-gray-500 text-sm italic w-full text-center py-4">
                         {t("noAssignedAnimals")}
                       </p>
                     )}
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
+
+            {/* Members Summary */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  {t("householdMembers")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const householdMembers = getMembersForHouse(
+                    viewingHousehold?.houseNumber || "",
+                  );
+                  if (householdMembers.length === 0) {
+                    return (
+                      <p className="text-gray-500 text-sm italic text-center py-4">
+                        {t("noMembersRegistered")}
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {householdMembers.map((member) => (
+                        <div
+                          key={member.id}
+                          className={`p-3 rounded-lg border ${
+                            member.isHeadOfHousehold
+                              ? "bg-blue-50 border-blue-200"
+                              : "bg-gray-50 border-gray-200"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-sm">
+                                {member.fullName}
+                                {member.isHeadOfHousehold && (
+                                  <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                                    {t("head")}
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                {member.age} {t("years")},{" "}
+                                {t(member.gender.toLowerCase())}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="border-t pt-4">
             <Button
               onClick={() => setViewDialog(false)}
               className="bg-blue-600 hover:bg-blue-700"

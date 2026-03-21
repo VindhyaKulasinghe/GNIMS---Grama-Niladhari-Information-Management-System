@@ -430,5 +430,9 @@
   "removeAnimal": "விலங்கை அகற்று",
   "increaseCount": "எண்ணிக்கையை அதிகரிக்கவும்",
   "decreaseCount": "எண்ணிக்கையைக் குறைக்கவும்",
-  "noAssignedAnimals": "இந்த வீட்டிற்கு விலங்குகள் ஒதுக்கப்படவில்லை"
+  "noAssignedAnimals": "இந்த வீட்டிற்கு விலங்குகள் ஒதுக்கப்படவில்லை",
+  "basicInformation": "அடிப்படை தகவல்கள்",
+  "noUtilitiesAvailable": "பொதுப் பயன்பாடுகள் இல்லை",
+  "householdMembers": "வீட்டு உறுப்பினர்கள்",
+  "head": "தலைவர்"
 }

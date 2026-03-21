@@ -469,5 +469,9 @@
   "removeAnimal": "Remove Animal",
   "increaseCount": "Increase Count",
   "decreaseCount": "Decrease Count",
-  "noAssignedAnimals": "No animals assigned to this household"
+  "noAssignedAnimals": "No animals assigned to this household",
+  "basicInformation": "Basic Information",
+  "noUtilitiesAvailable": "No utilities available",
+  "householdMembers": "Household Members",
+  "head": "Head"
 }
