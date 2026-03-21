@@ -66,8 +66,8 @@ export function Reports() {
                   <report.icon className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <CardTitle className="text-lg">{report.title}</CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">{report.description}</p>
+                  <CardTitle>{report.title}</CardTitle>
+                  <p className="text-xs text-gray-600 mt-1">{report.description}</p>
                 </div>
               </div>
             </CardHeader>

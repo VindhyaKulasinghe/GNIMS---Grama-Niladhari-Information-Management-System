@@ -154,15 +154,15 @@ export function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {stats.map((stat, idx) => (
               <Card key={`stat-${idx}`} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
+                <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
-                      <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-                      <p className="text-xs text-gray-500 mt-2">{stat.change}</p>
+                      <p className="text-xs font-medium text-gray-600 mb-1">{stat.title}</p>
+                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                      <p className="text-xs text-gray-500 mt-1">{stat.change}</p>
                     </div>
-                    <div className={`${stat.color} p-4 rounded-lg`}>
-                      <stat.icon className="h-8 w-8 text-white" />
+                    <div className={`${stat.color} p-3 rounded-lg`}>
+                      <stat.icon className="h-6 w-6 text-white" />
                     </div>
                   </div>
                 </CardContent>
@@ -178,7 +178,7 @@ export function Dashboard() {
                 <CardTitle>{t("incomeDistribution")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={260}>
                   <BarChart id="income-chart" data={incomeData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="range" />
@@ -197,7 +197,7 @@ export function Dashboard() {
                 <CardTitle>{t("educationLevels")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={260}>
                   <PieChart id="education-chart">
                     <Pie
                       data={educationData}
@@ -226,7 +226,7 @@ export function Dashboard() {
                 <CardTitle>{t("employmentSectors")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={260}>
                   <BarChart id="employment-chart" data={employmentData} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" />

@@ -1,5 +1,6 @@
 :root {
   --font-sans: 'Inter', 'Noto Sans Sinhala', system-ui, -apple-system, sans-serif;
+
 }
 
 body {
@@ -8,15 +9,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Fix for Sinhala Unicode rendering */
-*:lang(si) {
-  font-family: 'Noto Sans Sinhala', sans-serif;
-  letter-spacing: normal !important;
-  text-transform: none !important;
-}
-
 /* Ensure common UI elements don't break Sinhala shaping */
-button, input, select, textarea, label {
+button,
+input,
+select,
+textarea,
+label {
   font-family: inherit;
   letter-spacing: inherit;
 }
