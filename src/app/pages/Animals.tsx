@@ -28,7 +28,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "../components/ui/dialog";
-import { Plus, Pencil, Trash2, Search, PawPrint, BarChart3, List, Home } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, PawPrint, BarChart3, List, Home, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
@@ -38,6 +38,8 @@ export function Animals() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAnimal, setEditingAnimal] = useState<Animal | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [animalToDelete, setAnimalToDelete] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Animal>>({});
   
   // View dialog state
@@ -62,9 +64,17 @@ export function Animals() {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm(t("confirmDeleteAnimalType"))) {
-      await deleteAnimal(id);
+  const handleDeleteClick = (id: number) => {
+    setAnimalToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (animalToDelete !== null) {
+      await deleteAnimal(animalToDelete);
+      toast.success(t("animalDeleted") || "Animal type deleted successfully.");
+      setDeleteDialogOpen(false);
+      setAnimalToDelete(null);
     }
   };
 
@@ -388,7 +398,7 @@ export function Animals() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleDelete(animal.id)}
+                                onClick={() => handleDeleteClick(animal.id)}
                               >
                                 <Trash2 className="h-4 w-4 text-red-500" />
                               </Button>
@@ -545,6 +555,28 @@ export function Animals() {
           <DialogFooter>
             <Button onClick={() => setViewDialog(false)} className="bg-blue-600 hover:bg-blue-700">
               {t("close")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              {t("confirmDelete")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-gray-600 text-sm">{t("confirmDeleteAnimalType")}</p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmDelete}>
+              {t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

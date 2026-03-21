@@ -55,6 +55,7 @@ import {
   Loader2,
   AlertCircle,
   Users,
+  AlertTriangle,
 } from "lucide-react";
 import {
   PieChart,
@@ -87,6 +88,8 @@ export function PropertyLand() {
   const [formData, setFormData] = useState<Partial<Property>>(
     {},
   );
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState<number | null>(null);
   const [userId, setUserId] = useState("");
   const [userValidation, setUserValidation] = useState<
     "idle" | "validating" | "valid" | "invalid"
@@ -142,13 +145,17 @@ export function PropertyLand() {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (
-      confirm(
-        t("confirmDeleteProperty"),
-      )
-    ) {
-      await deleteProperty(id);
+  const handleDeleteClick = (id: number) => {
+    setPropertyToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (propertyToDelete !== null) {
+      await deleteProperty(propertyToDelete);
+      toast.success(t("propertyDeleted") || "Property deleted successfully.");
+      setDeleteDialogOpen(false);
+      setPropertyToDelete(null);
     }
   };
 
@@ -514,7 +521,7 @@ export function PropertyLand() {
                               variant="ghost"
                               size="sm"
                               onClick={() =>
-                                handleDelete(property.id)
+                                handleDeleteClick(property.id)
                               }
                             >
                               <Trash2 className="h-4 w-4 text-red-500" />
@@ -953,6 +960,27 @@ export function PropertyLand() {
           <DialogFooter>
             <Button onClick={() => setViewDialog(false)} className="bg-blue-600 hover:bg-blue-700">
               {t("close")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              {t("confirmDelete")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-gray-600 text-sm">{t("confirmDeleteProperty") || "Are you sure you want to delete this property?"}</p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmDelete}>
+              {t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

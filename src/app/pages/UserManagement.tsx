@@ -26,7 +26,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "../components/ui/dialog";
-import { Plus, Pencil, Trash2, Search, Shield, User } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Shield, User, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "../components/ui/badge";
 import * as userService from "../../lib/services/userService";
 import { User as UserType } from "../../lib/validationSchemas";
@@ -37,6 +38,8 @@ export function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<UserType>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,14 +80,23 @@ export function UserManagement() {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (id: string | undefined) => {
+  const handleDeleteClick = (id: string | undefined) => {
     if (!id) return;
-    if (confirm(t("confirmDeleteUser"))) {
+    setUserToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (userToDelete) {
       try {
-        await userService.deleteUser(id);
-        setUsers(users.filter(u => u.id !== id));
+        await userService.deleteUser(userToDelete);
+        setUsers(users.filter(u => u.id !== userToDelete));
+        toast.success(t("userDeleted") || "User deleted successfully.");
       } catch (err) {
         setError(err instanceof Error ? err.message : t("failedDeleteUser"));
+      } finally {
+        setDeleteDialogOpen(false);
+        setUserToDelete(null);
       }
     }
   };
@@ -115,6 +127,7 @@ export function UserManagement() {
         });
         setUsers([newUser, ...users]);
       }
+      toast.success(t("userSaved") || "User saved successfully.");
       setDialogOpen(false);
       setError(null);
     } catch (err) {
@@ -205,7 +218,7 @@ export function UserManagement() {
                         <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(user.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(user.id)}>
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>
                       </div>
@@ -282,6 +295,27 @@ export function UserManagement() {
             </Button>
             <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
               {t("save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              {t("confirmDelete")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-gray-600 text-sm">{t("confirmDeleteUser")}</p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmDelete}>
+              {t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

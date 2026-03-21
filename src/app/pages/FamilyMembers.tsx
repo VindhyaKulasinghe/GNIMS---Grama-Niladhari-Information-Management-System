@@ -48,6 +48,7 @@ import {
   MapPin,
   CheckCircle2,
   XCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
@@ -98,6 +99,8 @@ export function FamilyMembers() {
   const [viewHouseDialog, setViewHouseDialog] = useState(false);
   const [viewingHouse, setViewingHouse] = useState<Household | null>(null);
   const [viewMemberDialog, setViewMemberDialog] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<number | null>(null);
   const [viewingMember, setViewingMember] = useState<FamilyMember | null>(null);
 
   // Filtered houses in search view
@@ -155,9 +158,17 @@ export function FamilyMembers() {
   };
 
   // ---- Delete member ----
-  const handleDeleteMember = async (id: number) => {
-    if (confirm(t("confirmDelete"))) {
-      await deleteFamilyMember(id);
+  const handleDeleteMemberClick = (id: number) => {
+    setMemberToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (memberToDelete !== null) {
+      await deleteFamilyMember(memberToDelete);
+      toast.success(t("memberDeleted") || "Family member deleted successfully.");
+      setDeleteDialogOpen(false);
+      setMemberToDelete(null);
     }
   };
 
@@ -762,7 +773,7 @@ export function FamilyMembers() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleDeleteMember(member.id)}
+                                  onClick={() => handleDeleteMemberClick(member.id)}
                                 >
                                   <Trash2 className="h-4 w-4 text-red-500" />
                                 </Button>
@@ -1485,6 +1496,28 @@ export function FamilyMembers() {
                {t("editMember")}
              </Button>
              <Button onClick={() => setViewMemberDialog(false)}>{t("close")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              {t("confirmDelete")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-gray-600 text-sm">{t("confirmDeleteMember") || "Are you sure you want to delete this member?"}</p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmDelete}>
+              {t("delete")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

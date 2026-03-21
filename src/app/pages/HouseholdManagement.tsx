@@ -56,6 +56,8 @@ export function HouseholdManagement() {
   const [animalsDialogOpen, setAnimalsDialogOpen] = useState(false);
   const [selectedHouseNumber, setSelectedHouseNumber] = useState("");
   const [editingHousehold, setEditingHousehold] = useState<Household | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [householdToDelete, setHouseholdToDelete] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Household>>({
     electricity: false,
     water: false,
@@ -110,9 +112,17 @@ export function HouseholdManagement() {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm(t("confirmDelete"))) {
-      await deleteHousehold(id);
+  const handleDeleteClick = (id: number) => {
+    setHouseholdToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (householdToDelete !== null) {
+      await deleteHousehold(householdToDelete);
+      toast.success(t("householdDeleted") || "Household deleted successfully.");
+      setDeleteDialogOpen(false);
+      setHouseholdToDelete(null);
     }
   };
 
@@ -604,7 +614,7 @@ export function HouseholdManagement() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleDelete(household.id)}
+                                onClick={() => handleDeleteClick(household.id)}
                               >
                                 <Trash2 className="h-4 w-4 text-red-500" />
                               </Button>
@@ -1039,6 +1049,27 @@ export function HouseholdManagement() {
           <DialogFooter>
             <Button onClick={() => setViewDialog(false)} className="bg-blue-600 hover:bg-blue-700">
               {t("close")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              {t("confirmDelete")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-gray-600 text-sm">{t("confirmDeleteHousehold") || "Are you sure you want to delete this household?"}</p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmDelete}>
+              {t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

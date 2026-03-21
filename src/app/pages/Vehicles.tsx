@@ -29,7 +29,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "../components/ui/dialog";
-import { Plus, Pencil, Trash2, Search, Car, BarChart3, List, Check, Loader2, AlertCircle, Home } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Car, BarChart3, List, Check, Loader2, AlertCircle, Home, AlertTriangle } from "lucide-react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export function Vehicles() {
@@ -38,6 +38,8 @@ export function Vehicles() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [vehicleToDelete, setVehicleToDelete] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Vehicle>>({});
   const [userId, setUserId] = useState("");
   const [userValidation, setUserValidation] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
@@ -81,9 +83,17 @@ export function Vehicles() {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm(t("confirmDeleteVehicle"))) {
-      await deleteVehicle(id);
+  const handleDeleteClick = (id: number) => {
+    setVehicleToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (vehicleToDelete !== null) {
+      await deleteVehicle(vehicleToDelete);
+      toast.success(t("vehicleDeleted") || "Vehicle deleted successfully.");
+      setDeleteDialogOpen(false);
+      setVehicleToDelete(null);
     }
   };
 
@@ -395,7 +405,7 @@ export function Vehicles() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDelete(vehicle.id)}
+                              onClick={() => handleDeleteClick(vehicle.id)}
                             >
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
@@ -643,6 +653,28 @@ export function Vehicles() {
           <DialogFooter>
             <Button onClick={() => setViewDialog(false)} className="bg-blue-600 hover:bg-blue-700">
               {t("close")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              {t("confirmDelete")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-gray-600 text-sm">{t("confirmDeleteVehicle")}</p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmDelete}>
+              {t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>
