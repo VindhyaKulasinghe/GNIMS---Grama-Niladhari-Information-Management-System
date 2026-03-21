@@ -16,14 +16,38 @@ import { NotFound } from "./pages/NotFound";
 import { HouseholdDataProvider } from "./context/HouseholdDataContext";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { LoadingScreen } from "./components/LoadingScreen";
+import { useAuth } from "./context/AuthContext";
+import { useHouseholdData } from "./context/HouseholdDataContext";
+
+import { LoadingProvider, useLoading } from "./context/LoadingContext";
+
+function LoadingWrapper({ children }: { children: React.ReactNode }) {
+  const { loading: authLoading } = useAuth();
+  const { loading: dataLoading } = useHouseholdData();
+  const { isLoading: manualLoading } = useLoading();
+  
+  const isLoading = authLoading || dataLoading || manualLoading;
+
+  return (
+    <>
+      <LoadingScreen isVisible={isLoading} />
+      {children}
+    </>
+  );
+}
 
 function RootWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider>
-      <HouseholdDataProvider>
-        {children}
-      </HouseholdDataProvider>
-    </AuthProvider>
+    <LoadingProvider>
+      <AuthProvider>
+        <HouseholdDataProvider>
+          <LoadingWrapper>
+            {children}
+          </LoadingWrapper>
+        </HouseholdDataProvider>
+      </AuthProvider>
+    </LoadingProvider>
   );
 }
 

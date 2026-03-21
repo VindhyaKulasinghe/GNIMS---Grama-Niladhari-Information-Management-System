@@ -40,9 +40,49 @@ import { toast } from "sonner";
 import { Badge } from "../components/ui/badge";
 import * as userService from "../../lib/services/userService";
 import { User as UserType } from "../../lib/validationSchemas";
+import { useLoading } from "../context/LoadingContext";
+import Lottie from "lottie-react";
+import comingSoonAnimation from "../components/comingsoon.json";
+
+// Toggle this variable to show/hide the User Management page during development
+const IS_UNDER_DEVELOPMENT = true;
+
+function ComingSoonView() {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+      <div className="w-80 h-80 lg:w-[450px] lg:h-[450px]">
+        <Lottie
+          animationData={comingSoonAnimation}
+          loop={true}
+          autoPlay={true}
+        />
+      </div>
+      <div className="max-w-md space-y-4 -mt-8 relative z-10">
+        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          {t("userManagement")}
+        </h2>
+        <div className="inline-flex items-center px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold uppercase tracking-widest animate-pulse">
+          <AlertTriangle className="h-3 w-3 mr-1.5" />
+          {t("underDevelopment") || "Under Development"}
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          {t("userManagementComingSoon") || 
+            "We are currently perfecting the User Management system to ensure the highest security and performance. This feature will be available shortly."}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export function UserManagement() {
   const { t } = useTranslation();
+  
+  if (IS_UNDER_DEVELOPMENT) {
+    return <ComingSoonView />;
+  }
+
   const [users, setUsers] = useState<UserType[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -50,8 +90,8 @@ export function UserManagement() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<UserType>>({});
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { setIsLoading } = useLoading();
 
   // Loading states for operations
   const [savingUser, setSavingUser] = useState(false);
@@ -64,7 +104,7 @@ export function UserManagement() {
 
   const loadUsers = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       setError(null);
       const data = await userService.getUsers();
       setUsers(data);
@@ -72,7 +112,7 @@ export function UserManagement() {
       setError(err instanceof Error ? err.message : t("failedLoadUsers"));
       console.error(err);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -206,73 +246,67 @@ export function UserManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8">
-              {t("loading") || "Loading..."}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("name")}</TableHead>
-                  <TableHead>{t("email")}</TableHead>
-                  <TableHead>{t("role")}</TableHead>
-                  <TableHead>{t("division")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
-                  <TableHead className="text-right">{t("actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-400" />
-                        {user.name}
-                      </div>
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Badge className={getRoleBadge(user.role)}>
-                        <Shield className="h-3 w-3 mr-1" />
-                        {user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{user.division}</TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          user.status === "Active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-700"
-                        }
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("name")}</TableHead>
+                <TableHead>{t("email")}</TableHead>
+                <TableHead>{t("role")}</TableHead>
+                <TableHead>{t("division")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead className="text-right">{t("actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-gray-400" />
+                      {user.name}
+                    </div>
+                  </TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Badge className={getRoleBadge(user.role)}>
+                      <Shield className="h-3 w-3 mr-1" />
+                      {user.role}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{user.division}</TableCell>
+                  <TableCell>
+                    <Badge
+                      className={
+                        user.status === "Active"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-100 text-gray-700"
+                      }
+                    >
+                      {user.status === "Active" ? t("active") : t("inactive")}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(user)}
                       >
-                        {user.status === "Active" ? t("active") : t("inactive")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(user)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteClick(user.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteClick(user.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 

@@ -42,40 +42,38 @@ export async function createUser(
 ): Promise<User> {
   try {
     const validated = UserSchema.omit({ id: true, createdAt: true, updatedAt: true }).parse(user)
+    // 1. Create user in Supabase Auth via the secure RPC (SECURITY DEFINER)
+    // This avoids using the Service Role Key in the browser
+    const { data: authData, error: authError } = await supabase.rpc('create_user_admin', {
+      user_email: validated.email,
+      user_password: password || 'Welcome@123',
+      user_name: validated.name,
+      user_role: validated.role,
+      user_division: validated.division
+    });
 
-    // 1. Create Auth user first (requires service role / admin privileges)
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: validated.email,
-      password: password || 'Welcome@123', // Default password if none provided
-      email_confirm: true,
-      user_metadata: {
-        full_name: validated.name,
-        role: validated.role,
-        division: validated.division
-      }
-    })
-
-    if (authError) throw authError
-
-    // 2. Insert into the public users table using the same UUID
-    const { data, error } = await supabase
-      .from('users')
-      .insert([{
-        ...validated,
-        id: authUser.user.id // Use the auth user id
-      }])
-      .select()
-      .single()
-
-    if (error) {
-      // Cleanup auth user if database insertion fails
-      await supabaseAdmin.auth.admin.deleteUser(authUser.user.id)
-      throw error
+    if (authError) {
+      console.error('Auth RPC Error:', authError);
+      throw new Error(authError.message || 'Failed to create authentication account');
     }
-    return data
+
+    if (!authData) {
+      throw new Error('No data returned from user creation');
+    }
+
+    // Success! The RPC handled both Auth and Public User insertion.
+    // We fetch the newly created user to return it.
+    const { data: newUser, error: fetchError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', authData)
+      .single();
+
+    if (fetchError) throw fetchError;
+    return newUser;
   } catch (error) {
-    console.error('Error creating user:', error)
-    throw error
+    console.error('Error in createUser:', error);
+    throw error;
   }
 }
 
