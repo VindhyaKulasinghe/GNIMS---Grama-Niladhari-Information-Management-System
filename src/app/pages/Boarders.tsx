@@ -9,7 +9,7 @@ import {
 } from "../components/ui/dialog";
 import { Button } from "../components/ui/button";
 import { useState } from "react";
-import { useLanguage } from "../context/LanguageContext";
+import { useTranslation } from "react-i18next";
 import { useHouseholdData } from "../context/HouseholdDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -37,7 +37,7 @@ const PURPOSE_COLORS: Record<string, string> = {
 };
 
 export function Boarders() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const { getBoarders, households } = useHouseholdData();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -61,24 +61,24 @@ export function Boarders() {
   };
 
   const purposeGroups = boarders.reduce<Record<string, number>>((acc, b) => {
-    const p = b.purpose || "Other";
+    const p = b.purpose || "other";
     acc[p] = (acc[p] || 0) + 1;
     return acc;
   }, {});
 
   // Analytics data for charts
   const genderData = [
-    { name: "Male", value: boarders.filter((b) => b.gender === "Male").length },
-    { name: "Female", value: boarders.filter((b) => b.gender === "Female").length },
+    { name: t("male"), value: boarders.filter((b) => b.gender === "Male").length },
+    { name: t("female"), value: boarders.filter((b) => b.gender === "Female").length },
   ].filter(item => item.value > 0);
 
   const purposeData = Object.entries(purposeGroups).map(([name, value]) => ({
-    name,
+    name: t(name.toLowerCase()) || name,
     value,
   }));
 
   const countryGroups = boarders.reduce<Record<string, number>>((acc, b) => {
-    const country = b.boarderCountry || "Unknown";
+    const country = b.boarderCountry || t("unknown");
     acc[country] = (acc[country] || 0) + 1;
     return acc;
   }, {});
@@ -99,8 +99,7 @@ export function Boarders() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">{t("boarders")}</h1>
           <p className="text-slate-600 mt-1">
-            Boarders registered across all households. To add a boarder, go to{" "}
-            <strong>Family Member Registry</strong> and set member type to "Boarder".
+            {t("boardersDescription")}
           </p>
         </div>
       </div>
@@ -109,11 +108,11 @@ export function Boarders() {
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="overview" className="gap-2">
             <BarChart3 className="h-4 w-4" />
-            Overview
+            {t("overview")}
           </TabsTrigger>
           <TabsTrigger value="all-boarders" className="gap-2">
             <List className="h-4 w-4" />
-            All Boarders
+            {t("allBoarders")}
           </TabsTrigger>
         </TabsList>
 
@@ -126,7 +125,7 @@ export function Boarders() {
                 <div className="flex items-center gap-4">
                   <UserCheck className="h-10 w-10 text-white/90" />
                   <div>
-                    <p className="text-sm text-blue-100">Total Boarders</p>
+                    <p className="text-sm text-blue-100">{t("totalBoarders")}</p>
                     <p className="text-3xl font-bold">{boarders.length}</p>
                   </div>
                 </div>
@@ -139,7 +138,7 @@ export function Boarders() {
                     <Home className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-sm text-green-100">Households</p>
+                    <p className="text-sm text-green-100">{t("households")}</p>
                     <p className="text-3xl font-bold">
                       {new Set(boarders.map((b) => b.houseNumber)).size}
                     </p>
@@ -154,7 +153,7 @@ export function Boarders() {
                     <Briefcase className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-sm text-orange-100">For Employment</p>
+                    <p className="text-sm text-orange-100">{t("forEmployment")}</p>
                     <p className="text-3xl font-bold">
                       {boarders.filter((b) => b.purpose === "Job").length}
                     </p>
@@ -169,8 +168,8 @@ export function Boarders() {
                     <span className="text-2xl font-bold">{Object.keys(purposeGroups).length}</span>
                   </div>
                   <div>
-                    <p className="text-sm text-purple-100">Stay Purposes</p>
-                    <p className="text-xl font-semibold">Tracked</p>
+                    <p className="text-sm text-purple-100">{t("stayPurposes")}</p>
+                    <p className="text-xl font-semibold">{t("tracked")}</p>
                   </div>
                 </div>
               </CardContent>
@@ -182,7 +181,7 @@ export function Boarders() {
             {/* Pie Chart - Purpose Distribution */}
             <Card>
               <CardHeader>
-                <CardTitle>Purpose of Stay</CardTitle>
+                <CardTitle>{t("purposeOfStay")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -213,7 +212,7 @@ export function Boarders() {
             {/* Pie Chart - Gender Distribution */}
             <Card>
               <CardHeader>
-                <CardTitle>Gender Distribution</CardTitle>
+                <CardTitle>{t("genderDistribution")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -246,7 +245,7 @@ export function Boarders() {
           {countryData.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Top Countries of Origin</CardTitle>
+                <CardTitle>{t("topCountriesOrigin")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -270,7 +269,7 @@ export function Boarders() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
-                  placeholder="Search by name, house number, purpose, or country..."
+                  placeholder={t("searchBoardersPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -282,15 +281,15 @@ export function Boarders() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Unique No.</TableHead>
-                      <TableHead>Full Name</TableHead>
-                      <TableHead>House No.</TableHead>
-                      <TableHead>Address</TableHead>
-                      <TableHead>Age / Gender</TableHead>
-                      <TableHead>NIC</TableHead>
-                      <TableHead>Purpose</TableHead>
-                      <TableHead>Country of Origin</TableHead>
-                      <TableHead>Employment</TableHead>
+                      <TableHead>{t("uniqueNo")}</TableHead>
+                      <TableHead>{t("fullName")}</TableHead>
+                      <TableHead>{t("houseNo")}</TableHead>
+                      <TableHead>{t("address")}</TableHead>
+                      <TableHead>{t("ageGender")}</TableHead>
+                      <TableHead>{t("nic")}</TableHead>
+                      <TableHead>{t("purpose")}</TableHead>
+                      <TableHead>{t("countryOrigin")}</TableHead>
+                      <TableHead>{t("employment")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -316,7 +315,7 @@ export function Boarders() {
                           {getHouseAddress(boarder.houseNumber)}
                         </TableCell>
                         <TableCell className="text-xs">
-                          {boarder.age} / {boarder.gender}
+                          {boarder.age} / {boarder.gender ? t(boarder.gender.toLowerCase()) : "-"}
                         </TableCell>
                         <TableCell className="text-xs text-gray-500">
                           {boarder.nicNumber || "-"}
@@ -328,7 +327,7 @@ export function Boarders() {
                               "bg-gray-100 text-gray-600"
                             }`}
                           >
-                            {boarder.purpose || "-"}
+                            {boarder.purpose ? t(boarder.purpose.toLowerCase()) : "-"}
                           </span>
                         </TableCell>
                         <TableCell className="text-sm">
@@ -337,9 +336,9 @@ export function Boarders() {
                         <TableCell className="text-xs text-gray-600">
                           {boarder.jobType ? (
                             <span>
-                              {boarder.jobType}
+                              {t(boarder.jobType.toLowerCase()) || boarder.jobType}
                               {boarder.sector && (
-                                <span className="text-gray-400"> ({boarder.sector})</span>
+                                <span className="text-gray-400"> ({t(boarder.sector.toLowerCase()) || boarder.sector})</span>
                               )}
                             </span>
                           ) : (
@@ -352,8 +351,8 @@ export function Boarders() {
                       <TableRow>
                         <TableCell colSpan={9} className="text-center text-gray-400 py-8">
                           {boarders.length === 0
-                            ? "No boarders registered yet. Add members with type 'Boarder' in Family Member Registry."
-                            : "No boarders match your search."}
+                            ? t("noBoardersRegistered")
+                            : t("noBoardersMatch")}
                         </TableCell>
                       </TableRow>
                     )}
@@ -371,7 +370,7 @@ export function Boarders() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserCheck className="h-5 w-5 text-amber-600" />
-              Boarder Details
+              {t("boarderDetails")}
             </DialogTitle>
           </DialogHeader>
           {viewingBoarder && (
@@ -381,15 +380,15 @@ export function Boarders() {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-2">{viewingBoarder.fullName}</h3>
-                    <p className="text-amber-700 font-medium">ID: {viewingBoarder.uniqueNumber}</p>
+                    <p className="text-amber-700 font-medium">{t("id")}: {viewingBoarder.uniqueNumber}</p>
                   </div>
                   <span className="bg-amber-100 text-amber-700 text-xs px-3 py-1.5 rounded-full font-medium">
-                    Boarder
+                    {t("boarder")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-amber-700">
                   <Home className="h-4 w-4" />
-                  <span className="font-medium">House {viewingBoarder.houseNumber}</span>
+                  <span className="font-medium">{t("house")} {viewingBoarder.houseNumber}</span>
                   <span className="text-amber-400">•</span>
                   <span className="text-sm">{getHouseAddress(viewingBoarder.houseNumber)}</span>
                 </div>
@@ -397,33 +396,33 @@ export function Boarders() {
 
               {/* Personal Information */}
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">Personal Information</h4>
+                <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">{t("personalInformation")}</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">National ID (NIC)</p>
-                    <p className="font-medium text-gray-900">{viewingBoarder.nicNumber || "Not provided"}</p>
+                    <p className="text-sm text-gray-600">{t("nic")}</p>
+                    <p className="font-medium text-gray-900">{viewingBoarder.nicNumber || t("notProvided")}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Birth Year</p>
+                    <p className="text-sm text-gray-600">{t("birthYear")}</p>
                     <p className="font-medium text-gray-900">
-                      {viewingBoarder.birthYear} <span className="text-sm text-gray-500">(Age: {viewingBoarder.age})</span>
+                      {viewingBoarder.birthYear} <span className="text-sm text-gray-500">({t("age")}: {viewingBoarder.age})</span>
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Gender</p>
-                    <p className="font-medium text-gray-900">{viewingBoarder.gender}</p>
+                    <p className="text-sm text-gray-600">{t("gender")}</p>
+                    <p className="font-medium text-gray-900">{t(viewingBoarder.gender.toLowerCase()) || viewingBoarder.gender}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Nationality</p>
+                    <p className="text-sm text-gray-600">{t("nationality")}</p>
                     <p className="font-medium text-gray-900">{viewingBoarder.nationality}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Religion</p>
-                    <p className="font-medium text-gray-900">{viewingBoarder.religion}</p>
+                    <p className="text-sm text-gray-600">{t("religion")}</p>
+                    <p className="font-medium text-gray-900">{t(viewingBoarder.religion.toLowerCase()) || viewingBoarder.religion}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Marital Status</p>
-                    <p className="font-medium text-gray-900">{viewingBoarder.maritalStatus}</p>
+                    <p className="text-sm text-gray-600">{t("maritalStatus")}</p>
+                    <p className="font-medium text-gray-900">{t(viewingBoarder.maritalStatus.toLowerCase()) || viewingBoarder.maritalStatus}</p>
                   </div>
                 </div>
               </div>
@@ -432,16 +431,16 @@ export function Boarders() {
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <h4 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
                   <UserCheck className="h-5 w-5" />
-                  Boarder Information
+                  {t("boarderInformation")}
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-amber-600">Purpose of Stay</p>
-                    <p className="font-medium text-amber-900">{viewingBoarder.purpose || "Not specified"}</p>
+                    <p className="text-sm text-amber-600">{t("purposeOfStay")}</p>
+                    <p className="font-medium text-amber-900">{viewingBoarder.purpose ? t(viewingBoarder.purpose.toLowerCase()) : t("notSpecified")}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-amber-600">Country/District of Origin</p>
-                    <p className="font-medium text-amber-900">{viewingBoarder.boarderCountry || viewingBoarder.boarderDistrict || "Not specified"}</p>
+                    <p className="text-sm text-amber-600">{t("countryDistrictOrigin")}</p>
+                    <p className="font-medium text-amber-900">{viewingBoarder.boarderCountry || viewingBoarder.boarderDistrict || t("notSpecified")}</p>
                   </div>
                 </div>
               </div>
@@ -449,19 +448,19 @@ export function Boarders() {
               {/* Employment Information */}
               {viewingBoarder.jobType && (
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">Employment & Income</h4>
+                  <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">{t("employmentAndIncome")}</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-600">Job Type</p>
+                      <p className="text-sm text-gray-600">{t("jobType")}</p>
                       <p className="font-medium text-gray-900">{viewingBoarder.jobType}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Employment Sector</p>
-                      <p className="font-medium text-gray-900">{viewingBoarder.sector || "Not specified"}</p>
+                      <p className="text-sm text-gray-600">{t("employmentSector")}</p>
+                      <p className="font-medium text-gray-900">{t(viewingBoarder.sector.toLowerCase()) || viewingBoarder.sector || t("notSpecified")}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Monthly Income</p>
-                      <p className="font-medium text-gray-900">{viewingBoarder.monthlyIncome || "Not specified"}</p>
+                      <p className="text-sm text-gray-600">{t("monthlyIncome")}</p>
+                      <p className="font-medium text-gray-900">{viewingBoarder.monthlyIncome || t("notSpecified")}</p>
                     </div>
                   </div>
                 </div>
@@ -469,7 +468,7 @@ export function Boarders() {
             </div>
           )}
           <DialogFooter>
-            <Button onClick={() => setViewDialog(false)}>Close</Button>
+            <Button onClick={() => setViewDialog(false)}>{t("close")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -45,6 +45,7 @@ export const FamilyMemberSchema = z.object({
   institutionName: z.string().optional(),
   purpose: z.string().optional(),
   boarderDistrict: z.string().optional(),
+  boarderCountry: z.string().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 })

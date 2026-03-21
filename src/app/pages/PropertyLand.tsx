@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLanguage } from "../context/LanguageContext";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
   useHouseholdData,
@@ -70,7 +70,7 @@ import {
 } from "recharts";
 
 export function PropertyLand() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const {
     properties,
     addProperty,
@@ -121,7 +121,7 @@ export function PropertyLand() {
   const handleEdit = (property: Property) => {
     setEditingProperty(property);
     setFormData(property);
-    setUserId(property.userId);
+    setUserId(property.userId || "");
     // Auto-validate for editing
     const member = familyMembers.find(
       (m) => m.id.toString() === property.userId,
@@ -144,7 +144,7 @@ export function PropertyLand() {
   const handleDelete = async (id: number) => {
     if (
       confirm(
-        "Are you sure you want to delete this property record?",
+        t("confirmDeleteProperty"),
       )
     ) {
       await deleteProperty(id);
@@ -198,30 +198,32 @@ export function PropertyLand() {
       !formData.propertyType ||
       !formData.oppuNumber ||
       !formData.landSize ||
-      !formData.ownership ||
+      !formData.ownershipType || // Changed from ownership to ownershipType
       userValidation !== "valid"
     ) {
-      if (!formData.propertyType) errors.propertyType = "Property type is required";
-      if (!formData.oppuNumber) errors.oppuNumber = "OPPU number is required";
-      if (!formData.landSize) errors.landSize = "Land size is required";
-      if (!formData.ownership) errors.ownership = "Ownership type is required";
-      if (userValidation !== "valid") errors.userId = "Please validate the NIC before saving";
+      if (!formData.propertyType) errors.propertyType = t("propertyTypeRequired");
+      if (!formData.oppuNumber) errors.oppuNumber = t("oppuNumberRequired");
+      if (!formData.landSize) errors.landSize = t("landSizeRequired");
+      if (!formData.ownership) errors.ownership = t("ownershipTypeRequired");
+      if (userValidation !== "valid") errors.userId = t("validateNicPrompt");
 
-      (formData as any).__errors = errors;
-      toast.error("Please fix the highlighted property form errors.");
-      return;
+      if (Object.keys(errors).length > 0) {
+        (formData as any).__errors = errors;
+        toast.error(t("fixFormErrors"));
+        return;
+      }
     }
 
     const { __errors, ...cleanForm } = formData as any;
 
     if (editingProperty) {
-      const { id, createdAt, updatedAt, userId, ...rest } = (cleanForm as Property) as any;
-      await updateProperty(editingProperty.id, rest);
-      toast.success("Property updated successfully.");
+      const { id, createdAt, updatedAt, userId, ...rest } = (cleanForm as Property) as any; // Kept Property type
+      await updateProperty(editingProperty.id, rest); // Kept updateProperty
+      toast.success(t("propertyUpdated"));
     } else {
-      const { id, createdAt, updatedAt, userId, ...rest } = (cleanForm as Property) as any;
-      await addProperty(rest);
-      toast.success("Property added successfully.");
+      const { id, createdAt, updatedAt, userId, ...rest } = (cleanForm as Property) as any; // Kept Property type
+      await addProperty(rest); // Kept addProperty
+      toast.success(t("propertyAdded"));
     }
     setDialogOpen(false);
   };
@@ -239,7 +241,7 @@ export function PropertyLand() {
   const propertyTypeData = Object.entries(
     propertyTypeCounts,
   ).map(([name, value]) => ({
-    name,
+    name: t(name.toLowerCase()) || name,
     value,
   }));
 
@@ -254,7 +256,7 @@ export function PropertyLand() {
 
   const ownershipChartData = Object.entries(ownershipData).map(
     ([name, value]) => ({
-      name,
+      name: t(name.toLowerCase()) || name,
       value,
     }),
   );
@@ -276,19 +278,12 @@ export function PropertyLand() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">
-            {t("propertyLand")}
-          </h1>
-          <p className="text-slate-600 mt-1">
-            Property and land ownership management system
-          </p>
+          <h1 className="text-3xl font-bold text-slate-900">{t("propertyLand")}</h1>
+          <p className="text-slate-600 mt-1">{t("propertyLandDescription")}</p>
         </div>
-        <Button
-          onClick={handleAdd}
-          className="bg-slate-900 hover:bg-slate-800"
-        >
+        <Button onClick={handleAdd} className="bg-slate-900 hover:bg-slate-800">
           <Plus className="h-4 w-4 mr-2" />
-          {t("add")} Property
+          {t("add")} {t("property")}
         </Button>
       </div>
 
@@ -296,14 +291,11 @@ export function PropertyLand() {
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="overview" className="gap-2">
             <BarChart3 className="h-4 w-4" />
-            Overview
+            {t("overview")}
           </TabsTrigger>
-          <TabsTrigger
-            value="property-details"
-            className="gap-2"
-          >
+          <TabsTrigger value="property-details" className="gap-2">
             <List className="h-4 w-4" />
-            Property Details
+            {t("propertyDetails")}
           </TabsTrigger>
         </TabsList>
 
@@ -317,7 +309,7 @@ export function PropertyLand() {
                   <Landmark className="h-10 w-10 text-white/90" />
                   <div>
                     <p className="text-sm text-blue-100">
-                      Total Properties
+                      {t("totalProperties")}
                     </p>
                     <p className="text-3xl font-bold">
                       {properties.length}
@@ -334,7 +326,7 @@ export function PropertyLand() {
                   </div>
                   <div>
                     <p className="text-sm text-green-100">
-                      Property Types
+                      {t("propertyTypes")}
                     </p>
                     <p className="text-3xl font-bold">
                       {Object.keys(propertyTypeCounts).length}
@@ -351,7 +343,7 @@ export function PropertyLand() {
                   </div>
                   <div>
                     <p className="text-sm text-orange-100">
-                      Agricultural Use
+                      {t("agriculturalUse")}
                     </p>
                     <p className="text-3xl font-bold">
                       {agriculturalUseCount}
@@ -368,7 +360,7 @@ export function PropertyLand() {
                   </div>
                   <div>
                     <p className="text-sm text-purple-100">
-                      Unique Owners
+                      {t("uniqueOwners")}
                     </p>
                     <p className="text-3xl font-bold">
                       {
@@ -389,7 +381,7 @@ export function PropertyLand() {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  Property Distribution by Type
+                  {t("propertyDistributionByType")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -423,7 +415,7 @@ export function PropertyLand() {
             {/* Bar Chart - Ownership Types */}
             <Card>
               <CardHeader>
-                <CardTitle>Ownership Types</CardTitle>
+                <CardTitle>{t("ownershipTypes")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -447,7 +439,7 @@ export function PropertyLand() {
               className="gap-2"
             >
               <Plus className="h-5 w-5" />
-              Add New Property
+              {t("addNewProperty")}
             </Button>
           </div>
         </TabsContent>
@@ -461,18 +453,15 @@ export function PropertyLand() {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder={`${t("search")} by owner, oppu number, or property type...`}
+                placeholder={t("searchPropertyPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
-            <Button
-              onClick={handleAdd}
-              className="bg-slate-900 hover:bg-slate-800"
-            >
+            <Button onClick={handleAdd} className="bg-slate-900 hover:bg-slate-800">
               <Plus className="h-4 w-4 mr-2" />
-              Add Property
+              {t("add")} {t("property")}
             </Button>
           </div>
 
@@ -482,12 +471,12 @@ export function PropertyLand() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Owner</TableHead>
-                      <TableHead>Oppu Number</TableHead>
-                      <TableHead>Property Type</TableHead>
-                      <TableHead>Land Size</TableHead>
-                      <TableHead>Ownership</TableHead>
-                      <TableHead>Agricultural Use</TableHead>
+                      <TableHead>{t("owner")}</TableHead>
+                      <TableHead>{t("oppuNumber")}</TableHead>
+                      <TableHead>{t("propertyType")}</TableHead>
+                      <TableHead>{t("landSize")}</TableHead>
+                      <TableHead>{t("ownershipType")}</TableHead>
+                      <TableHead>{t("agriculturalUse")}</TableHead>
                       <TableHead className="text-right">
                         {t("actions")}
                       </TableHead>
@@ -513,14 +502,14 @@ export function PropertyLand() {
                         </TableCell>
                         <TableCell>
                           <span className="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full">
-                            {property.propertyType}
+                            {t(property.propertyType.toLowerCase()) || property.propertyType}
                           </span>
                         </TableCell>
                         <TableCell>
                           {property.landSize}
                         </TableCell>
                         <TableCell>
-                          {property.ownership}
+                          {t(property.ownership.toLowerCase()) || property.ownership}
                         </TableCell>
                         <TableCell className="max-w-xs truncate">
                           {property.agriculturalUse}
@@ -555,7 +544,7 @@ export function PropertyLand() {
                           colSpan={7}
                           className="text-center text-slate-400 py-8"
                         >
-                          No properties found.
+                          {t("noPropertiesFound")}
                         </TableCell>
                       </TableRow>
                     )}
@@ -572,21 +561,21 @@ export function PropertyLand() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingProperty ? t("edit") : t("add")} Property
+              {editingProperty ? t("edit") : t("add")} {t("property")}
             </DialogTitle>
           </DialogHeader>
 
           <div className="grid gap-6 py-4">
             {/* NIC Validation Section */}
             <div className="space-y-2">
-              <Label>NIC Number *</Label>
+              <Label>{t("nicNumber")} *</Label>
               <div className="relative">
                 <Input
                   value={userId}
                   onChange={(e) =>
                     handleUserIdChange(e.target.value)
                   }
-                  placeholder="Enter NIC (e.g., 850123456V or 198512300890)"
+                  placeholder={t("nicPlaceholder")}
                   disabled={!!editingProperty}
                   className="pr-10"
                 />
@@ -604,7 +593,7 @@ export function PropertyLand() {
               </div>
               {userValidation === "invalid" && (
                 <p className="text-sm text-red-500">
-                  NIC not found. Please enter a valid family member NIC.
+                  {t("nicNotFound")}
                 </p>
               )}
             </div>
@@ -613,12 +602,12 @@ export function PropertyLand() {
             {userValidation === "valid" && validatedUser && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h4 className="font-semibold text-green-900 mb-2">
-                  Validated User Details
+                  {t("validatedUserDetails")}
                 </h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-green-700 font-medium">
-                      Name:
+                      {t("name")}:
                     </p>
                     <p className="text-green-900">
                       {validatedUser.name}
@@ -626,7 +615,7 @@ export function PropertyLand() {
                   </div>
                   <div>
                     <p className="text-green-700 font-medium">
-                      House Number:
+                      {t("houseNumber")}:
                     </p>
                     <p className="text-green-900">
                       {validatedUser.houseNumber}
@@ -634,7 +623,7 @@ export function PropertyLand() {
                   </div>
                   <div>
                     <p className="text-green-700 font-medium">
-                      Address:
+                      {t("address")}:
                     </p>
                     <p className="text-green-900">
                       {validatedUser.address}
@@ -642,7 +631,7 @@ export function PropertyLand() {
                   </div>
                   <div>
                     <p className="text-green-700 font-medium">
-                      Phone:
+                      {t("phone")}:
                     </p>
                     <p className="text-green-900">
                       {validatedUser.phone}
@@ -656,7 +645,7 @@ export function PropertyLand() {
             {userValidation === "valid" && (
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
                 <Label className="text-base font-semibold text-slate-900 mb-3 block">
-                  Property Category *
+                  {t("propertyCategory")} *
                 </Label>
                 <div className="flex gap-3">
                   <button
@@ -674,9 +663,9 @@ export function PropertyLand() {
                     }`}
                   >
                     <div className="text-center">
-                      <p className="font-medium">Living Property</p>
+                      <p className="font-medium">{t("livingProperty")}</p>
                       <p className="text-xs mt-1 opacity-80">
-                        Primary residence or living space
+                        {t("primaryResidence")}
                       </p>
                     </div>
                   </button>
@@ -695,9 +684,9 @@ export function PropertyLand() {
                     }`}
                   >
                     <div className="text-center">
-                      <p className="font-medium">Additional Property</p>
+                      <p className="font-medium">{t("additionalProperty")}</p>
                       <p className="text-xs mt-1 opacity-80">
-                        Additional land or investment property
+                        {t("investmentProperty")}
                       </p>
                     </div>
                   </button>
@@ -710,12 +699,12 @@ export function PropertyLand() {
               <>
                 <div className="border-t pt-4">
                   <h4 className="font-semibold text-slate-900 mb-4">
-                    Property Information
+                    {t("propertyInformation")}
                   </h4>
                   <div className="grid gap-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Property Type *</Label>
+                        <Label>{t("propertyType")} *</Label>
                         <Select
                           value={formData.propertyType}
                           onValueChange={(val) =>
@@ -726,23 +715,23 @@ export function PropertyLand() {
                           }
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select property type..." />
+                            <SelectValue placeholder={t("selectPropertyType")} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Land">
-                              Land
+                              {t("land")}
                             </SelectItem>
                             <SelectItem value="House">
-                              House
+                              {t("house")}
                             </SelectItem>
                             <SelectItem value="Commercial">
-                              Commercial
+                              {t("commercial")}
                             </SelectItem>
                             <SelectItem value="Agricultural">
-                              Agricultural
+                              {t("agricultural")}
                             </SelectItem>
                             <SelectItem value="Other">
-                              Other
+                              {t("other")}
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -753,7 +742,7 @@ export function PropertyLand() {
                         )}
                       </div>
                       <div className="space-y-2">
-                        <Label>Oppu Number *</Label>
+                        <Label>{t("oppuNumber")} *</Label>
                         <Input
                           value={formData.oppuNumber || ""}
                           onChange={(e) =>
@@ -762,7 +751,7 @@ export function PropertyLand() {
                               oppuNumber: e.target.value,
                             })
                           }
-                          placeholder="e.g., OPPU12345"
+                          placeholder={t("oppuNumberPlaceholder")}
                         />
                         {(formData as any).__errors?.oppuNumber && (
                           <p className="text-xs text-red-500">
@@ -774,7 +763,7 @@ export function PropertyLand() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Land Size *</Label>
+                        <Label>{t("landSize")} *</Label>
                         <Input
                           value={formData.landSize || ""}
                           onChange={(e) =>
@@ -783,7 +772,7 @@ export function PropertyLand() {
                               landSize: e.target.value,
                             })
                           }
-                          placeholder="e.g., 5 acres, 30 perches"
+                          placeholder={t("landSizePlaceholder")}
                         />
                         {(formData as any).__errors?.landSize && (
                           <p className="text-xs text-red-500">
@@ -792,7 +781,7 @@ export function PropertyLand() {
                         )}
                       </div>
                       <div className="space-y-2">
-                        <Label>Ownership Type *</Label>
+                        <Label>{t("ownershipType")} *</Label>
                         <Select
                           value={formData.ownership}
                           onValueChange={(val) =>
@@ -803,20 +792,23 @@ export function PropertyLand() {
                           }
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select ownership..." />
+                            <SelectValue placeholder={t("selectOwnership")} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Private">
-                              Private
-                            </SelectItem>
-                            <SelectItem value="Leasehold">
-                              Leasehold
+                              {t("private")}
                             </SelectItem>
                             <SelectItem value="Government">
-                              Government
+                              {t("government")}
                             </SelectItem>
-                            <SelectItem value="Other">
-                              Other
+                            <SelectItem value="Grant">
+                              {t("grant")}
+                            </SelectItem>
+                            <SelectItem value="Permit">
+                              {t("permit")}
+                            </SelectItem>
+                            <SelectItem value="Leasehold">
+                              {t("leasehold")}
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -829,7 +821,7 @@ export function PropertyLand() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Agricultural Use</Label>
+                      <Label>{t("agriculturalUse")}</Label>
                       <Textarea
                         value={formData.agriculturalUse || ""}
                         onChange={(e) =>
@@ -838,7 +830,7 @@ export function PropertyLand() {
                             agriculturalUse: e.target.value,
                           })
                         }
-                        placeholder="e.g., Paddy farming, Coconut plantation, Vegetable cultivation"
+                        placeholder={t("paddyFarmingPlaceholder")}
                         rows={3}
                       />
                     </div>
@@ -871,19 +863,19 @@ export function PropertyLand() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Property Details - {viewingProperty?.oppuNumber}
+              {t("propertyDetails")} — {viewingProperty?.oppuNumber}
             </DialogTitle>
           </DialogHeader>
 
           <div className="py-4">
             <p className="text-sm text-gray-600 mb-4">
-              View detailed information about this property
+              {t("viewDetailedPropertyInfo")}
             </p>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Owner Name</p>
+                  <p className="font-medium">{t("ownerName")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -892,7 +884,7 @@ export function PropertyLand() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Oppu Number</p>
+                  <p className="font-medium">{t("oppuNumber")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -901,18 +893,18 @@ export function PropertyLand() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Property Type</p>
+                  <p className="font-medium">{t("propertyType")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
                   <span className="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full">
-                    {viewingProperty?.propertyType}
+                    {viewingProperty?.propertyType ? t(viewingProperty.propertyType.toLowerCase()) : "-"}
                   </span>
                 </div>
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Property Category</p>
+                  <p className="font-medium">{t("propertyCategory")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -921,13 +913,13 @@ export function PropertyLand() {
                       ? "bg-blue-100 text-blue-700"
                       : "bg-orange-100 text-orange-700"
                   }`}>
-                    {viewingProperty?.propertyCategory === "living" ? "Living Property" : "Additional Property"}
+                    {viewingProperty?.propertyCategory === "living" ? t("livingProperty") : t("additionalProperty")}
                   </span>
                 </div>
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Land Size</p>
+                  <p className="font-medium">{t("landSize")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -936,16 +928,16 @@ export function PropertyLand() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Ownership</p>
+                  <p className="font-medium">{t("ownership")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
-                  <p className="font-medium">{viewingProperty?.ownership}</p>
+                  <p className="font-medium">{viewingProperty?.ownership ? t(viewingProperty.ownership.toLowerCase()) : "-"}</p>
                 </div>
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Agricultural Use</p>
+                  <p className="font-medium">{t("agriculturalUse")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -954,7 +946,7 @@ export function PropertyLand() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Owner Address</p>
+                  <p className="font-medium">{t("ownerAddress")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -963,7 +955,7 @@ export function PropertyLand() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">House Number</p>
+                  <p className="font-medium">{t("houseNumber")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -975,7 +967,7 @@ export function PropertyLand() {
 
           <DialogFooter>
             <Button onClick={() => setViewDialog(false)} className="bg-blue-600 hover:bg-blue-700">
-              Close
+              {t("close")}
             </Button>
           </DialogFooter>
         </DialogContent>

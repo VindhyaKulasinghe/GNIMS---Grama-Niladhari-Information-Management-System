@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLanguage } from "../context/LanguageContext";
+import { useTranslation } from "react-i18next";
 import { useHouseholdData, Animal } from "../context/HouseholdDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -33,7 +33,7 @@ import { toast } from "sonner";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export function Animals() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const { animals, householdAnimals, addAnimal, updateAnimal, deleteAnimal } = useHouseholdData();
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -63,19 +63,19 @@ export function Animals() {
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm("Are you sure you want to delete this animal type?")) {
+    if (confirm(t("confirmDeleteAnimalType"))) {
       await deleteAnimal(id);
     }
   };
 
   const handleSave = async () => {
     const errors: { [key: string]: string } = {};
-    if (!formData.name) errors.name = "Animal name is required";
-    if (!formData.category) errors.category = "Category is required";
+    if (!formData.name) errors.name = t("animalNameRequired");
+    if (!formData.category) errors.category = t("categoryRequired");
 
     if (Object.keys(errors).length > 0) {
       (formData as any).__errors = errors;
-      toast.error("Please fill in all required animal fields.");
+      toast.error(t("fillRequiredFields"));
       return;
     }
 
@@ -84,11 +84,11 @@ export function Animals() {
     if (editingAnimal) {
       const { id, createdAt, updatedAt, ...rest } = (cleanForm as Animal) as any;
       await updateAnimal(editingAnimal.id, rest);
-      toast.success("Animal type updated successfully.");
+      toast.success(t("animalTypeUpdated"));
     } else {
       const { id, createdAt, updatedAt, ...rest } = (cleanForm as Animal) as any;
       await addAnimal(rest);
-      toast.success("Animal type added successfully.");
+      toast.success(t("animalTypeAdded"));
     }
     setDialogOpen(false);
   };
@@ -126,12 +126,12 @@ export function Animals() {
             {t("animalManagement")}
           </h1>
           <p className="text-slate-600 mt-1">
-            Manage and analyze animal distribution across households
+            {t("animalManagementSubtitle")}
           </p>
         </div>
         <Button onClick={handleAdd} className="bg-slate-900 hover:bg-slate-800">
           <Plus className="h-4 w-4 mr-2" />
-          {t("add")} Animal Type
+          {t("addAnimalType")}
         </Button>
       </div>
 
@@ -139,11 +139,11 @@ export function Animals() {
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="overview" className="gap-2">
             <BarChart3 className="h-4 w-4" />
-            Overview
+            {t("overview")}
           </TabsTrigger>
           <TabsTrigger value="all-animals" className="gap-2">
             <List className="h-4 w-4" />
-            All Animals
+            {t("allAnimals")}
           </TabsTrigger>
         </TabsList>
 
@@ -156,7 +156,7 @@ export function Animals() {
                 <div className="flex items-center gap-4">
                   <PawPrint className="h-10 w-10 text-white/90" />
                   <div>
-                    <p className="text-sm text-blue-100">Total Types</p>
+                    <p className="text-sm text-blue-100">{t("totalTypes")}</p>
                     <p className="text-3xl font-bold">{animals.length}</p>
                   </div>
                 </div>
@@ -169,8 +169,8 @@ export function Animals() {
                     <span className="text-2xl font-bold">{Object.keys(categoryCounts).length}</span>
                   </div>
                   <div>
-                    <p className="text-sm text-green-100">Categories</p>
-                    <p className="text-xl font-semibold">Types</p>
+                    <p className="text-sm text-green-100">{t("categories")}</p>
+                    <p className="text-xl font-semibold">{t("types")}</p>
                   </div>
                 </div>
               </CardContent>
@@ -182,8 +182,8 @@ export function Animals() {
                     <span className="text-2xl font-bold">{householdAnimals.reduce((sum, ha) => sum + ha.count, 0)}</span>
                   </div>
                   <div>
-                    <p className="text-sm text-orange-100">Total</p>
-                    <p className="text-xl font-semibold">Population</p>
+                    <p className="text-sm text-orange-100">{t("total")}</p>
+                    <p className="text-xl font-semibold">{t("population")}</p>
                   </div>
                 </div>
               </CardContent>
@@ -195,8 +195,8 @@ export function Animals() {
                     <span className="text-2xl font-bold">{new Set(householdAnimals.map(ha => ha.houseNumber)).size}</span>
                   </div>
                   <div>
-                    <p className="text-sm text-purple-100">Households</p>
-                    <p className="text-xl font-semibold">with Animals</p>
+                    <p className="text-sm text-purple-100">{t("households")}</p>
+                    <p className="text-xl font-semibold">{t("withAnimals")}</p>
                   </div>
                 </div>
               </CardContent>
@@ -208,7 +208,7 @@ export function Animals() {
             {/* Pie Chart - Animal Types by Category */}
             <Card>
               <CardHeader>
-                <CardTitle>Animal Types by Category</CardTitle>
+                <CardTitle>{t("animalTypesByCategory")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -236,7 +236,7 @@ export function Animals() {
             {/* Bar Chart - Animal Population */}
             <Card>
               <CardHeader>
-                <CardTitle>Animal Population Distribution</CardTitle>
+                <CardTitle>{t("animalPopulationDistribution")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -254,7 +254,7 @@ export function Animals() {
 
           {/* Individual Animal Detail Cards */}
           <div>
-            <h3 className="text-xl font-semibold text-slate-900 mb-4">Animal Details by Type</h3>
+            <h3 className="text-xl font-semibold text-slate-900 mb-4">{t("animalDetailsByType")}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {animals.map(animal => {
                 const totalCount = householdAnimals
@@ -280,11 +280,11 @@ export function Animals() {
                       </div>
                       <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-100">
                         <div>
-                          <p className="text-xs text-slate-600">Total Count</p>
+                          <p className="text-xs text-slate-600">{t("totalCount")}</p>
                           <p className="text-2xl font-bold text-blue-600">{totalCount}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-600">Households</p>
+                          <p className="text-xs text-slate-600">{t("households")}</p>
                           <p className="text-2xl font-bold text-orange-600">{householdCount}</p>
                         </div>
                       </div>
@@ -298,7 +298,7 @@ export function Animals() {
           <div className="flex justify-center pt-4">
             <Button onClick={handleAdd} variant="outline" size="lg" className="gap-2">
               <Plus className="h-5 w-5" />
-              Add New Animal Type
+              {t("addNewAnimalType")}
             </Button>
           </div>
         </TabsContent>
@@ -309,7 +309,7 @@ export function Animals() {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder={`${t("search")} by animal name or category...`}
+                placeholder={t("searchAnimalsPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -317,7 +317,7 @@ export function Animals() {
             </div>
             <Button onClick={handleAdd} className="bg-slate-900 hover:bg-slate-800">
               <Plus className="h-4 w-4 mr-2" />
-              Add Animal
+              {t("addAnimalType")}
             </Button>
           </div>
 
@@ -327,10 +327,10 @@ export function Animals() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Animal Name</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead className="text-right">Total in Division</TableHead>
-                      <TableHead className="text-right">Households</TableHead>
+                      <TableHead>{t("animalName")}</TableHead>
+                      <TableHead>{t("category")}</TableHead>
+                      <TableHead className="text-right">{t("totalInDivision")}</TableHead>
+                      <TableHead className="text-right">{t("households")}</TableHead>
                       <TableHead className="text-right">{t("actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -389,7 +389,7 @@ export function Animals() {
                     {filteredAnimals.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center text-slate-400 py-8">
-                          No animals found.
+                          {t("noAnimalsFound")}
                         </TableCell>
                       </TableRow>
                     )}
@@ -406,16 +406,16 @@ export function Animals() {
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingAnimal ? t("edit") : t("add")} Animal Type
+              {editingAnimal ? t("edit") : t("add")} {t("animalType")}
             </DialogTitle>
             <p className="text-sm text-slate-600">
-              Define a named animal type and its category for use across households.
+              {t("defineAnimalType")}
             </p>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>Animal Name *</Label>
+              <Label>{t("animalName")} *</Label>
               <Input
                 value={formData.name || ""}
                 onChange={(e) =>
@@ -431,7 +431,7 @@ export function Animals() {
             </div>
 
             <div className="space-y-2">
-              <Label>Category *</Label>
+              <Label>{t("category")} *</Label>
               <Select
                 value={formData.category}
                 onValueChange={(val) =>
@@ -439,14 +439,14 @@ export function Animals() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category..." />
+                  <SelectValue placeholder={t("selectCategory")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Livestock">Livestock</SelectItem>
-                  <SelectItem value="Poultry">Poultry</SelectItem>
-                  <SelectItem value="Pets">Pets</SelectItem>
-                  <SelectItem value="Small Animals">Small Animals</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="Livestock">{t("livestock")}</SelectItem>
+                  <SelectItem value="Poultry">{t("poultry")}</SelectItem>
+                  <SelectItem value="Pets">{t("pets")}</SelectItem>
+                  <SelectItem value="Small Animals">{t("smallAnimals")}</SelectItem>
+                  <SelectItem value="Other">{t("other")}</SelectItem>
                 </SelectContent>
               </Select>
               {(formData as any).__errors?.category && (
@@ -472,9 +472,9 @@ export function Animals() {
       <Dialog open={viewDialog} onOpenChange={setViewDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Animal Details - {viewingAnimal?.name}</DialogTitle>
+            <DialogTitle>{t("details")} - {viewingAnimal?.name}</DialogTitle>
             <p className="text-sm text-slate-600">
-              Review summary information and statistics for this animal type.
+              {t("viewDetailedInfo")}
             </p>
           </DialogHeader>
 
@@ -486,7 +486,7 @@ export function Animals() {
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Animal Name</p>
+                  <p className="font-medium">{t("animalName")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -495,7 +495,7 @@ export function Animals() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Category</p>
+                  <p className="font-medium">{t("category")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -506,7 +506,7 @@ export function Animals() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Total Population</p>
+                  <p className="font-medium">{t("totalPopulation")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -519,7 +519,7 @@ export function Animals() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Households with this Animal</p>
+                  <p className="font-medium">{t("householdsWithAnimals")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -533,7 +533,7 @@ export function Animals() {
 
           <DialogFooter>
             <Button onClick={() => setViewDialog(false)} className="bg-blue-600 hover:bg-blue-700">
-              Close
+              {t("close")}
             </Button>
           </DialogFooter>
         </DialogContent>

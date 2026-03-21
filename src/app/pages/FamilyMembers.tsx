@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLanguage } from "../context/LanguageContext";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useHouseholdData, FamilyMember, MemberType, Household } from "../context/HouseholdDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -51,26 +51,26 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 
 type ViewState = "search" | "house";
 
-const MEMBER_TYPE_CONFIG: Record<MemberType, { label: string; color: string; icon: React.ReactNode }> = {
+const MEMBER_TYPE_CONFIG: Record<MemberType, { labelKey: string; color: string; icon: React.ReactNode }> = {
   regular: {
-    label: "Regular",
+    labelKey: "regular",
     color: "bg-gray-100 text-gray-700",
     icon: <Users className="h-3 w-3" />,
   },
   student: {
-    label: "Student",
+    labelKey: "student",
     color: "bg-blue-100 text-blue-700",
     icon: <GraduationCap className="h-3 w-3" />,
   },
   boarder: {
-    label: "Boarder",
+    labelKey: "boarder",
     color: "bg-amber-100 text-amber-700",
     icon: <UserCheck className="h-3 w-3" />,
   },
 };
 
 export function FamilyMembers() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const { households, familyMembers, addFamilyMember, updateFamilyMember, deleteFamilyMember, getMembersForHouse } =
     useHouseholdData();
 
@@ -154,7 +154,7 @@ export function FamilyMembers() {
 
   // ---- Delete member ----
   const handleDeleteMember = async (id: number) => {
-    if (confirm("Are you sure you want to delete this member?")) {
+    if (confirm(t("confirmDelete"))) {
       await deleteFamilyMember(id);
     }
   };
@@ -164,17 +164,17 @@ export function FamilyMembers() {
     const errors: { [key: string]: string } = {};
 
     if (!formData.nicNumber) {
-      errors.nicNumber = "NIC number is required";
+      errors.nicNumber = t("nicRequired");
     } else if (!/^(\d{9}[VvXx]|\d{12})$/.test(formData.nicNumber)) {
-      errors.nicNumber = "NIC must be 9 digits plus letter (V/X) or 12 digits";
+      errors.nicNumber = t("nicInvalid");
     }
 
     if (!formData.birthYear) {
-      errors.birthYear = "Birth year is required";
+      errors.birthYear = t("birthYearRequired");
     }
 
     if (Object.keys(errors).length > 0) {
-      toast.error("Please fix the highlighted member form errors.");
+      toast.error(t("fixFormErrors"));
       (formData as any).__errors = errors;
       return;
     }
@@ -197,7 +197,7 @@ export function FamilyMembers() {
 
       const { id, createdAt, updatedAt, ...rest } = payload as any;
       await updateFamilyMember(editingMember.id, rest);
-      toast.success("Family member updated successfully.");
+      toast.success(t("memberUpdated"));
     } else {
       if (payload.isHeadOfHousehold) {
         const others = familyMembers.filter(
@@ -210,7 +210,7 @@ export function FamilyMembers() {
 
       const { id, createdAt, updatedAt, ...rest } = payload as any;
       await addFamilyMember(rest);
-      toast.success("Family member added successfully.");
+      toast.success(t("memberAdded"));
     }
     setDialogOpen(false);
   };
@@ -224,14 +224,14 @@ export function FamilyMembers() {
   const boarderMembers = familyMembers.filter((m) => m.memberType === "boarder").length;
 
   const memberTypeData = [
-    { name: "Regular", value: regularMembers },
-    { name: "Students", value: studentMembers },
-    { name: "Boarders", value: boarderMembers },
+    { name: t("regular"), value: regularMembers },
+    { name: t("students"), value: studentMembers },
+    { name: t("boarders"), value: boarderMembers },
   ].filter(item => item.value > 0);
 
   const genderData = [
-    { name: "Male", value: familyMembers.filter((m) => m.gender === "Male").length },
-    { name: "Female", value: familyMembers.filter((m) => m.gender === "Female").length },
+    { name: t("male"), value: familyMembers.filter((m) => m.gender === "Male").length },
+    { name: t("female"), value: familyMembers.filter((m) => m.gender === "Female").length },
   ].filter(item => item.value > 0);
 
   // Age distribution
@@ -291,8 +291,8 @@ export function FamilyMembers() {
             </h1>
             <p className="text-slate-600 mt-1">
               {view === "search"
-                ? "Manage family members across all households"
-                : `House ${selectedHouse?.houseNumber} — ${selectedHouse?.address}`}
+                ? t("manageFamilyMembersAcrossHouseholds")
+                : `${t("house")} ${selectedHouse?.houseNumber} — ${selectedHouse?.address}`}
             </p>
           </div>
         </div>
@@ -302,7 +302,7 @@ export function FamilyMembers() {
             className="bg-slate-900 hover:bg-slate-800"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add Member
+            {t("addMember")}
           </Button>
         )}
       </div>
@@ -313,11 +313,11 @@ export function FamilyMembers() {
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="overview" className="gap-2">
               <BarChart3 className="h-4 w-4" />
-              Overview
+              {t("overview")}
             </TabsTrigger>
             <TabsTrigger value="manage" className="gap-2">
               <List className="h-4 w-4" />
-              Manage Members
+              {t("manageMembers")}
             </TabsTrigger>
           </TabsList>
 
@@ -330,7 +330,7 @@ export function FamilyMembers() {
                   <div className="flex items-center gap-4">
                     <Users className="h-10 w-10 text-white/90" />
                     <div>
-                      <p className="text-sm text-blue-100">Total Members</p>
+                      <p className="text-sm text-blue-100">{t("totalMembers")}</p>
                       <p className="text-3xl font-bold">{totalMembers}</p>
                     </div>
                   </div>
@@ -343,7 +343,7 @@ export function FamilyMembers() {
                       <Home className="h-6 w-6" />
                     </div>
                     <div>
-                      <p className="text-sm text-green-100">Households</p>
+                      <p className="text-sm text-green-100">{t("households")}</p>
                       <p className="text-3xl font-bold">
                         {new Set(familyMembers.map((m) => m.houseNumber)).size}
                       </p>
@@ -358,7 +358,7 @@ export function FamilyMembers() {
                       <GraduationCap className="h-6 w-6" />
                     </div>
                     <div>
-                      <p className="text-sm text-orange-100">Students</p>
+                      <p className="text-sm text-orange-100">{t("students")}</p>
                       <p className="text-3xl font-bold">{studentMembers}</p>
                     </div>
                   </div>
@@ -371,7 +371,7 @@ export function FamilyMembers() {
                       <UserCheck className="h-6 w-6" />
                     </div>
                     <div>
-                      <p className="text-sm text-purple-100">Boarders</p>
+                      <p className="text-sm text-purple-100">{t("boarders")}</p>
                       <p className="text-3xl font-bold">{boarderMembers}</p>
                     </div>
                   </div>
@@ -384,7 +384,7 @@ export function FamilyMembers() {
               {/* Pie Chart - Member Types */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Member Types Distribution</CardTitle>
+                  <CardTitle>{t("memberTypesDistribution")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -415,7 +415,7 @@ export function FamilyMembers() {
               {/* Pie Chart - Gender Distribution */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Gender Distribution</CardTitle>
+                  <CardTitle>{t("genderDistribution")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -450,7 +450,7 @@ export function FamilyMembers() {
               {ageData.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Age Distribution</CardTitle>
+                    <CardTitle>{t("ageDistribution")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
@@ -470,7 +470,7 @@ export function FamilyMembers() {
               {householdMemberCounts.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Top 5 Households by Members</CardTitle>
+                    <CardTitle>{t("topHouseholdsByMembers")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
@@ -492,13 +492,13 @@ export function FamilyMembers() {
           <TabsContent value="manage" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Search by House Number or Address</CardTitle>
+                <CardTitle className="text-base">{t("searchByHouseNumberOrAddress")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="relative mb-4">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Enter house number (e.g. 23/A) or address..."
+                    placeholder={t("searchHousePlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -512,23 +512,23 @@ export function FamilyMembers() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">
-                  {searchQuery.length > 0 ? `Search Results (${filteredHouses.length})` : 'All Households'}
+                  {searchQuery.length > 0 ? t("searchResults", { count: filteredHouses.length }) : t("allHouseholds")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {(searchQuery.length > 0 ? filteredHouses : households).length === 0 ? (
                   <p className="text-center text-gray-400 py-6">
-                    No houses found matching "{searchQuery}"
+                    {t("noHousesFound", { searchQuery })}
                   </p>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>House No.</TableHead>
-                        <TableHead>Address</TableHead>
-                        <TableHead>Head of Household</TableHead>
-                        <TableHead>Members</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t("houseNo")}</TableHead>
+                        <TableHead>{t("address")}</TableHead>
+                        <TableHead>{t("headOfHousehold")}</TableHead>
+                        <TableHead>{t("members")}</TableHead>
+                        <TableHead className="text-right">{t("actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -536,7 +536,7 @@ export function FamilyMembers() {
                         const members = getMembersForHouse(house.houseNumber);
                         const head = members.find((m) => m.isHeadOfHousehold);
                         return (
-                          <TableRow 
+                          <TableRow
                             key={house.id}
                             className="cursor-pointer hover:bg-blue-50"
                             onClick={(e) => {
@@ -557,22 +557,22 @@ export function FamilyMembers() {
                                   <span className="text-sm">{head.fullName}</span>
                                 </div>
                               ) : (
-                                <span className="text-gray-400 text-xs italic">Not assigned</span>
+                                <span className="text-gray-400 text-xs italic">{t("notAssigned")}</span>
                               )}
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-1">
                                 <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded">
-                                  {members.filter((m) => m.memberType === "regular").length} regular
+                                  {members.filter((m) => m.memberType === "regular").length} {t("regular")}
                                 </span>
                                 {members.filter((m) => m.memberType === "student").length > 0 && (
                                   <span className="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded">
-                                    {members.filter((m) => m.memberType === "student").length} student
+                                    {members.filter((m) => m.memberType === "student").length} {t("student")}
                                   </span>
                                 )}
                                 {members.filter((m) => m.memberType === "boarder").length > 0 && (
                                   <span className="bg-amber-100 text-amber-600 text-xs px-2 py-0.5 rounded">
-                                    {members.filter((m) => m.memberType === "boarder").length} boarder
+                                    {members.filter((m) => m.memberType === "boarder").length} {t("boarder")}
                                   </span>
                                 )}
                               </div>
@@ -585,7 +585,7 @@ export function FamilyMembers() {
                                 onClick={() => handleSelectHouse(house)}
                               >
                                 <Users className="h-3 w-3 mr-1" />
-                                Manage
+                                {t("manage")}
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -611,7 +611,7 @@ export function FamilyMembers() {
               </div>
               <div>
                 <p className="font-bold text-blue-900 text-lg">
-                  House No: {selectedHouse.houseNumber}
+                  {t("houseNo")}: {selectedHouse.houseNumber}
                 </p>
                 <p className="text-blue-700 text-sm">{selectedHouse.address}</p>
                 <p className="text-blue-600 text-xs">{selectedHouse.telephone}</p>
@@ -620,25 +620,25 @@ export function FamilyMembers() {
             <div className="flex gap-4 text-center">
               <div>
                 <p className="text-2xl font-bold text-blue-800">{houseMembers.length}</p>
-                <p className="text-xs text-blue-600">Total</p>
+                <p className="text-xs text-blue-600">{t("total") || "Total"}</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-700">
                   {houseMembers.filter((m) => m.memberType === "regular").length}
                 </p>
-                <p className="text-xs text-gray-500">Regular</p>
+                <p className="text-xs text-gray-500">{t("regular")}</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-blue-700">
                   {houseMembers.filter((m) => m.memberType === "student").length}
                 </p>
-                <p className="text-xs text-blue-500">Students</p>
+                <p className="text-xs text-blue-500">{t("students")}</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-amber-700">
                   {houseMembers.filter((m) => m.memberType === "boarder").length}
                 </p>
-                <p className="text-xs text-amber-500">Boarders</p>
+                <p className="text-xs text-amber-500">{t("boarders")}</p>
               </div>
             </div>
           </div>
@@ -648,20 +648,20 @@ export function FamilyMembers() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                Members of House {selectedHouse.houseNumber}
+                {t("membersOfHouse", { houseNumber: selectedHouse.houseNumber })}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {houseMembers.length === 0 ? (
                 <div className="text-center py-12 text-gray-400">
                   <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p className="mb-4">No members registered for this house yet.</p>
+                  <p className="mb-4">{t("noMembersRegistered")}</p>
                   <Button
                     onClick={handleAddMember}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Add First Member (Head of Household)
+                    {t("addFirstMember")}
                   </Button>
                 </div>
               ) : (
@@ -669,13 +669,13 @@ export function FamilyMembers() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>No.</TableHead>
-                        <TableHead>Full Name</TableHead>
-                        <TableHead>NIC</TableHead>
-                        <TableHead>Age</TableHead>
-                        <TableHead>Gender</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Details</TableHead>
+                        <TableHead>{t("no")}.</TableHead>
+                        <TableHead>{t("fullName")}</TableHead>
+                        <TableHead>{t("nic")}</TableHead>
+                        <TableHead>{t("age")}</TableHead>
+                        <TableHead>{t("gender")}</TableHead>
+                        <TableHead>{t("type")}</TableHead>
+                        <TableHead>{t("details")}</TableHead>
                         <TableHead className="text-right">{t("actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -683,7 +683,7 @@ export function FamilyMembers() {
                       {houseMembers.map((member) => {
                         const typeConfig = MEMBER_TYPE_CONFIG[member.memberType];
                         return (
-                          <TableRow 
+                          <TableRow
                             key={member.id}
                             className="cursor-pointer hover:bg-blue-50"
                             onClick={(e) => {
@@ -702,22 +702,22 @@ export function FamilyMembers() {
                                 {member.isHeadOfHousehold && (
                                   <span className="flex items-center gap-0.5 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">
                                     <Crown className="h-2.5 w-2.5" />
-                                    Head
+                                    {t("head")}
                                   </span>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell className="text-xs text-gray-500">
-                              {member.nicNumber || "-"}
+                              {member.nicNumber || t("notProvided")}
                             </TableCell>
                             <TableCell>{member.age}</TableCell>
-                            <TableCell className="text-xs">{member.gender}</TableCell>
+                            <TableCell className="text-xs">{member.gender ? t(member.gender.toLowerCase()) : "-"}</TableCell>
                             <TableCell>
                               <span
                                 className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${typeConfig.color}`}
                               >
                                 {typeConfig.icon}
-                                {typeConfig.label}
+                                {t(typeConfig.labelKey)}
                               </span>
                             </TableCell>
                             <TableCell className="text-xs text-gray-500">
@@ -770,14 +770,13 @@ export function FamilyMembers() {
         <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingMember ? "Edit" : "Add"} Member — House{" "}
-              {formData.houseNumber}
+              {editingMember ? t("editMember") : t("addMember")} — {t("house")} {formData.houseNumber}
             </DialogTitle>
           </DialogHeader>
 
           {/* Member Type Selector */}
           <div className="bg-gray-50 rounded-lg p-4 flex flex-wrap gap-3 items-center">
-            <Label className="text-sm font-medium">Member Type:</Label>
+            <Label className="text-sm font-medium">{t("memberType")}:</Label>
             {(["regular", "student", "boarder"] as MemberType[]).map((type) => {
               const cfg = MEMBER_TYPE_CONFIG[type];
               return (
@@ -795,13 +794,13 @@ export function FamilyMembers() {
                   }`}
                 >
                   {cfg.icon}
-                  {cfg.label}
+                  {t(cfg.labelKey)}
                 </button>
               );
             })}
 
             <div className="ml-auto flex items-center gap-2">
-              <Label className="text-sm">Head of Household:</Label>
+              <Label className="text-sm">{t("headOfHousehold")}:</Label>
               <button
                 type="button"
                 onClick={() =>
@@ -817,7 +816,7 @@ export function FamilyMembers() {
                 }`}
               >
                 <Crown className="h-3.5 w-3.5" />
-                {formData.isHeadOfHousehold ? "Yes (Head)" : "No"}
+                {formData.isHeadOfHousehold ? t("yesHead") : t("no")}
               </button>
             </div>
           </div>
@@ -832,18 +831,18 @@ export function FamilyMembers() {
                   : "grid-cols-2"
               }`}
             >
-              <TabsTrigger value="personal">Personal Info</TabsTrigger>
-              <TabsTrigger value="employment">Employment & Income</TabsTrigger>
+              <TabsTrigger value="personal">{t("personalInfo")}</TabsTrigger>
+              <TabsTrigger value="employment">{t("employmentAndIncome")}</TabsTrigger>
               {memberTypeValue === "student" && (
                 <TabsTrigger value="student">
                   <GraduationCap className="h-3.5 w-3.5 mr-1" />
-                  Student Details
+                  {t("studentDetails")}
                 </TabsTrigger>
               )}
               {memberTypeValue === "boarder" && (
                 <TabsTrigger value="boarder">
                   <UserCheck className="h-3.5 w-3.5 mr-1" />
-                  Boarder Details
+                  {t("boarderDetails")}
                 </TabsTrigger>
               )}
             </TabsList>
@@ -852,7 +851,7 @@ export function FamilyMembers() {
             <TabsContent value="personal" className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Unique Number (Anu Ankaya)</Label>
+                  <Label>{t("uniqueNumber")}</Label>
                   <Input
                     value={formData.uniqueNumber || ""}
                     onChange={(e) =>
@@ -861,7 +860,7 @@ export function FamilyMembers() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>National ID Number</Label>
+                  <Label>{t("nationalIdNumber")}</Label>
                   <Input
                     value={formData.nicNumber || ""}
                     onChange={(e) =>
@@ -878,19 +877,19 @@ export function FamilyMembers() {
               </div>
 
               <div className="space-y-2">
-                <Label>Full Name</Label>
+                <Label>{t("fullName")}</Label>
                 <Input
                   value={formData.fullName || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, fullName: e.target.value })
                   }
-                  placeholder="Full legal name"
+                  placeholder={t("fullNamePlaceholder")}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Birth Year</Label>
+                  <Label>{t("birthYear")}</Label>
                   <Input
                     type="number"
                     min="1900"
@@ -910,25 +909,25 @@ export function FamilyMembers() {
                   )}
                   {formData.birthYear && formData.birthYear > 1900 && (
                     <p className="text-xs text-blue-600">
-                      Age: {calculateAge(formData.birthYear)} years
+                      {t("age")}: {calculateAge(formData.birthYear)} {t("years")}
                     </p>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label>Gender</Label>
+                  <Label>{t("gender")}</Label>
                   <Select
                     value={formData.gender}
                     onValueChange={(val) =>
-                      setFormData({ ...formData, gender: val })
+                      setFormData({ ...formData, gender: val as any })
                     }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      <SelectItem value="Male">{t("male")}</SelectItem>
+                      <SelectItem value="Female">{t("female")}</SelectItem>
+                      <SelectItem value="Other">{t("other")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -936,7 +935,7 @@ export function FamilyMembers() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Nationality</Label>
+                  <Label>{t("nationality")}</Label>
                   <Input
                     value={formData.nationality || ""}
                     onChange={(e) =>
@@ -945,22 +944,22 @@ export function FamilyMembers() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Religion</Label>
+                  <Label>{t("religion")}</Label>
                   <Select
                     value={formData.religion}
                     onValueChange={(val) =>
-                      setFormData({ ...formData, religion: val })
+                      setFormData({ ...formData, religion: val as any })
                     }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Buddhist">Buddhist</SelectItem>
-                      <SelectItem value="Hindu">Hindu</SelectItem>
-                      <SelectItem value="Christian">Christian</SelectItem>
-                      <SelectItem value="Islam">Islam</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      <SelectItem value="Buddhist">{t("buddhist")}</SelectItem>
+                      <SelectItem value="Hindu">{t("hindu")}</SelectItem>
+                      <SelectItem value="Christian">{t("christian")}</SelectItem>
+                      <SelectItem value="Islam">{t("islam")}</SelectItem>
+                      <SelectItem value="Other">{t("other")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -968,42 +967,42 @@ export function FamilyMembers() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Marital Status</Label>
+                  <Label>{t("maritalStatus")}</Label>
                   <Select
                     value={formData.maritalStatus}
                     onValueChange={(val) =>
-                      setFormData({ ...formData, maritalStatus: val })
+                      setFormData({ ...formData, maritalStatus: val as any })
                     }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Single">Single</SelectItem>
-                      <SelectItem value="Married">Married</SelectItem>
-                      <SelectItem value="Divorced">Divorced</SelectItem>
-                      <SelectItem value="Widowed">Widowed</SelectItem>
+                      <SelectItem value="Single">{t("single")}</SelectItem>
+                      <SelectItem value="Married">{t("married")}</SelectItem>
+                      <SelectItem value="Divorced">{t("divorced")}</SelectItem>
+                      <SelectItem value="Widowed">{t("widowed")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Education Status</Label>
+                  <Label>{t("educationStatus")}</Label>
                   <Select
                     value={formData.educationStatus}
                     onValueChange={(val) =>
-                      setFormData({ ...formData, educationStatus: val })
+                      setFormData({ ...formData, educationStatus: val as any })
                     }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Primary">Primary</SelectItem>
-                      <SelectItem value="Secondary">Secondary (O/L)</SelectItem>
-                      <SelectItem value="A/L">Advanced Level (A/L)</SelectItem>
-                      <SelectItem value="Diploma">Diploma</SelectItem>
-                      <SelectItem value="Degree">Degree</SelectItem>
-                      <SelectItem value="Postgraduate">Postgraduate</SelectItem>
+                      <SelectItem value="Primary">{t("primary")}</SelectItem>
+                      <SelectItem value="Secondary">{t("secondaryOL")}</SelectItem>
+                      <SelectItem value="A/L">{t("advancedLevelAL")}</SelectItem>
+                      <SelectItem value="Diploma">{t("diploma")}</SelectItem>
+                      <SelectItem value="Degree">{t("degree")}</SelectItem>
+                      <SelectItem value="Postgraduate">{t("postgraduate")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1013,58 +1012,58 @@ export function FamilyMembers() {
             {/* Employment Tab */}
             <TabsContent value="employment" className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label>Job Type / Occupation</Label>
+                <Label>{t("jobTypeOccupation")}</Label>
                 <Input
                   value={formData.jobType || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, jobType: e.target.value })
                   }
-                  placeholder="e.g. Teacher, Farmer, Engineer"
+                  placeholder={t("jobTypePlaceholder")}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Training Received</Label>
+                <Label>{t("trainingReceived")}</Label>
                 <Input
                   value={formData.trainingReceived || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, trainingReceived: e.target.value })
                   }
-                  placeholder="e.g. Professional, Vocational, Technical"
+                  placeholder={t("trainingReceivedPlaceholder")}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Employment Sector</Label>
+                <Label>{t("employmentSector")}</Label>
                 <Select
                   value={formData.sector}
                   onValueChange={(val) =>
-                    setFormData({ ...formData, sector: val })
+                    setFormData({ ...formData, sector: val as any })
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select sector..." />
+                    <SelectValue placeholder={t("selectSector")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Government">Government</SelectItem>
-                    <SelectItem value="Private">Private</SelectItem>
-                    <SelectItem value="Self-Employed">Self-Employed / Individual</SelectItem>
-                    <SelectItem value="Unemployed">Unemployed</SelectItem>
-                    <SelectItem value="Student">Student (No Income)</SelectItem>
+                    <SelectItem value="Government">{t("government")}</SelectItem>
+                    <SelectItem value="Private">{t("private")}</SelectItem>
+                    <SelectItem value="Self-Employed">{t("selfEmployed")}</SelectItem>
+                    <SelectItem value="Unemployed">{t("unemployed")}</SelectItem>
+                    <SelectItem value="Student">{t("studentNoIncome")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Monthly Income Range (LKR)</Label>
+                <Label>{t("monthlyIncomeRange")}</Label>
                 <Select
                   value={formData.monthlyIncome}
                   onValueChange={(val) =>
-                    setFormData({ ...formData, monthlyIncome: val })
+                    setFormData({ ...formData, monthlyIncome: val as any })
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select income range..." />
+                    <SelectValue placeholder={t("selectIncomeRange")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="<750">&lt; 750</SelectItem>
@@ -1073,7 +1072,7 @@ export function FamilyMembers() {
                     <SelectItem value="5000-7999">5,000 – 7,999</SelectItem>
                     <SelectItem value="8000-9999">8,000 – 9,999</SelectItem>
                     <SelectItem value=">10000">&gt; 10,000</SelectItem>
-                    <SelectItem value="None">No Income</SelectItem>
+                    <SelectItem value="None">{t("noIncome")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1085,30 +1084,29 @@ export function FamilyMembers() {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
                   <GraduationCap className="h-5 w-5 text-blue-600 mt-0.5" />
                   <p className="text-sm text-blue-700">
-                    This member is registered as a <strong>Student</strong>. Fill in their
-                    educational details below. They will also appear in the Students module.
+                    {t("studentMemberDescription")}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Grade / Year of Study</Label>
+                  <Label>{t("gradeYearOfStudy")}</Label>
                   <Input
                     value={formData.grade || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, grade: e.target.value })
                     }
-                    placeholder="e.g. Grade 10, A/L Science, University Year 2"
+                    placeholder={t("gradeYearPlaceholder")}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Institution Name</Label>
+                  <Label>{t("institutionName")}</Label>
                   <Input
                     value={formData.institutionName || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, institutionName: e.target.value })
                     }
-                    placeholder="e.g. Hambantota National School"
+                    placeholder={t("institutionNamePlaceholder")}
                   />
                 </div>
               </TabsContent>
@@ -1120,40 +1118,39 @@ export function FamilyMembers() {
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
                   <UserCheck className="h-5 w-5 text-amber-600 mt-0.5" />
                   <p className="text-sm text-amber-700">
-                    This member is registered as a <strong>Boarder</strong> (temporary
-                    resident). They will appear in the Boarders module.
+                    {t("boarderMemberDescription")}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Purpose of Stay</Label>
+                  <Label>{t("purposeOfStay")}</Label>
                   <Select
                     value={formData.purpose}
                     onValueChange={(val) =>
-                      setFormData({ ...formData, purpose: val })
+                      setFormData({ ...formData, purpose: val as any })
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select purpose..." />
+                      <SelectValue placeholder={t("selectPurpose")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Education">Education</SelectItem>
-                      <SelectItem value="Job">Employment / Job</SelectItem>
-                      <SelectItem value="Medical">Medical Treatment</SelectItem>
-                      <SelectItem value="Business">Business</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      <SelectItem value="Education">{t("education")}</SelectItem>
+                      <SelectItem value="Job">{t("employmentJob")}</SelectItem>
+                      <SelectItem value="Medical">{t("medicalTreatment")}</SelectItem>
+                      <SelectItem value="Business">{t("business")}</SelectItem>
+                      <SelectItem value="Other">{t("other")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>District (within Sri Lanka)</Label>
+                  <Label>{t("districtWithinSriLanka")}</Label>
                   <Input
                     value={formData.boarderDistrict || ""}
                     onChange={(e) =>
                       setFormData({ ...formData, boarderDistrict: e.target.value })
                     }
-                    placeholder="e.g. Hambantota, Colombo, Matara, Galle"
+                    placeholder={t("districtPlaceholder")}
                   />
                 </div>
               </TabsContent>
@@ -1168,7 +1165,7 @@ export function FamilyMembers() {
               onClick={handleSave}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {t("save")} Member
+              {t("saveMember")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1180,7 +1177,7 @@ export function FamilyMembers() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Home className="h-5 w-5 text-blue-600" />
-              Household Details
+              {t("householdDetails")}
             </DialogTitle>
           </DialogHeader>
           {viewingHouse && (
@@ -1189,11 +1186,11 @@ export function FamilyMembers() {
               <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-6">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm text-blue-600 font-medium mb-1">House Number</p>
+                    <p className="text-sm text-blue-600 font-medium mb-1">{t("houseNumber")}</p>
                     <p className="text-3xl font-bold text-blue-900">{viewingHouse.houseNumber}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-blue-600 font-medium mb-1">Total Members</p>
+                    <p className="text-sm text-blue-600 font-medium mb-1">{t("totalMembers")}</p>
                     <p className="text-3xl font-bold text-blue-900">
                       {getMembersForHouse(viewingHouse.houseNumber).length}
                     </p>
@@ -1206,7 +1203,7 @@ export function FamilyMembers() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-gray-600 text-sm">
                     <MapPin className="h-4 w-4" />
-                    <span className="font-medium">Address</span>
+                    <span className="font-medium">{t("address")}</span>
                   </div>
                   <p className="text-gray-900 ml-6">{viewingHouse.address}</p>
                 </div>
@@ -1214,22 +1211,22 @@ export function FamilyMembers() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-gray-600 text-sm">
                     <Phone className="h-4 w-4" />
-                    <span className="font-medium">Telephone</span>
+                    <span className="font-medium">{t("telephone")}</span>
                   </div>
-                  <p className="text-gray-900 ml-6">{viewingHouse.telephone || "Not provided"}</p>
+                  <p className="text-gray-900 ml-6">{viewingHouse.telephone || t("notProvided")}</p>
                 </div>
 
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-gray-600 text-sm">
                     <Crown className="h-4 w-4 text-amber-500" />
-                    <span className="font-medium">Head of Household</span>
+                    <span className="font-medium">{t("headOfHousehold")}</span>
                   </div>
                   <p className="text-gray-900 ml-6">
                     {(() => {
                       const head = getMembersForHouse(viewingHouse.houseNumber).find(
                         (m) => m.isHeadOfHousehold
                       );
-                      return head ? head.fullName : "Not assigned";
+                      return head ? head.fullName : t("notAssigned");
                     })()}
                   </p>
                 </div>
@@ -1237,7 +1234,7 @@ export function FamilyMembers() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-gray-600 text-sm">
                     <Users className="h-4 w-4" />
-                    <span className="font-medium">Member Breakdown</span>
+                    <span className="font-medium">{t("memberBreakdown")}</span>
                   </div>
                   <div className="ml-6 flex flex-wrap gap-1">
                     {(() => {
@@ -1248,16 +1245,16 @@ export function FamilyMembers() {
                       return (
                         <>
                           <span className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded">
-                            {regular} Regular
+                            {regular} {t("regular")}
                           </span>
                           {students > 0 && (
                             <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">
-                              {students} Student{students > 1 ? "s" : ""}
+                              {students} {t("student")}{students > 1 ? "s" : ""}
                             </span>
                           )}
                           {boarders > 0 && (
                             <span className="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded">
-                              {boarders} Boarder{boarders > 1 ? "s" : ""}
+                              {boarders} {t("boarder")}{boarders > 1 ? "s" : ""}
                             </span>
                           )}
                         </>
@@ -1271,7 +1268,7 @@ export function FamilyMembers() {
               <div className="border-t pt-4">
                 <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <Users className="h-4 w-4" />
-                  Members in this Household
+                  {t("membersInThisHousehold")}
                 </h4>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {getMembersForHouse(viewingHouse.houseNumber).map((member) => {
@@ -1290,14 +1287,14 @@ export function FamilyMembers() {
                               )}
                             </div>
                             <span className="text-xs text-gray-500">
-                              {member.uniqueNumber} • Age {member.age} • {member.gender}
+                                {member.uniqueNumber} • {t("age")} {member.age} • {member.gender ? t(member.gender.toLowerCase()) : "-"}
                             </span>
                           </div>
                         </div>
                         <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${typeConfig.color}`}>
-                          {typeConfig.icon}
-                          {typeConfig.label}
-                        </span>
+                           {typeConfig.icon}
+                           {t(typeConfig.labelKey)}
+                         </span>
                       </div>
                     );
                   })}
@@ -1306,7 +1303,7 @@ export function FamilyMembers() {
             </div>
           )}
           <DialogFooter>
-            <Button onClick={() => setViewHouseDialog(false)}>Close</Button>
+            <Button onClick={() => setViewHouseDialog(false)}>{t("close")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1317,7 +1314,7 @@ export function FamilyMembers() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-blue-600" />
-              Member Details
+              {t("memberDetails")}
             </DialogTitle>
           </DialogHeader>
           {viewingMember && (
@@ -1331,27 +1328,27 @@ export function FamilyMembers() {
                       {viewingMember.isHeadOfHousehold && (
                         <span className="flex items-center gap-1 text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">
                           <Crown className="h-3 w-3" />
-                          Head of Household
+                          {t("headOfHousehold")}
                         </span>
                       )}
                     </div>
-                    <p className="text-blue-700 font-medium">ID: {viewingMember.uniqueNumber}</p>
+                    <p className="text-blue-700 font-medium">{t("id")}: {viewingMember.uniqueNumber}</p>
                   </div>
                   <div className="text-right">
                     {(() => {
                       const typeConfig = MEMBER_TYPE_CONFIG[viewingMember.memberType];
                       return (
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${typeConfig.color}`}>
-                          {typeConfig.icon}
-                          <span className="font-medium">{typeConfig.label}</span>
-                        </span>
+                         <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${typeConfig.color}`}>
+                           {typeConfig.icon}
+                           <span className="font-medium">{t(typeConfig.labelKey)}</span>
+                         </span>
                       );
                     })()}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-blue-700">
                   <Home className="h-4 w-4" />
-                  <span className="font-medium">House {viewingMember.houseNumber}</span>
+                  <span className="font-medium">{t("house")} {viewingMember.houseNumber}</span>
                   <span className="text-blue-400">•</span>
                   <span className="text-sm">
                     {households.find((h) => h.houseNumber === viewingMember.houseNumber)?.address}
@@ -1361,102 +1358,100 @@ export function FamilyMembers() {
 
               {/* Personal Information */}
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">Personal Information</h4>
+                <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">{t("personalInformation")}</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">National ID (NIC)</p>
-                    <p className="font-medium text-gray-900">{viewingMember.nicNumber || "Not provided"}</p>
+                    <p className="text-sm text-gray-600">{t("nationalIdNic")}</p>
+                    <p className="font-medium text-gray-900">{viewingMember.nicNumber || t("notProvided")}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Birth Year</p>
+                    <p className="text-sm text-gray-600">{t("birthYear")}</p>
                     <p className="font-medium text-gray-900">
                       {viewingMember.birthYear} <span className="text-sm text-gray-500">(Age: {viewingMember.age})</span>
                     </p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Gender</p>
-                    <p className="font-medium text-gray-900">{viewingMember.gender}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Marital Status</p>
-                    <p className="font-medium text-gray-900">{viewingMember.maritalStatus}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Nationality</p>
-                    <p className="font-medium text-gray-900">{viewingMember.nationality}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Religion</p>
-                    <p className="font-medium text-gray-900">{viewingMember.religion}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Education Status</p>
-                    <p className="font-medium text-gray-900">{viewingMember.educationStatus}</p>
-                  </div>
+                   <div>
+                     <p className="text-sm text-gray-600">{t("gender")}</p>
+                     <p className="font-medium text-gray-900">{viewingMember.gender ? t(viewingMember.gender.toLowerCase()) : "-"}</p>
+                   </div>
+                   <div>
+                     <p className="text-sm text-gray-600">{t("maritalStatus")}</p>
+                     <p className="font-medium text-gray-900">{viewingMember.maritalStatus ? t(viewingMember.maritalStatus.toLowerCase()) : "-"}</p>
+                   </div>
+                   <div>
+                     <p className="text-sm text-gray-600">{t("nationality")}</p>
+                     <p className="font-medium text-gray-900">{viewingMember.nationality}</p>
+                   </div>
+                   <div>
+                     <p className="text-sm text-gray-600">{t("religion")}</p>
+                     <p className="font-medium text-gray-900">{viewingMember.religion ? t(viewingMember.religion.toLowerCase()) : "-"}</p>
+                   </div>
+                   <div>
+                     <p className="text-sm text-gray-600">{t("educationStatus")}</p>
+                     <p className="font-medium text-gray-900">{viewingMember.educationStatus ? t(viewingMember.educationStatus.toLowerCase()) : "-"}</p>
+                   </div>
                 </div>
               </div>
 
               {/* Employment Information */}
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">Employment & Income</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Job Type / Occupation</p>
-                    <p className="font-medium text-gray-900">{viewingMember.jobType || "Not specified"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Employment Sector</p>
-                    <p className="font-medium text-gray-900">{viewingMember.sector || "Not specified"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Training Received</p>
-                    <p className="font-medium text-gray-900">{viewingMember.trainingReceived || "None"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Monthly Income (LKR)</p>
-                    <p className="font-medium text-gray-900">{viewingMember.monthlyIncome || "Not specified"}</p>
-                  </div>
-                </div>
-              </div>
+                  <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">{t("employmentAndIncome")}</h4>
+                 <div className="grid grid-cols-2 gap-4">
+                   <div>
+                     <p className="text-sm text-gray-600">{t("jobTypeOccupation")}</p>
+                     <p className="font-medium text-gray-900">{viewingMember.jobType || t("notSpecified")}</p>
+                   </div>
+                   <div>
+                     <p className="text-sm text-gray-600">{t("employmentSector")}</p>
+                     <p className="font-medium text-gray-900">{viewingMember.sector ? t(viewingMember.sector.toLowerCase()) : t("notSpecified")}</p>
+                   </div>
+                   <div>
+                     <p className="text-sm text-gray-600">{t("trainingReceived")}</p>
+                     <p className="font-medium text-gray-900">{viewingMember.trainingReceived || t("none")}</p>
+                   </div>
+                   <div>
+                     <p className="text-sm text-gray-600">{t("monthlyIncome")}</p>
+                     <p className="font-medium text-gray-900">{viewingMember.monthlyIncome || t("notSpecified")}</p>
+                   </div>
+                 </div>
 
               {/* Student Details (if applicable) */}
               {viewingMember.memberType === "student" && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5" />
-                    Student Information
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-blue-600">Grade / Year</p>
-                      <p className="font-medium text-blue-900">{viewingMember.grade || "Not specified"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-blue-600">Institution</p>
-                      <p className="font-medium text-blue-900">{viewingMember.institutionName || "Not specified"}</p>
-                    </div>
-                  </div>
-                </div>
+                   <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                     <GraduationCap className="h-5 w-5" />
+                     {t("studentInformation")}
+                   </h4>
+                   <div className="grid grid-cols-2 gap-4">
+                     <div>
+                       <p className="text-sm text-blue-600">{t("gradeYearOfStudy")}</p>
+                       <p className="font-medium text-blue-900">{viewingMember.grade || t("notSpecified")}</p>
+                     </div>
+                     <div>
+                       <p className="text-sm text-blue-600">{t("institutionName")}</p>
+                       <p className="font-medium text-blue-900">{viewingMember.institutionName || t("notSpecified")}</p>
+                     </div>
+                   </div>
+                 </div>
               )}
 
               {/* Boarder Details (if applicable) */}
               {viewingMember.memberType === "boarder" && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
-                    <UserCheck className="h-5 w-5" />
-                    Boarder Information
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-amber-600">Purpose of Stay</p>
-                      <p className="font-medium text-amber-900">{viewingMember.purpose || "Not specified"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-amber-600">Home District</p>
-                      <p className="font-medium text-amber-900">{viewingMember.boarderDistrict || "Not specified"}</p>
-                    </div>
-                  </div>
-                </div>
+                   <h4 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
+                     <UserCheck className="h-5 w-5" />
+                     {t("boarderInformation")}
+                   </h4>
+                   <div className="grid grid-cols-2 gap-4">
+                     <div>
+                       <p className="text-sm text-amber-600">{t("purposeOfStay")}</p>
+                       <p className="font-medium text-amber-900">{viewingMember.purpose || t("notSpecified")}</p>
+                     </div>
+                     <div>
+                       <p className="text-sm text-amber-600">{t("districtWithinSriLanka")}</p>
+                       <p className="font-medium text-amber-900">{viewingMember.boarderDistrict || t("notSpecified")}</p>
+                     </div>
+                   </div>
+                 </div>
               )}
             </div>
           )}
@@ -1472,9 +1467,9 @@ export function FamilyMembers() {
               className="mr-auto"
             >
               <Pencil className="h-4 w-4 mr-2" />
-              Edit Member
-            </Button>
-            <Button onClick={() => setViewMemberDialog(false)}>Close</Button>
+               {t("editMember")}
+             </Button>
+             <Button onClick={() => setViewMemberDialog(false)}>{t("close")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

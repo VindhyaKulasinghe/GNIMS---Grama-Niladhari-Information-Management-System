@@ -1,46 +1,46 @@
-import { useLanguage } from "../context/LanguageContext";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { FileText, Download, Printer, BarChart3 } from "lucide-react";
 
 export function Reports() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
 
   const reportTypes = [
     {
       title: t("residenceCertificate"),
-      description: "Generate residence certificate for individuals",
+      description: t("residenceCertificateDesc"),
       icon: FileText,
       color: "bg-blue-500",
     },
     {
       title: t("characterCertificate"),
-      description: "Generate character certificate for residents",
+      description: t("characterCertificateDesc"),
       icon: FileText,
       color: "bg-green-500",
     },
     {
       title: t("householdReport"),
-      description: "Detailed household information report",
+      description: t("householdReportDesc"),
       icon: FileText,
       color: "bg-purple-500",
     },
     {
       title: t("populationStatistics"),
-      description: "Statistical analysis of village population",
+      description: t("populationStatisticsDesc"),
       icon: BarChart3,
       color: "bg-orange-500",
     },
     {
       title: t("incomeStatistics"),
-      description: "Income distribution and economic data",
+      description: t("incomeStatisticsDesc"),
       icon: BarChart3,
       color: "bg-pink-500",
     },
     {
-      title: "Property Report",
-      description: "Land and property ownership summary",
+      title: t("propertyReport"),
+      description: t("propertyReportDesc"),
       icon: FileText,
       color: "bg-cyan-500",
     },
@@ -54,7 +54,7 @@ export function Reports() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{t("reports")}</h1>
-        <p className="text-gray-600 mt-1">Generate certificates and statistical reports</p>
+        <p className="text-gray-600 mt-1">{t("reportsDescription")}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -79,7 +79,7 @@ export function Reports() {
                   size="sm"
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Generate
+                  {t("generate")}
                 </Button>
                 <Button 
                   onClick={() => handleGenerateReport(report.title)}
@@ -97,14 +97,14 @@ export function Reports() {
       {/* Recent Reports */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Reports</CardTitle>
+          <CardTitle>{t("recentReports")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {[
-              { name: "Residence Certificate - H.M. Bandara", date: "2026-03-05", type: "Certificate" },
-              { name: "Population Statistics - Hambantota - March 2026", date: "2026-03-01", type: "Statistics" },
-              { name: "Income Report - Southern Province - Q1 2026", date: "2026-02-28", type: "Statistics" },
+              { name: `${t("residenceCertificate")} - H.M. Bandara`, date: "2026-03-05", type: t("certificate") },
+              { name: `${t("populationStatistics")} - Hambantota - March 2026`, date: "2026-03-01", type: t("statistics") },
+              { name: `${t("incomeStatistics")} - Southern Province - Q1 2026`, date: "2026-02-28", type: t("statistics") },
             ].map((report, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">

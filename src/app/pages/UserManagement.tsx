@@ -1,5 +1,5 @@
-﻿import { useState, useEffect } from "react";
-import { useLanguage } from "../context/LanguageContext";
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -32,7 +32,7 @@ import * as userService from "../../lib/services/userService";
 import { User as UserType } from "../../lib/validationSchemas";
 
 export function UserManagement() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const [users, setUsers] = useState<UserType[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -53,7 +53,7 @@ export function UserManagement() {
       const data = await userService.getUsers();
       setUsers(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load users");
+      setError(err instanceof Error ? err.message : t("failedLoadUsers"));
       console.error(err);
     } finally {
       setLoading(false);
@@ -79,12 +79,12 @@ export function UserManagement() {
 
   const handleDelete = async (id: string | undefined) => {
     if (!id) return;
-    if (confirm("Are you sure you want to delete this user?")) {
+    if (confirm(t("confirmDeleteUser"))) {
       try {
         await userService.deleteUser(id);
         setUsers(users.filter(u => u.id !== id));
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to delete user");
+        setError(err instanceof Error ? err.message : t("failedDeleteUser"));
       }
     }
   };
@@ -92,7 +92,7 @@ export function UserManagement() {
   const handleSave = async () => {
     try {
       if (!formData.name || !formData.email || !formData.role || !formData.division || !formData.status) {
-        setError("All fields are required");
+        setError(t("allFieldsRequired"));
         return;
       }
 
@@ -118,7 +118,7 @@ export function UserManagement() {
       setDialogOpen(false);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save user");
+      setError(err instanceof Error ? err.message : t("failedSaveUser"));
     }
   };
 
@@ -136,7 +136,7 @@ export function UserManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{t("userManagement")}</h1>
-          <p className="text-gray-600 mt-1">Manage system users and access permissions</p>
+          <p className="text-gray-600 mt-1">{t("userManagementDescription")}</p>
         </div>
         <Button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="h-4 w-4 mr-2" />
@@ -165,17 +165,17 @@ export function UserManagement() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8">Loading...</div>
+            <div className="text-center py-8">{t("loading") || "Loading..."}</div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Division</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("name")}</TableHead>
+                  <TableHead>{t("email")}</TableHead>
+                  <TableHead>{t("role")}</TableHead>
+                  <TableHead>{t("division")}</TableHead>
+                  <TableHead>{t("status")}</TableHead>
+                  <TableHead className="text-right">{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -197,7 +197,7 @@ export function UserManagement() {
                     <TableCell>{user.division}</TableCell>
                     <TableCell>
                       <Badge className={user.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
-                        {user.status}
+                        {user.status === "Active" ? t("active") : t("inactive")}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -222,20 +222,20 @@ export function UserManagement() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingUser ? t("edit") : t("add")} User
+              {editingUser ? t("edit") : t("add")} {t("user") || "User"}
             </DialogTitle>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>Name</Label>
+              <Label>{t("name")}</Label>
               <Input
                 value={formData.name || ""}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Email</Label>
+              <Label>{t("email")}</Label>
               <Input
                 type="email"
                 value={formData.email || ""}
@@ -243,34 +243,34 @@ export function UserManagement() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Role</Label>
+              <Label>{t("role")}</Label>
               <Select value={formData.role || ""} onValueChange={(val) => setFormData({ ...formData, role: val as any })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
+                  <SelectValue placeholder={t("selectRole")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="GN Officer">GN Officer</SelectItem>
-                  <SelectItem value="Divisional Secretariat">Divisional Secretariat</SelectItem>
+                  <SelectItem value="Admin">{t("admin")}</SelectItem>
+                  <SelectItem value="GN Officer">{t("gnOfficer")}</SelectItem>
+                  <SelectItem value="Divisional Secretariat">{t("divisionalSecretariatLabel")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Division</Label>
+              <Label>{t("division")}</Label>
               <Input
                 value={formData.division || ""}
                 onChange={(e) => setFormData({ ...formData, division: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>{t("status")}</Label>
               <Select value={formData.status || ""} onValueChange={(val) => setFormData({ ...formData, status: val as any })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder={t("selectStatus")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Active">{t("active")}</SelectItem>
+                  <SelectItem value="Inactive">{t("inactive")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

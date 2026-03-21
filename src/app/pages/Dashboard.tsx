@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useLanguage } from "../context/LanguageContext";
+import { useTranslation } from "react-i18next";
 import { useHouseholdData } from "../context/HouseholdDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Home, Users, GraduationCap, Briefcase, UserCheck, Car } from "lucide-react";
@@ -20,7 +20,7 @@ import {
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
 
 export function Dashboard() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const { households, familyMembers, vehicles, loading, error } = useHouseholdData();
 
   // Calculate statistics from real data
@@ -38,42 +38,42 @@ export function Dashboard() {
         value: totalHouseholds.toString(), 
         icon: Home, 
         color: "bg-blue-500",
-        change: "Registered households"
+        change: t("registeredHouseholds")
       },
       { 
         title: t("totalResidents"), 
         value: totalResidents.toString(), 
         icon: Users, 
         color: "bg-green-500",
-        change: "Total members"
+        change: t("totalMembers")
       },
       { 
         title: t("studentsCount"), 
         value: students.toString(), 
         icon: GraduationCap, 
         color: "bg-orange-500",
-        change: "Active students"
+        change: t("activeStudents")
       },
       { 
         title: t("employedResidents"), 
         value: employed.toString(), 
         icon: Briefcase, 
         color: "bg-purple-500",
-        change: "Currently employed"
+        change: t("currentlyEmployed")
       },
       { 
         title: t("retiredPersons"), 
         value: retired.toString(), 
         icon: UserCheck, 
         color: "bg-pink-500",
-        change: "Retired persons"
+        change: t("retiredPersons")
       },
       { 
         title: t("registeredVehicles"), 
         value: totalVehicles.toString(), 
         icon: Car, 
         color: "bg-cyan-500",
-        change: "Total vehicles"
+        change: t("totalVehicles")
       },
     ];
   }, [households, familyMembers, vehicles, t]);
@@ -137,7 +137,7 @@ export function Dashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">{t("dashboard")}</h1>
-        <p className="text-gray-600 mt-1">Overview of village statistics and data</p>
+        <p className="text-gray-600 mt-1">{t("overviewVillageStats")}</p>
       </div>
 
       {error && (
@@ -147,7 +147,7 @@ export function Dashboard() {
       )}
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500">Loading dashboard data...</div>
+        <div className="text-center py-12 text-gray-500">{t("loading")}</div>
       ) : (
         <>
           {/* Stats Grid */}
@@ -185,7 +185,7 @@ export function Dashboard() {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="count" fill="#3b82f6" name="Households" />
+                    <Bar dataKey="count" fill="#3b82f6" name={t("households")} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>

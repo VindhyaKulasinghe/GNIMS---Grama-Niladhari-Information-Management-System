@@ -1,7 +1,7 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router'
 import { useAuth } from '../context/AuthContext'
-import { useLanguage } from '../context/LanguageContext'
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -22,7 +22,6 @@ import {
 } from '../components/ui/dialog'
 import { Globe, Lock, Mail, Building2, ShieldCheck, AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '../components/ui/alert'
-import { Language } from '../context/LanguageContext'
 
 export function Login() {
   const [email, setEmail] = useState('')
@@ -32,7 +31,7 @@ export function Login() {
   const { login, error, clearError, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const { t, language, setLanguage } = useLanguage()
+  const { t, i18n } = useTranslation();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -75,8 +74,8 @@ export function Login() {
       {/* Language selector */}
       <div className="absolute top-6 right-6 z-10">
         <Select
-          value={language}
-          onValueChange={(val) => setLanguage(val as Language)}
+          value={i18n.language}
+          onValueChange={(val) => i18n.changeLanguage(val)}
         >
           <SelectTrigger className="w-[160px] bg-slate-800/80 border-slate-700 text-white backdrop-blur-sm">
             <Globe className="h-5 w-5 mr-2" />
@@ -101,7 +100,7 @@ export function Login() {
               GNIMS
             </CardTitle>
             <p className="text-sm font-medium text-slate-600 mt-1">
-              Grama Niladhari Information Management System
+              {t("loginSubtitle")}
             </p>
           </div>
           <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
@@ -129,7 +128,7 @@ export function Login() {
             {/* Email Field */}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-slate-700">
-                Email
+                {t("email")}
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
@@ -149,7 +148,7 @@ export function Login() {
             {/* Password Field */}
             <div className="space-y-2">
               <Label htmlFor="password" className="text-slate-700">
-                Password
+                {t("password")}
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
@@ -173,7 +172,7 @@ export function Login() {
                 onClick={() => setForgotPasswordOpen(true)}
                 className="text-sm text-slate-600 hover:text-slate-900 hover:underline"
               >
-                Forgot Password?
+                {t("forgotPassword")}
               </button>
             </div>
 
@@ -183,7 +182,7 @@ export function Login() {
               disabled={isSubmitting}
               className="w-full h-11 bg-slate-800 hover:bg-slate-900 text-white font-semibold"
             >
-              {isSubmitting ? 'Signing In...' : 'Sign In'}
+              {isSubmitting ? t("signingIn") : t("signIn")}
             </Button>
 
           </form>
@@ -194,32 +193,31 @@ export function Login() {
       <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Password Recovery</DialogTitle>
+            <DialogTitle>{t("passwordRecovery")}</DialogTitle>
             <DialogDescription>
-              Please contact your system administrator or the District GN Supervisor to reset your password.
+              {t("passwordRecoveryDesc")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
               <h4 className="font-medium text-slate-900 mb-2">
-                Contact Information:
+                {t("contactInformation")}
               </h4>
               <div className="space-y-1 text-sm text-slate-600">
-                <p>📞 District Office: 047-222-0000</p>
-                <p>📧 Email: gn.hambantota@district.gov.lk</p>
-                <p>🕐 Office Hours: Mon-Fri, 8:00 AM - 4:00 PM</p>
+                <p>📞 {t("districtOffice")}: 047-222-0000</p>
+                <p>📧 {t("email")}: gn.hambantota@district.gov.lk</p>
+                <p>🕐 {t("officeHours")}: {t("monFri")}, 8:00 AM - 4:00 PM</p>
               </div>
             </div>
             <p className="text-xs text-slate-500">
-              For security purposes, password resets must be done through official
-              channels only.
+              {t("securityPurposesDesc")}
             </p>
           </div>
           <Button
             onClick={() => setForgotPasswordOpen(false)}
             className="w-full bg-slate-800 hover:bg-slate-900"
           >
-            Close
+            {t("close")}
           </Button>
         </DialogContent>
       </Dialog>

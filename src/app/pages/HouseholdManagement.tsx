@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLanguage } from "../context/LanguageContext";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useHouseholdData, Household } from "../context/HouseholdDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -39,7 +39,7 @@ import { Plus, Pencil, Trash2, Search, Home, PawPrint, X, BarChart3, List } from
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export function HouseholdManagement() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const {
     households,
     getMembersForHouse,
@@ -111,7 +111,7 @@ export function HouseholdManagement() {
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm("Are you sure you want to delete this household?")) {
+    if (confirm(t("confirmDelete"))) {
       await deleteHousehold(id);
     }
   };
@@ -258,10 +258,10 @@ export function HouseholdManagement() {
   const toiletCount = households.filter((h) => h.toilet).length;
 
   const utilitiesData = [
-    { name: "Electricity", value: electricityCount },
-    { name: "Water", value: waterCount },
-    { name: "Toilet", value: toiletCount },
-    { name: "None", value: households.length - Math.max(electricityCount, waterCount, toiletCount) },
+    { name: t("electricityCount"), value: electricityCount },
+    { name: t("waterSupplyCount"), value: waterCount },
+    { name: t("toiletFacilityCount"), value: toiletCount },
+    { name: t("none"), value: households.length - Math.max(electricityCount, waterCount, toiletCount) },
   ].filter(item => item.value > 0);
 
   // Roof types distribution
@@ -273,7 +273,7 @@ export function HouseholdManagement() {
   }, {} as Record<string, number>);
 
   const roofTypeData = Object.entries(roofTypeCounts).map(([name, value]) => ({
-    name,
+    name: t(name.toLowerCase()),
     value,
   }));
 
@@ -287,12 +287,12 @@ export function HouseholdManagement() {
             {t("householdManagement")}
           </h1>
           <p className="text-slate-600 mt-1">
-            Manage household address and property details
+            {t("householdManagementSubtitle")}
           </p>
         </div>
         <Button onClick={handleAdd} className="bg-slate-900 hover:bg-slate-800">
           <Plus className="h-4 w-4 mr-2" />
-          {t("add")} Household
+          {t("addHousehold")}
         </Button>
       </div>
 
@@ -300,11 +300,11 @@ export function HouseholdManagement() {
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="overview" className="gap-2">
             <BarChart3 className="h-4 w-4" />
-            Overview
+            {t("overview")}
           </TabsTrigger>
           <TabsTrigger value="all-households" className="gap-2">
             <List className="h-4 w-4" />
-            All Households
+            {t("allHouseholds")}
           </TabsTrigger>
         </TabsList>
 
@@ -317,7 +317,7 @@ export function HouseholdManagement() {
                 <div className="flex items-center gap-4">
                   <Home className="h-10 w-10 text-white/90" />
                   <div>
-                    <p className="text-sm text-blue-100">Total Households</p>
+                    <p className="text-sm text-blue-100">{t("totalHouseholds")}</p>
                     <p className="text-3xl font-bold">{households.length}</p>
                   </div>
                 </div>
@@ -330,7 +330,7 @@ export function HouseholdManagement() {
                     <span className="text-2xl">⚡</span>
                   </div>
                   <div>
-                    <p className="text-sm text-green-100">Electricity</p>
+                    <p className="text-sm text-green-100">{t("electricityCount")}</p>
                     <p className="text-3xl font-bold">{electricityCount}</p>
                   </div>
                 </div>
@@ -343,7 +343,7 @@ export function HouseholdManagement() {
                     <span className="text-2xl">💧</span>
                   </div>
                   <div>
-                    <p className="text-sm text-orange-100">Water Supply</p>
+                    <p className="text-sm text-orange-100">{t("waterSupplyCount")}</p>
                     <p className="text-3xl font-bold">{waterCount}</p>
                   </div>
                 </div>
@@ -356,7 +356,7 @@ export function HouseholdManagement() {
                     <span className="text-2xl">🚽</span>
                   </div>
                   <div>
-                    <p className="text-sm text-purple-100">Toilet Facility</p>
+                    <p className="text-sm text-purple-100">{t("toiletFacilityCount")}</p>
                     <p className="text-3xl font-bold">{toiletCount}</p>
                   </div>
                 </div>
@@ -369,7 +369,7 @@ export function HouseholdManagement() {
             {/* Pie Chart - Utilities Distribution */}
             <Card>
               <CardHeader>
-                <CardTitle>Utilities Distribution</CardTitle>
+                <CardTitle>{t("utilitiesDistribution")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -400,7 +400,7 @@ export function HouseholdManagement() {
             {/* Bar Chart - Roof Types */}
             <Card>
               <CardHeader>
-                <CardTitle>Roof Type Distribution</CardTitle>
+                <CardTitle>{t("roofTypeDistribution")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -424,7 +424,7 @@ export function HouseholdManagement() {
               className="gap-2"
             >
               <Plus className="h-5 w-5" />
-              Add New Household
+              {t("addNewHousehold")}
             </Button>
           </div>
         </TabsContent>
@@ -443,7 +443,7 @@ export function HouseholdManagement() {
             </div>
             <Button onClick={handleAdd} className="bg-slate-900 hover:bg-slate-800">
               <Plus className="h-4 w-4 mr-2" />
-              Add Household
+              {t("addHousehold")}
             </Button>
           </div>
 
@@ -456,10 +456,10 @@ export function HouseholdManagement() {
                       <TableHead>{t("houseNumber")}</TableHead>
                       <TableHead>{t("address")}</TableHead>
                       <TableHead>{t("telephone")}</TableHead>
-                      <TableHead>Members</TableHead>
-                      <TableHead>Animals</TableHead>
+                      <TableHead>{t("members")}</TableHead>
+                      <TableHead>{t("animals")}</TableHead>
                       <TableHead>{t("utilities")}</TableHead>
-                      <TableHead>Housing</TableHead>
+                      <TableHead>{t("housing")}</TableHead>
                       <TableHead className="text-right">{t("actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -493,7 +493,7 @@ export function HouseholdManagement() {
                               <p className="text-sm">{household.address}</p>
                               {head && (
                                 <p className="text-xs text-gray-500 mt-0.5">
-                                  Head: {head.fullName}
+                                  {t("headOfHouseholdLabel")}: {head.fullName}
                                 </p>
                               )}
                             </div>
@@ -501,7 +501,7 @@ export function HouseholdManagement() {
                           <TableCell>{household.telephone}</TableCell>
                           <TableCell>
                             <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
-                              {members.length} members
+                              {members.length} {t("members").toLowerCase()}
                             </span>
                           </TableCell>
                           <TableCell>
@@ -534,8 +534,8 @@ export function HouseholdManagement() {
                           </TableCell>
                           <TableCell>
                             <div className="text-xs text-gray-600 space-y-0.5">
-                              <div>Roof: {household.roofType || "-"}</div>
-                              <div>Wall: {household.wallType || "-"}</div>
+                              <div>{t("roof")}: {household.roofType ? t(household.roofType.toLowerCase()) : "-"}</div>
+                              <div>{t("wall")}: {household.wallType ? t(household.wallType.toLowerCase()) : "-"}</div>
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
@@ -562,7 +562,7 @@ export function HouseholdManagement() {
                     {filteredHouseholds.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={8} className="text-center text-gray-400 py-8">
-                          No households found.
+                          {t("noHouseholdsFound") || "No households found."}
                         </TableCell>
                       </TableRow>
                     )}
@@ -579,7 +579,7 @@ export function HouseholdManagement() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingHousehold ? t("edit") : t("add")} Household
+              {editingHousehold ? t("edit") : t("add")} {t("households").slice(0, -1)}
             </DialogTitle>
           </DialogHeader>
 
@@ -681,10 +681,10 @@ export function HouseholdManagement() {
                       <SelectValue placeholder="Select..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Tiles">Tiles</SelectItem>
-                      <SelectItem value="Asbestos">Asbestos</SelectItem>
-                      <SelectItem value="Metal">Metal</SelectItem>
-                      <SelectItem value="Cadjan">Cadjan</SelectItem>
+                      <SelectItem value="Tiles">{t("tiles")}</SelectItem>
+                      <SelectItem value="Asbestos">{t("asbestos")}</SelectItem>
+                      <SelectItem value="Metal">{t("metal")}</SelectItem>
+                      <SelectItem value="Cadjan">{t("cadjan")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -700,10 +700,10 @@ export function HouseholdManagement() {
                       <SelectValue placeholder="Select..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Brick">Brick</SelectItem>
-                      <SelectItem value="Cement">Cement</SelectItem>
-                      <SelectItem value="Wood">Wood</SelectItem>
-                      <SelectItem value="Cadjan">Cadjan</SelectItem>
+                      <SelectItem value="Brick">{t("brick")}</SelectItem>
+                      <SelectItem value="Cement">{t("cement")}</SelectItem>
+                      <SelectItem value="Wood">{t("wood")}</SelectItem>
+                      <SelectItem value="Cadjan">{t("cadjan")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -719,10 +719,10 @@ export function HouseholdManagement() {
                       <SelectValue placeholder="Select..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Cement">Cement</SelectItem>
-                      <SelectItem value="Tiles">Tiles</SelectItem>
-                      <SelectItem value="Earth">Earth</SelectItem>
-                      <SelectItem value="Wood">Wood</SelectItem>
+                      <SelectItem value="Cement">{t("cement")}</SelectItem>
+                      <SelectItem value="Tiles">{t("tiles")}</SelectItem>
+                      <SelectItem value="Earth">{t("earth")}</SelectItem>
+                      <SelectItem value="Wood">{t("wood")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -740,7 +740,7 @@ export function HouseholdManagement() {
                   className="gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  Add Animal
+                  {t("add")} {t("animals").slice(0, -1)}
                 </Button>
               </div>
 

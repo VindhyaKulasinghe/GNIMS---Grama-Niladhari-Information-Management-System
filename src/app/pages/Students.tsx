@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLanguage } from "../context/LanguageContext";
+import { useTranslation } from "react-i18next";
 import { useHouseholdData } from "../context/HouseholdDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -29,7 +29,7 @@ import { Search, GraduationCap, Home, Users, BarChart3, List, MapPin, Phone } fr
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export function Students() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const { getStudents, households } = useHouseholdData();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -72,8 +72,8 @@ export function Students() {
 
   // Analytics data for charts
   const genderData = [
-    { name: "Male", value: students.filter((s) => s.gender === "Male").length },
-    { name: "Female", value: students.filter((s) => s.gender === "Female").length },
+    { name: t("male"), value: students.filter((s) => s.gender === "Male").length },
+    { name: t("female"), value: students.filter((s) => s.gender === "Female").length },
   ].filter(item => item.value > 0);
 
   const gradeData = Object.entries(gradeGroups).map(([name, value]) => ({
@@ -97,8 +97,7 @@ export function Students() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">{t("students")}</h1>
           <p className="text-slate-600 mt-1">
-            Students registered across all households. To add a student, go to{" "}
-            <strong>Family Member Registry</strong> and set member type to "Student".
+            {t("studentsDescription")}
           </p>
         </div>
       </div>
@@ -107,11 +106,11 @@ export function Students() {
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="overview" className="gap-2">
             <BarChart3 className="h-4 w-4" />
-            Overview
+            {t("overview")}
           </TabsTrigger>
           <TabsTrigger value="all-students" className="gap-2">
             <List className="h-4 w-4" />
-            All Students
+            {t("allStudents")}
           </TabsTrigger>
         </TabsList>
 
@@ -124,7 +123,7 @@ export function Students() {
                 <div className="flex items-center gap-4">
                   <GraduationCap className="h-10 w-10 text-white/90" />
                   <div>
-                    <p className="text-sm text-blue-100">Total Students</p>
+                    <p className="text-sm text-blue-100">{t("totalStudents")}</p>
                     <p className="text-3xl font-bold">{students.length}</p>
                   </div>
                 </div>
@@ -137,7 +136,7 @@ export function Students() {
                     <Home className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-sm text-green-100">Households</p>
+                    <p className="text-sm text-green-100">{t("households")}</p>
                     <p className="text-3xl font-bold">
                       {new Set(students.map((s) => s.houseNumber)).size}
                     </p>
@@ -152,7 +151,7 @@ export function Students() {
                     <Users className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-sm text-orange-100">Institutions</p>
+                    <p className="text-sm text-orange-100">{t("institutions")}</p>
                     <p className="text-3xl font-bold">
                       {new Set(students.map((s) => s.institutionName)).size}
                     </p>
@@ -167,8 +166,8 @@ export function Students() {
                     <span className="text-2xl font-bold">{Object.keys(gradeGroups).length}</span>
                   </div>
                   <div>
-                    <p className="text-sm text-purple-100">Grade Levels</p>
-                    <p className="text-xl font-semibold">Tracked</p>
+                    <p className="text-sm text-purple-100">{t("gradeLevels")}</p>
+                    <p className="text-xl font-semibold">{t("tracked")}</p>
                   </div>
                 </div>
               </CardContent>
@@ -180,7 +179,7 @@ export function Students() {
             {/* Pie Chart - Gender Distribution */}
             <Card>
               <CardHeader>
-                <CardTitle>Gender Distribution</CardTitle>
+                <CardTitle>{t("genderDistribution")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -211,7 +210,7 @@ export function Students() {
             {/* Bar Chart - Top Institutions */}
             <Card>
               <CardHeader>
-                <CardTitle>Top 5 Institutions</CardTitle>
+                <CardTitle>{t("topInstitutions")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -231,7 +230,7 @@ export function Students() {
           {gradeData.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Students by Grade/Year</CardTitle>
+                <CardTitle>{t("studentsByGrade")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -255,7 +254,7 @@ export function Students() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
-                  placeholder="Search by name, house number, institution, or grade..."
+                  placeholder={t("searchStudentsPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -267,12 +266,12 @@ export function Students() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Unique No.</TableHead>
-                      <TableHead>Full Name</TableHead>
-                      <TableHead>House No.</TableHead>
-                      <TableHead>Address</TableHead>
-                      <TableHead>Age</TableHead>
-                      <TableHead>Gender</TableHead>
+                      <TableHead>{t("uniqueNo")}</TableHead>
+                      <TableHead>{t("fullName")}</TableHead>
+                      <TableHead>{t("houseNo")}</TableHead>
+                      <TableHead>{t("address")}</TableHead>
+                      <TableHead>{t("age")}</TableHead>
+                      <TableHead>{t("gender")}</TableHead>
                       <TableHead>{t("grade")}</TableHead>
                       <TableHead>{t("institutionName")}</TableHead>
                     </TableRow>
@@ -300,7 +299,7 @@ export function Students() {
                           {getHouseAddress(student.houseNumber)}
                         </TableCell>
                         <TableCell>{student.age}</TableCell>
-                        <TableCell className="text-xs">{student.gender}</TableCell>
+                        <TableCell className="text-xs">{student.gender ? t(student.gender.toLowerCase()) : "-"}</TableCell>
                         <TableCell>
                           <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded">
                             {student.grade || "-"}
@@ -313,8 +312,8 @@ export function Students() {
                       <TableRow>
                         <TableCell colSpan={8} className="text-center text-gray-400 py-8">
                           {students.length === 0
-                            ? "No students registered yet. Add members with type 'Student' in Family Member Registry."
-                            : "No students match your search."}
+                            ? t("noStudentsRegistered")
+                            : t("noStudentsMatch")}
                         </TableCell>
                       </TableRow>
                     )}
@@ -332,7 +331,7 @@ export function Students() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <GraduationCap className="h-5 w-5 text-blue-600" />
-              Student Details
+              {t("studentDetails")}
             </DialogTitle>
           </DialogHeader>
           {viewingStudent && (
@@ -342,15 +341,15 @@ export function Students() {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-2">{viewingStudent.fullName}</h3>
-                    <p className="text-blue-700 font-medium">ID: {viewingStudent.uniqueNumber}</p>
+                    <p className="text-blue-700 font-medium">{t("id") || "ID"}: {viewingStudent.uniqueNumber}</p>
                   </div>
                   <span className="bg-blue-100 text-blue-700 text-xs px-3 py-1.5 rounded-full font-medium">
-                    Student
+                    {t("student")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-blue-700">
                   <Home className="h-4 w-4" />
-                  <span className="font-medium">House {viewingStudent.houseNumber}</span>
+                  <span className="font-medium">{t("house")} {viewingStudent.houseNumber}</span>
                   <span className="text-blue-400">•</span>
                   <span className="text-sm">{getHouseAddress(viewingStudent.houseNumber)}</span>
                 </div>
@@ -358,32 +357,32 @@ export function Students() {
 
               {/* Personal Information */}
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">Personal Information</h4>
+                <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">{t("personalInformation")}</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">National ID (NIC)</p>
-                    <p className="font-medium text-gray-900">{viewingStudent.nicNumber || "Not provided"}</p>
+                    <p className="text-sm text-gray-600">{t("nic") || "NIC"}</p>
+                    <p className="font-medium text-gray-900">{viewingStudent.nicNumber || t("notProvided")}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Birth Year</p>
+                    <p className="text-sm text-gray-600">{t("birthYear")}</p>
                     <p className="font-medium text-gray-900">
-                      {viewingStudent.birthYear} <span className="text-sm text-gray-500">(Age: {viewingStudent.age})</span>
+                      {viewingStudent.birthYear} <span className="text-sm text-gray-500">({t("age")}: {viewingStudent.age})</span>
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Gender</p>
-                    <p className="font-medium text-gray-900">{viewingStudent.gender}</p>
+                    <p className="text-sm text-gray-600">{t("gender")}</p>
+                    <p className="font-medium text-gray-900">{viewingStudent.gender ? t(viewingStudent.gender.toLowerCase()) : "-"}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Nationality</p>
+                    <p className="text-sm text-gray-600">{t("nationality")}</p>
                     <p className="font-medium text-gray-900">{viewingStudent.nationality}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Religion</p>
+                    <p className="text-sm text-gray-600">{t("religion")}</p>
                     <p className="font-medium text-gray-900">{viewingStudent.religion}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Education Level</p>
+                    <p className="text-sm text-gray-600">{t("educationStatus")}</p>
                     <p className="font-medium text-gray-900">{viewingStudent.educationStatus}</p>
                   </div>
                 </div>
@@ -393,16 +392,16 @@ export function Students() {
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
                   <GraduationCap className="h-5 w-5" />
-                  Academic Information
+                  {t("academicInformation")}
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-green-600">Grade / Year of Study</p>
-                    <p className="font-medium text-green-900">{viewingStudent.grade || "Not specified"}</p>
+                    <p className="text-sm text-green-600">{t("gradeYearStudy")}</p>
+                    <p className="font-medium text-green-900">{viewingStudent.grade || t("notSpecified")}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-green-600">Institution Name</p>
-                    <p className="font-medium text-green-900">{viewingStudent.institutionName || "Not specified"}</p>
+                    <p className="text-sm text-green-600">{t("institutionName")}</p>
+                    <p className="font-medium text-green-900">{viewingStudent.institutionName || t("notSpecified")}</p>
                   </div>
                 </div>
               </div>
@@ -410,15 +409,15 @@ export function Students() {
               {/* Employment Information (if any) */}
               {viewingStudent.jobType && (
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">Employment & Income</h4>
+                  <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">{t("employmentAndIncome")}</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-600">Job Type</p>
+                      <p className="text-sm text-gray-600">{t("jobType")}</p>
                       <p className="font-medium text-gray-900">{viewingStudent.jobType}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Monthly Income</p>
-                      <p className="font-medium text-gray-900">{viewingStudent.monthlyIncome || "Not specified"}</p>
+                      <p className="text-sm text-gray-600">{t("monthlyIncome")}</p>
+                      <p className="font-medium text-gray-900">{viewingStudent.monthlyIncome || t("notSpecified")}</p>
                     </div>
                   </div>
                 </div>
@@ -426,7 +425,7 @@ export function Students() {
             </div>
           )}
           <DialogFooter>
-            <Button onClick={() => setViewDialog(false)}>Close</Button>
+            <Button onClick={() => setViewDialog(false)}>{t("close")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

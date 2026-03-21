@@ -1,10 +1,10 @@
 import { Link } from "react-router";
 import { Button } from "../components/ui/button";
 import { Home, AlertCircle } from "lucide-react";
-import { useLanguage } from "../context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 export function NotFound() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLanguage } from "../context/LanguageContext";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useHouseholdData, Vehicle } from "../context/HouseholdDataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -33,7 +33,7 @@ import { Plus, Pencil, Trash2, Search, Car, BarChart3, List, Check, Loader2, Ale
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export function Vehicles() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const { vehicles, addVehicle, updateVehicle, deleteVehicle, familyMembers, households } = useHouseholdData();
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -65,7 +65,7 @@ export function Vehicles() {
   const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
     setFormData(vehicle);
-    setUserId(vehicle.userId);
+    setUserId(vehicle.userId || "");
     // Auto-validate for editing
     const member = familyMembers.find(m => m.id.toString() === vehicle.userId);
     if (member) {
@@ -82,7 +82,7 @@ export function Vehicles() {
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm("Are you sure you want to delete this vehicle record?")) {
+    if (confirm(t("confirmDeleteVehicle"))) {
       await deleteVehicle(id);
     }
   };
@@ -126,14 +126,14 @@ export function Vehicles() {
   const handleSave = async () => {
     const errors: { [key: string]: string } = {};
 
-    if (!formData.vehicleType) errors.vehicleType = "Vehicle type is required";
-    if (!formData.vehicleNumber) errors.vehicleNumber = "Vehicle number is required";
-    if (!formData.registrationYear) errors.registrationYear = "Registration year is required";
-    if (userValidation !== "valid") errors.userId = "Please validate the NIC before saving";
+    if (!formData.vehicleType) errors.vehicleType = t("vehicleTypeRequired");
+    if (!formData.vehicleNumber) errors.vehicleNumber = t("vehicleNumberRequired");
+    if (!formData.registrationYear) errors.registrationYear = t("registrationYearRequired");
+    if (userValidation !== "valid") errors.userId = t("validateNicPrompt");
 
     if (Object.keys(errors).length > 0) {
       (formData as any).__errors = errors;
-      toast.error("Please fix the highlighted vehicle form errors.");
+      toast.error(t("fixFormErrors"));
       return;
     }
 
@@ -142,11 +142,11 @@ export function Vehicles() {
     if (editingVehicle) {
       const { id, createdAt, updatedAt, userId, ...rest } = (cleanForm as Vehicle) as any;
       await updateVehicle(editingVehicle.id, rest);
-      toast.success("Vehicle updated successfully.");
+      toast.success(t("vehicleUpdated"));
     } else {
       const { id, createdAt, updatedAt, userId, ...rest } = (cleanForm as Vehicle) as any;
       await addVehicle(rest);
-      toast.success("Vehicle added successfully.");
+      toast.success(t("vehicleAdded"));
     }
     setDialogOpen(false);
   };
@@ -158,7 +158,7 @@ export function Vehicles() {
   }, {} as Record<string, number>);
 
   const vehicleTypeData = Object.entries(vehicleTypeCounts).map(([name, value]) => ({
-    name,
+    name: t(name.toLowerCase().replace("-", "")) || name,
     value,
   }));
 
@@ -181,11 +181,11 @@ export function Vehicles() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">{t("vehicles")}</h1>
-          <p className="text-slate-600 mt-1">Vehicle registration and management system</p>
+          <p className="text-slate-600 mt-1">{t("vehicleManagementSubtitle")}</p>
         </div>
         <Button onClick={handleAdd} className="bg-slate-900 hover:bg-slate-800">
           <Plus className="h-4 w-4 mr-2" />
-          {t("add")} Vehicle
+          {t("addVehicle")}
         </Button>
       </div>
 
@@ -193,11 +193,11 @@ export function Vehicles() {
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="overview" className="gap-2">
             <BarChart3 className="h-4 w-4" />
-            Overview
+            {t("overview")}
           </TabsTrigger>
           <TabsTrigger value="vehicle-details" className="gap-2">
             <List className="h-4 w-4" />
-            Vehicle Details
+            {t("details")}
           </TabsTrigger>
         </TabsList>
 
@@ -210,7 +210,7 @@ export function Vehicles() {
                 <div className="flex items-center gap-4">
                   <Car className="h-10 w-10 text-white/90" />
                   <div>
-                    <p className="text-sm text-blue-100">Total Vehicles</p>
+                    <p className="text-sm text-blue-100">{t("totalVehicles")}</p>
                     <p className="text-3xl font-bold">{vehicles.length}</p>
                   </div>
                 </div>
@@ -223,7 +223,7 @@ export function Vehicles() {
                     <BarChart3 className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-sm text-green-100">Vehicle Types</p>
+                    <p className="text-sm text-green-100">{t("vehicleType")}</p>
                     <p className="text-3xl font-bold">{Object.keys(vehicleTypeCounts).length}</p>
                   </div>
                 </div>
@@ -236,7 +236,7 @@ export function Vehicles() {
                     <Home className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-sm text-orange-100">Households with Vehicles</p>
+                    <p className="text-sm text-orange-100">{t("householdsWithVehicles")}</p>
                     <p className="text-3xl font-bold">
                       {new Set(vehicles.map(v => v.houseNumber)).size}
                     </p>
@@ -251,7 +251,7 @@ export function Vehicles() {
                     <Car className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-sm text-purple-100">Avg Registration Year</p>
+                    <p className="text-sm text-purple-100">{t("avgRegistrationYear")}</p>
                     <p className="text-3xl font-bold">
                       {Math.round(vehicles.reduce((sum, v) => sum + v.registrationYear, 0) / vehicles.length)}
                     </p>
@@ -266,7 +266,7 @@ export function Vehicles() {
             {/* Pie Chart - Vehicle Types */}
             <Card>
               <CardHeader>
-                <CardTitle>Vehicle Distribution by Type</CardTitle>
+                <CardTitle>{t("vehicleDistributionByType")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -294,7 +294,7 @@ export function Vehicles() {
             {/* Bar Chart - Registration Years */}
             <Card>
               <CardHeader>
-                <CardTitle>Vehicles by Registration Period</CardTitle>
+                <CardTitle>{t("vehiclesByRegistrationPeriod")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -313,7 +313,7 @@ export function Vehicles() {
           <div className="flex justify-center pt-4">
             <Button onClick={handleAdd} variant="outline" size="lg" className="gap-2">
               <Plus className="h-5 w-5" />
-              Add New Vehicle
+              {t("addNewVehicle")}
             </Button>
           </div>
         </TabsContent>
@@ -324,7 +324,7 @@ export function Vehicles() {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder={`${t("search")} by vehicle number, type, or owner...`}
+                placeholder={t("searchVehiclesPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -332,7 +332,7 @@ export function Vehicles() {
             </div>
             <Button onClick={handleAdd} className="bg-slate-900 hover:bg-slate-800">
               <Plus className="h-4 w-4 mr-2" />
-              Add Vehicle
+              {t("addVehicle")}
             </Button>
           </div>
 
@@ -342,11 +342,11 @@ export function Vehicles() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Vehicle Number</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Owner</TableHead>
-                      <TableHead>House Number</TableHead>
-                      <TableHead>Registration Year</TableHead>
+                      <TableHead>{t("vehicleNumber")}</TableHead>
+                      <TableHead>{t("type") || "Type"}</TableHead>
+                      <TableHead>{t("owner")}</TableHead>
+                      <TableHead>{t("houseNumber")}</TableHead>
+                      <TableHead>{t("registrationYear")}</TableHead>
                       <TableHead className="text-right">{t("actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -394,7 +394,7 @@ export function Vehicles() {
                     {filteredVehicles.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center text-slate-400 py-8">
-                          No vehicles found.
+                          {t("noVehiclesFound")}
                         </TableCell>
                       </TableRow>
                     )}
@@ -411,19 +411,19 @@ export function Vehicles() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingVehicle ? t("edit") : t("add")} Vehicle
+              {editingVehicle ? t("edit") : t("add")} {t("vehicles")}
             </DialogTitle>
           </DialogHeader>
 
           <div className="grid gap-6 py-4">
             {/* NIC Validation Section */}
             <div className="space-y-2">
-              <Label>NIC Number *</Label>
+              <Label>{t("nicNumber")} *</Label>
               <div className="relative">
                 <Input
                   value={userId}
                   onChange={(e) => handleUserIdChange(e.target.value)}
-                  placeholder="Enter NIC (e.g., 850123456V or 198512300890)"
+                  placeholder={t("nicNumberPlaceholder")}
                   disabled={!!editingVehicle}
                   className="pr-10"
                 />
@@ -434,29 +434,29 @@ export function Vehicles() {
                 </div>
               </div>
               {userValidation === "invalid" && (
-                <p className="text-sm text-red-500">NIC not found. Please enter a valid family member NIC.</p>
+                <p className="text-sm text-red-500">{t("nicNotFound")}</p>
               )}
             </div>
 
             {/* User Details Display */}
             {userValidation === "valid" && validatedUser && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-900 mb-2">Validated User Details</h4>
+                <h4 className="font-semibold text-green-900 mb-2">{t("validatedUserDetails")}</h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-green-700 font-medium">Name:</p>
+                    <p className="text-green-700 font-medium">{t("name")}:</p>
                     <p className="text-green-900">{validatedUser.name}</p>
                   </div>
                   <div>
-                    <p className="text-green-700 font-medium">House Number:</p>
+                    <p className="text-green-700 font-medium">{t("houseNumber")}:</p>
                     <p className="text-green-900">{validatedUser.houseNumber}</p>
                   </div>
                   <div>
-                    <p className="text-green-700 font-medium">Address:</p>
+                    <p className="text-green-700 font-medium">{t("address")}:</p>
                     <p className="text-green-900">{validatedUser.address}</p>
                   </div>
                   <div>
-                    <p className="text-green-700 font-medium">Phone:</p>
+                    <p className="text-green-700 font-medium">{t("phone")}:</p>
                     <p className="text-green-900">{validatedUser.phone}</p>
                   </div>
                 </div>
@@ -467,25 +467,25 @@ export function Vehicles() {
             {userValidation === "valid" && (
               <>
                 <div className="border-t pt-4">
-                  <h4 className="font-semibold text-slate-900 mb-4">Vehicle Information</h4>
+                  <h4 className="font-semibold text-slate-900 mb-4">{t("vehicleInformation")}</h4>
                   <div className="grid gap-4">
                     <div className="space-y-2">
-                      <Label>Vehicle Type *</Label>
+                      <Label>{t("vehicleType")} *</Label>
                       <Select
                         value={formData.vehicleType}
                         onValueChange={(val) => setFormData({ ...formData, vehicleType: val })}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select vehicle type..." />
+                          <SelectValue placeholder={t("selectVehicleType")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Car">Car</SelectItem>
-                          <SelectItem value="Motorcycle">Motorcycle</SelectItem>
-                          <SelectItem value="Van">Van</SelectItem>
-                          <SelectItem value="Truck">Truck</SelectItem>
-                          <SelectItem value="Three-Wheeler">Three-Wheeler</SelectItem>
-                          <SelectItem value="Tractor">Tractor</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
+                          <SelectItem value="Car">{t("car")}</SelectItem>
+                          <SelectItem value="Motorcycle">{t("motorcycle")}</SelectItem>
+                          <SelectItem value="Van">{t("van")}</SelectItem>
+                          <SelectItem value="Truck">{t("truck")}</SelectItem>
+                          <SelectItem value="Three-Wheeler">{t("threeWheeler")}</SelectItem>
+                          <SelectItem value="Tractor">{t("tractor")}</SelectItem>
+                          <SelectItem value="Other">{t("other")}</SelectItem>
                         </SelectContent>
                       </Select>
                       {(formData as any).__errors?.vehicleType && (
@@ -495,7 +495,7 @@ export function Vehicles() {
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label>Vehicle Number *</Label>
+                      <Label>{t("vehicleNumber")} *</Label>
                       <Input
                         value={formData.vehicleNumber || ""}
                         onChange={(e) => setFormData({ ...formData, vehicleNumber: e.target.value.toUpperCase() })}
@@ -509,7 +509,7 @@ export function Vehicles() {
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label>Registration Year *</Label>
+                      <Label>{t("registrationYear")} *</Label>
                       <Input
                         type="number"
                         value={formData.registrationYear || ""}
@@ -550,19 +550,19 @@ export function Vehicles() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Vehicle Details - {viewingVehicle?.vehicleNumber}
+              {t("details")} - {viewingVehicle?.vehicleNumber}
             </DialogTitle>
           </DialogHeader>
 
           <div className="py-4">
             <p className="text-sm text-gray-600 mb-4">
-              View detailed information about this vehicle
+              {t("viewDetailedInfo")}
             </p>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Vehicle Number</p>
+                  <p className="font-medium">{t("vehicleNumber")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -571,7 +571,7 @@ export function Vehicles() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Vehicle Type</p>
+                  <p className="font-medium">{t("vehicleType")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -582,7 +582,7 @@ export function Vehicles() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Owner Name</p>
+                  <p className="font-medium">{t("ownerName")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -591,7 +591,7 @@ export function Vehicles() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">House Number</p>
+                  <p className="font-medium">{t("houseNumber")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -600,7 +600,7 @@ export function Vehicles() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Owner Address</p>
+                  <p className="font-medium">{t("ownerAddress")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -609,7 +609,7 @@ export function Vehicles() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Owner Phone</p>
+                  <p className="font-medium">{t("ownerPhone")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -618,7 +618,7 @@ export function Vehicles() {
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
                 <div>
-                  <p className="font-medium">Registration Year</p>
+                  <p className="font-medium">{t("registrationYear")}</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
@@ -630,7 +630,7 @@ export function Vehicles() {
 
           <DialogFooter>
             <Button onClick={() => setViewDialog(false)} className="bg-blue-600 hover:bg-blue-700">
-              Close
+              {t("close")}
             </Button>
           </DialogFooter>
         </DialogContent>

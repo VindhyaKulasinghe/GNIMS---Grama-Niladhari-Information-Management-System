@@ -15,7 +15,7 @@ import {
   Globe,
   LogOut
 } from "lucide-react";
-import { useLanguage, Language } from "../context/LanguageContext";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
@@ -43,7 +43,7 @@ const navigation = [
 export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { t, language, setLanguage } = useLanguage();
+  const { t, i18n } = useTranslation();
   const { isAuthenticated, loading, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -80,12 +80,12 @@ export function Layout() {
             </Button>
             <div>
               <h1 className="font-bold text-lg lg:text-xl">{t("appName")}</h1>
-              <p className="text-xs text-slate-300 hidden sm:block">Southern Province - Hambantota District</p>
+              <p className="text-xs text-slate-300 hidden sm:block">{t("southernProvinceHambantota")}</p>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
-            <Select value={language} onValueChange={(val) => setLanguage(val as Language)}>
+            <Select value={i18n.language} onValueChange={(val) => i18n.changeLanguage(val)}>
               <SelectTrigger className="w-[140px] bg-slate-800 border-slate-700 text-white hover:bg-slate-700">
                 <Globe className="h-4 w-4 mr-2" />
                 <SelectValue />
@@ -102,8 +102,8 @@ export function Layout() {
                 <span className="text-sm font-medium">GN</span>
               </div>
               <div className="hidden md:block">
-                <p className="text-sm font-medium">GN Officer</p>
-                <p className="text-xs text-slate-300">Hambantota Division</p>
+                <p className="text-sm font-medium">{t("gnOfficerLabel")}</p>
+                <p className="text-xs text-slate-300">{t("hambantotaDivision")}</p>
               </div>
             </div>
 

@@ -13,7 +13,6 @@ import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
 import { UserManagement } from "./pages/UserManagement";
 import { NotFound } from "./pages/NotFound";
-import { LanguageProvider } from "./context/LanguageContext";
 import { HouseholdDataProvider } from "./context/HouseholdDataContext";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -21,11 +20,9 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 function RootWrapper({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <LanguageProvider>
-        <HouseholdDataProvider>
-          {children}
-        </HouseholdDataProvider>
-      </LanguageProvider>
+      <HouseholdDataProvider>
+        {children}
+      </HouseholdDataProvider>
     </AuthProvider>
   );
 }
