@@ -78,8 +78,8 @@ export function UserManagement() {
 
   const filteredUsers = users.filter(
     (u) =>
-      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase()),
+      (u.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+      (u.email?.toLowerCase() || "").includes(searchQuery.toLowerCase()),
   );
 
   const handleAdd = () => {
@@ -147,7 +147,7 @@ export function UserManagement() {
           role: formData.role as any,
           division: formData.division!,
           status: formData.status as any,
-        });
+        }, (formData as any).password);
         setUsers([newUser, ...users]);
       }
       toast.success(t("userSaved") || "User saved successfully.");
@@ -304,6 +304,21 @@ export function UserManagement() {
                 }
               />
             </div>
+            {!editingUser && (
+              <div className="space-y-2">
+                <Label>{t("password") || "Password"}</Label>
+                <Input
+                  type="password"
+                  placeholder="Welcome@123"
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value } as any)
+                  }
+                />
+                <p className="text-[10px] text-gray-500">
+                  {t("defaultPasswordNote") || "Default: Welcome@123 if left blank"}
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               <Label>{t("role")}</Label>
               <Select

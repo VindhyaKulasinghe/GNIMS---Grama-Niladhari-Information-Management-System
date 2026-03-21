@@ -13,7 +13,8 @@ import {
   Menu,
   X,
   Globe,
-  LogOut
+  LogOut,
+  UserCog
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
@@ -38,13 +39,14 @@ const navigation = [
   { name: "vehicles", icon: Car, path: "/vehicles" },
   { name: "reports", icon: FileText, path: "/reports" },
   { name: "settings", icon: SettingsIcon, path: "/settings" },
+  { name: "userManagement", icon: UserCog, path: "/user-management", roles: ["Admin"] },
 ];
 
 export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
-  const { isAuthenticated, loading, logout } = useAuth();
+  const { isAuthenticated, loading, logout, user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Redirect to login if not authenticated
@@ -127,7 +129,7 @@ export function Layout() {
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
           <nav className="h-full overflow-y-auto py-10 p-4 space-y-2">
-            {navigation.map((item) => {
+            {navigation.filter(item => !item.roles || (user && item.roles.includes(user.role))).map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <Link
