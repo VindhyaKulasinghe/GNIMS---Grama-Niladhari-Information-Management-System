@@ -658,6 +658,7 @@ const BOARDERS = Array.from({ length: 20 }).map((_, i) => ({
   memberType: "boarder",
   boarderDistrict:
     i < 5 ? "Colombo" : i < 10 ? "Galle" : i < 15 ? "Matara" : "Kandy",
+  purpose: ["Education", "Job", "Medical", "Business", "Other"][i % 5],
   jobType: "Worker",
   sector: "Private",
   monthlyIncome: "30000-45000",
@@ -1320,17 +1321,40 @@ async function seed() {
     console.log("Seeding Household Animals Relationships...");
     const houseAnimalData = [];
 
-    // Link each house to 1-3 random animals
-    HOUSEHOLDS.forEach((h) => {
-      const numAnimals = Math.floor(Math.random() * 3) + 1;
+    // Link each house to 2-5 random animals with more realistic counts
+    HOUSEHOLDS.forEach((h, index) => {
+      const numAnimals = Math.floor(Math.random() * 4) + 2; // 2-5 animals per household
       const shuffled = [...animalsData].sort(() => 0.5 - Math.random());
       const selected = shuffled.slice(0, numAnimals);
 
       selected.forEach((a) => {
+        // More realistic animal counts based on animal type
+        let count = 1;
+        if (
+          a.name.toLowerCase().includes("chicken") ||
+          a.name.toLowerCase().includes("duck")
+        ) {
+          count = Math.floor(Math.random() * 20) + 5; // Poultry: 5-25
+        } else if (
+          a.name.toLowerCase().includes("cow") ||
+          a.name.toLowerCase().includes("buffalo")
+        ) {
+          count = Math.floor(Math.random() * 3) + 1; // Large livestock: 1-3
+        } else if (
+          a.name.toLowerCase().includes("goat") ||
+          a.name.toLowerCase().includes("sheep")
+        ) {
+          count = Math.floor(Math.random() * 4) + 1; // Small livestock: 1-4
+        } else if (a.name.toLowerCase().includes("pig")) {
+          count = Math.floor(Math.random() * 2) + 1; // Pigs: 1-2
+        } else {
+          count = Math.floor(Math.random() * 3) + 1; // Other animals: 1-3
+        }
+
         houseAnimalData.push({
           houseNumber: h.houseNumber,
           animalId: a.id,
-          count: Math.floor(Math.random() * 5) + 1,
+          count: count,
         });
       });
     });

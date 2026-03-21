@@ -115,35 +115,55 @@ interface HouseholdDataContextType {
   error: string | null;
 
   // Household CRUD
-  addHousehold: (household: Omit<Household, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  addHousehold: (
+    household: Omit<Household, "id" | "createdAt" | "updatedAt">,
+  ) => Promise<void>;
   updateHousehold: (id: number, household: Partial<Household>) => Promise<void>;
   deleteHousehold: (id: number) => Promise<void>;
   refreshHouseholds: () => Promise<void>;
 
   // Family Member CRUD
-  addFamilyMember: (member: Omit<FamilyMember, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateFamilyMember: (id: number, member: Partial<FamilyMember>) => Promise<void>;
+  addFamilyMember: (
+    member: Omit<FamilyMember, "id" | "createdAt" | "updatedAt">,
+  ) => Promise<void>;
+  updateFamilyMember: (
+    id: number,
+    member: Partial<FamilyMember>,
+  ) => Promise<void>;
   deleteFamilyMember: (id: number) => Promise<void>;
   refreshFamilyMembers: () => Promise<void>;
 
   // Vehicle CRUD
-  addVehicle: (vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  addVehicle: (
+    vehicle: Omit<Vehicle, "id" | "createdAt" | "updatedAt">,
+  ) => Promise<void>;
   updateVehicle: (id: number, vehicle: Partial<Vehicle>) => Promise<void>;
   deleteVehicle: (id: number) => Promise<void>;
   refreshVehicles: () => Promise<void>;
 
   // Property CRUD
-  addProperty: (property: Omit<Property, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  addProperty: (
+    property: Omit<Property, "id" | "createdAt" | "updatedAt">,
+  ) => Promise<void>;
   updateProperty: (id: number, property: Partial<Property>) => Promise<void>;
   deleteProperty: (id: number) => Promise<void>;
   refreshProperties: () => Promise<void>;
 
   // Animal CRUD
-  addAnimal: (animal: Omit<Animal, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  addAnimal: (
+    animal: Omit<Animal, "id" | "createdAt" | "updatedAt">,
+  ) => Promise<void>;
   updateAnimal: (id: number, animal: Partial<Animal>) => Promise<void>;
   deleteAnimal: (id: number) => Promise<void>;
-  addHouseholdAnimal: (houseNumber: string, animalId: number, count: number) => Promise<void>;
-  deleteHouseholdAnimal: (houseNumber: string, animalId: number) => Promise<void>;
+  addHouseholdAnimal: (
+    houseNumber: string,
+    animalId: number,
+    count: number,
+  ) => Promise<void>;
+  deleteHouseholdAnimal: (
+    houseNumber: string,
+    animalId: number,
+  ) => Promise<void>;
   refreshAnimals: () => Promise<void>;
 
   // Helper functions
@@ -153,13 +173,19 @@ interface HouseholdDataContextType {
   getAnimalsForHouse: (houseNumber: string) => HouseholdAnimal[];
 }
 
-const HouseholdDataContext = createContext<HouseholdDataContextType | undefined>(undefined);
+const HouseholdDataContext = createContext<
+  HouseholdDataContextType | undefined
+>(undefined);
 
-export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [households, setHouseholds] = useState<Household[]>([]);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [animals, setAnimals] = useState<Animal[]>([]);
-  const [householdAnimals, setHouseholdAnimals] = useState<HouseholdAnimal[]>([]);
+  const [householdAnimals, setHouseholdAnimals] = useState<HouseholdAnimal[]>(
+    [],
+  );
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -174,34 +200,42 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       setLoading(true);
       setError(null);
-      const [hh, fm, a, v, p] = await Promise.all([
+      const [hh, fm, a, ha, v, p] = await Promise.all([
         householdService.getHouseholds(),
         familyMemberService.getFamilyMembers(),
         animalService.getAnimals(),
+        animalService.getAllHouseholdAnimals(),
         vehicleService.getVehicles(),
         propertyService.getProperties(),
       ]);
       setHouseholds(hh as Household[]);
       setFamilyMembers(fm as FamilyMember[]);
       setAnimals(a as Animal[]);
+      setHouseholdAnimals(ha as HouseholdAnimal[]);
       setVehicles(v as Vehicle[]);
       setProperties(p as Property[]);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load data';
+      const message =
+        err instanceof Error ? err.message : "Failed to load data";
       setError(message);
-      console.error('Error loading data:', err);
+      console.error("Error loading data:", err);
     } finally {
       setLoading(false);
     }
   };
 
   // Household CRUD
-  const addHousehold = async (household: Omit<Household, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addHousehold = async (
+    household: Omit<Household, "id" | "createdAt" | "updatedAt">,
+  ) => {
     try {
-      const newHousehold = await householdService.createHousehold(household as any);
+      const newHousehold = await householdService.createHousehold(
+        household as any,
+      );
       setHouseholds([...households, newHousehold as Household]);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to add household';
+      const message =
+        err instanceof Error ? err.message : "Failed to add household";
       setError(message);
       throw err;
     }
@@ -209,10 +243,16 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const updateHousehold = async (id: number, household: Partial<Household>) => {
     try {
-      const updated = await householdService.updateHousehold(id, household as any);
-      setHouseholds(households.map(h => h.id === id ? updated as Household : h));
+      const updated = await householdService.updateHousehold(
+        id,
+        household as any,
+      );
+      setHouseholds(
+        households.map((h) => (h.id === id ? (updated as Household) : h)),
+      );
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update household';
+      const message =
+        err instanceof Error ? err.message : "Failed to update household";
       setError(message);
       throw err;
     }
@@ -221,9 +261,10 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const deleteHousehold = async (id: number) => {
     try {
       await householdService.deleteHousehold(id);
-      setHouseholds(households.filter(h => h.id !== id));
+      setHouseholds(households.filter((h) => h.id !== id));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete household';
+      const message =
+        err instanceof Error ? err.message : "Failed to delete household";
       setError(message);
       throw err;
     }
@@ -234,29 +275,44 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
       const hh = await householdService.getHouseholds();
       setHouseholds(hh as Household[]);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to refresh households';
+      const message =
+        err instanceof Error ? err.message : "Failed to refresh households";
       setError(message);
     }
   };
 
   // Family Member CRUD
-  const addFamilyMember = async (member: Omit<FamilyMember, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addFamilyMember = async (
+    member: Omit<FamilyMember, "id" | "createdAt" | "updatedAt">,
+  ) => {
     try {
-      const newMember = await familyMemberService.createFamilyMember(member as any);
+      const newMember = await familyMemberService.createFamilyMember(
+        member as any,
+      );
       setFamilyMembers([...familyMembers, newMember as FamilyMember]);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to add family member';
+      const message =
+        err instanceof Error ? err.message : "Failed to add family member";
       setError(message);
       throw err;
     }
   };
 
-  const updateFamilyMember = async (id: number, member: Partial<FamilyMember>) => {
+  const updateFamilyMember = async (
+    id: number,
+    member: Partial<FamilyMember>,
+  ) => {
     try {
-      const updated = await familyMemberService.updateFamilyMember(id, member as any);
-      setFamilyMembers(familyMembers.map(m => m.id === id ? updated as FamilyMember : m));
+      const updated = await familyMemberService.updateFamilyMember(
+        id,
+        member as any,
+      );
+      setFamilyMembers(
+        familyMembers.map((m) => (m.id === id ? (updated as FamilyMember) : m)),
+      );
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update family member';
+      const message =
+        err instanceof Error ? err.message : "Failed to update family member";
       setError(message);
       throw err;
     }
@@ -265,9 +321,10 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const deleteFamilyMember = async (id: number) => {
     try {
       await familyMemberService.deleteFamilyMember(id);
-      setFamilyMembers(familyMembers.filter(m => m.id !== id));
+      setFamilyMembers(familyMembers.filter((m) => m.id !== id));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete family member';
+      const message =
+        err instanceof Error ? err.message : "Failed to delete family member";
       setError(message);
       throw err;
     }
@@ -278,18 +335,22 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
       const fm = await familyMemberService.getFamilyMembers();
       setFamilyMembers(fm as FamilyMember[]);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to refresh family members';
+      const message =
+        err instanceof Error ? err.message : "Failed to refresh family members";
       setError(message);
     }
   };
 
   // Vehicle CRUD
-  const addVehicle = async (vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addVehicle = async (
+    vehicle: Omit<Vehicle, "id" | "createdAt" | "updatedAt">,
+  ) => {
     try {
       const newVehicle = await vehicleService.createVehicle(vehicle as any);
       setVehicles([...vehicles, newVehicle as Vehicle]);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to add vehicle';
+      const message =
+        err instanceof Error ? err.message : "Failed to add vehicle";
       setError(message);
       throw err;
     }
@@ -298,9 +359,12 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const updateVehicle = async (id: number, vehicle: Partial<Vehicle>) => {
     try {
       const updated = await vehicleService.updateVehicle(id, vehicle as any);
-      setVehicles(vehicles.map(v => v.id === id ? updated as Vehicle : v));
+      setVehicles(
+        vehicles.map((v) => (v.id === id ? (updated as Vehicle) : v)),
+      );
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update vehicle';
+      const message =
+        err instanceof Error ? err.message : "Failed to update vehicle";
       setError(message);
       throw err;
     }
@@ -309,9 +373,10 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const deleteVehicle = async (id: number) => {
     try {
       await vehicleService.deleteVehicle(id);
-      setVehicles(vehicles.filter(v => v.id !== id));
+      setVehicles(vehicles.filter((v) => v.id !== id));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete vehicle';
+      const message =
+        err instanceof Error ? err.message : "Failed to delete vehicle";
       setError(message);
       throw err;
     }
@@ -322,18 +387,22 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
       const v = await vehicleService.getVehicles();
       setVehicles(v as Vehicle[]);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to refresh vehicles';
+      const message =
+        err instanceof Error ? err.message : "Failed to refresh vehicles";
       setError(message);
     }
   };
 
   // Property CRUD
-  const addProperty = async (property: Omit<Property, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addProperty = async (
+    property: Omit<Property, "id" | "createdAt" | "updatedAt">,
+  ) => {
     try {
       const newProperty = await propertyService.createProperty(property as any);
       setProperties([...properties, newProperty as Property]);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to add property';
+      const message =
+        err instanceof Error ? err.message : "Failed to add property";
       setError(message);
       throw err;
     }
@@ -342,9 +411,12 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const updateProperty = async (id: number, property: Partial<Property>) => {
     try {
       const updated = await propertyService.updateProperty(id, property as any);
-      setProperties(properties.map(p => p.id === id ? updated as Property : p));
+      setProperties(
+        properties.map((p) => (p.id === id ? (updated as Property) : p)),
+      );
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update property';
+      const message =
+        err instanceof Error ? err.message : "Failed to update property";
       setError(message);
       throw err;
     }
@@ -353,9 +425,10 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const deleteProperty = async (id: number) => {
     try {
       await propertyService.deleteProperty(id);
-      setProperties(properties.filter(p => p.id !== id));
+      setProperties(properties.filter((p) => p.id !== id));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete property';
+      const message =
+        err instanceof Error ? err.message : "Failed to delete property";
       setError(message);
       throw err;
     }
@@ -366,18 +439,22 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
       const p = await propertyService.getProperties();
       setProperties(p as Property[]);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to refresh properties';
+      const message =
+        err instanceof Error ? err.message : "Failed to refresh properties";
       setError(message);
     }
   };
 
   // Animal CRUD
-  const addAnimal = async (animal: Omit<Animal, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addAnimal = async (
+    animal: Omit<Animal, "id" | "createdAt" | "updatedAt">,
+  ) => {
     try {
       const newAnimal = await animalService.createAnimal(animal as any);
       setAnimals([...animals, newAnimal as Animal]);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to add animal';
+      const message =
+        err instanceof Error ? err.message : "Failed to add animal";
       setError(message);
       throw err;
     }
@@ -386,9 +463,10 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const updateAnimal = async (id: number, animal: Partial<Animal>) => {
     try {
       const updated = await animalService.updateAnimal(id, animal as any);
-      setAnimals(animals.map(a => a.id === id ? updated as Animal : a));
+      setAnimals(animals.map((a) => (a.id === id ? (updated as Animal) : a)));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update animal';
+      const message =
+        err instanceof Error ? err.message : "Failed to update animal";
       setError(message);
       throw err;
     }
@@ -397,18 +475,29 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const deleteAnimal = async (id: number) => {
     try {
       await animalService.deleteAnimal(id);
-      setAnimals(animals.filter(a => a.id !== id));
+      setAnimals(animals.filter((a) => a.id !== id));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete animal';
+      const message =
+        err instanceof Error ? err.message : "Failed to delete animal";
       setError(message);
       throw err;
     }
   };
 
-  const addHouseholdAnimal = async (houseNumber: string, animalId: number, count: number) => {
+  const addHouseholdAnimal = async (
+    houseNumber: string,
+    animalId: number,
+    count: number,
+  ) => {
     try {
-      const newAnimal = await animalService.upsertHouseholdAnimal(houseNumber, animalId, count);
-      const existing = householdAnimals.findIndex(ha => ha.houseNumber === houseNumber && ha.animalId === animalId);
+      const newAnimal = await animalService.upsertHouseholdAnimal(
+        houseNumber,
+        animalId,
+        count,
+      );
+      const existing = householdAnimals.findIndex(
+        (ha) => ha.houseNumber === houseNumber && ha.animalId === animalId,
+      );
       if (existing >= 0) {
         const updated = [...householdAnimals];
         updated[existing] = newAnimal;
@@ -417,18 +506,29 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
         setHouseholdAnimals([...householdAnimals, newAnimal]);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to add household animal';
+      const message =
+        err instanceof Error ? err.message : "Failed to add household animal";
       setError(message);
       throw err;
     }
   };
 
-  const deleteHouseholdAnimal = async (houseNumber: string, animalId: number) => {
+  const deleteHouseholdAnimal = async (
+    houseNumber: string,
+    animalId: number,
+  ) => {
     try {
       await animalService.deleteHouseholdAnimal(houseNumber, animalId);
-      setHouseholdAnimals(householdAnimals.filter(ha => !(ha.houseNumber === houseNumber && ha.animalId === animalId)));
+      setHouseholdAnimals(
+        householdAnimals.filter(
+          (ha) => !(ha.houseNumber === houseNumber && ha.animalId === animalId),
+        ),
+      );
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete household animal';
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to delete household animal";
       setError(message);
       throw err;
     }
@@ -436,10 +536,15 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const refreshAnimals = async () => {
     try {
-      const a = await animalService.getAnimals();
+      const [a, ha] = await Promise.all([
+        animalService.getAnimals(),
+        animalService.getAllHouseholdAnimals(),
+      ]);
       setAnimals(a as Animal[]);
+      setHouseholdAnimals(ha as HouseholdAnimal[]);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to refresh animals';
+      const message =
+        err instanceof Error ? err.message : "Failed to refresh animals";
       setError(message);
     }
   };
@@ -448,9 +553,11 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const getMembersForHouse = (houseNumber: string) =>
     familyMembers.filter((m) => m.houseNumber === houseNumber);
 
-  const getStudents = () => familyMembers.filter((m) => m.memberType === "student");
+  const getStudents = () =>
+    familyMembers.filter((m) => m.memberType === "student");
 
-  const getBoarders = () => familyMembers.filter((m) => m.memberType === "boarder");
+  const getBoarders = () =>
+    familyMembers.filter((m) => m.memberType === "boarder");
 
   const getAnimalsForHouse = (houseNumber: string) =>
     householdAnimals.filter((ha) => ha.houseNumber === houseNumber);
@@ -504,7 +611,9 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useHouseholdData = () => {
   const context = useContext(HouseholdDataContext);
   if (!context) {
-    throw new Error("useHouseholdData must be used within HouseholdDataProvider");
+    throw new Error(
+      "useHouseholdData must be used within HouseholdDataProvider",
+    );
   }
   return context;
 };

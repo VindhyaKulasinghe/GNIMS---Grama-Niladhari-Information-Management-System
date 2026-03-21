@@ -262,9 +262,7 @@ export function Boarders() {
                       outerRadius={90}
                       paddingAngle={5}
                       labelLine={false}
-                      label={({ name, percent }) =>
-                        `${name} ${(percent * 100).toFixed(0)}%`
-                      }
+                      label={(entry) => `${entry.name}: ${entry.value}`}
                       dataKey="value"
                     >
                       {purposeData.map((entry, index) => (
@@ -310,9 +308,7 @@ export function Boarders() {
                       outerRadius={90}
                       paddingAngle={5}
                       labelLine={false}
-                      label={({ name, percent }) =>
-                        `${name} ${(percent * 100).toFixed(0)}%`
-                      }
+                      label={(entry) => `${entry.name}: ${entry.value}`}
                       dataKey="value"
                     >
                       {genderData.map((entry, index) => (

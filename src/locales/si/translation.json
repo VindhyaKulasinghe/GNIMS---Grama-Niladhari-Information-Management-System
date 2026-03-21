@@ -11,6 +11,7 @@
   "additionalLand": "අතිරේක ඉඩම් හිමිකම",
   "additionalProperty": "අතිරේක දේපළ",
   "addMember": "සාමාජිකයෙකු එක් කරන්න",
+  "addNewAnimal": "නව සතෙක් එක් කරන්න",
   "addNewAnimalType": "නව සත්ව වර්ගක් ඇතුළත් කරන්න",
   "addNewHousehold": "නව ගෘහ ඒකකයක් එක් කරන්න",
   "addNewProperty": "නව දේපළක් එක් කරන්න",
@@ -90,6 +91,7 @@
   "countryOrigin": "මව් රට",
   "createBackup": "පිටපතක් සාදන්න",
   "currentPassword": "දැනට භාවිතා කරන මුරපදය",
+  "currentCount": "දැනට ඇති ගණන",
   "currentlyEmployed": "දැනට රැකියාවේ නියුක්ත",
   "dangerZone": "අවදානම් කලාපය (Danger Zone)",
   "dashboard": "පාලක පුවරුව",
@@ -259,6 +261,8 @@
   "notificationPreferences": "දැනුම්දීම් මනාප",
   "notifications": "දැනුම්දීම්",
   "noVehiclesFound": "වාහන පිළිබඳ තොරතුරු හමු නොවීය.",
+  "noAnimalsAssigned": "මෙම ගෘහයට සතුන් පැවරීම් කර නැත",
+  "clickAddAnimalToGetStarted": "ආරම්භ කිරීම සඳහා සතෙක් එක් කරන්න ක්ලික් කරන්න",
   "notProvided": "ලබා දී නැත",
   "notSpecified": "සඳහන් කර නැත",
   "officeHours": "කාර්යාල වේලාවන්",
@@ -462,5 +466,10 @@
   "withStudents": "සිසුන් සිටින",
   "years": "වසර",
   "yes": "ඔව්",
-  "yesHead": "ඔව් (ගෘහ මූලිකයා)"
+  "yesHead": "ඔව් (ගෘහ මූලිකයා)",
+  "assignedAnimals": "අනුවාදනය කරන ලද සතුන්",
+  "removeAnimal": "සතෙක් ඉවත් කරන්න",
+  "increaseCount": "ගණන වැඩි කරන්න",
+  "decreaseCount": "ගණන අඩු කරන්න",
+  "noAssignedAnimals": "මෙම නිවාසයට සතුන් අනුවාදනය කර නොමැත"
 }

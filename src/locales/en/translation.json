@@ -11,6 +11,7 @@
   "additionalLand": "Additional Land Ownership",
   "additionalProperty": "Additional Property",
   "addMember": "Add Member",
+  "addNewAnimal": "Add New Animal",
   "addNewAnimalType": "Add New Animal Type",
   "addNewHousehold": "Add New Household",
   "addNewProperty": "Add New Property",
@@ -89,6 +90,7 @@
   "countryOrigin": "Country of Origin",
   "createBackup": "Create Backup",
   "currentPassword": "Current Password",
+  "currentCount": "Current Count",
   "currentlyEmployed": "Currently employed",
   "dangerZone": "Danger Zone",
   "dashboard": "Dashboard",
@@ -258,6 +260,8 @@
   "notificationPreferences": "Notification Preferences",
   "notifications": "Notifications",
   "noVehiclesFound": "No vehicles found.",
+  "noAnimalsAssigned": "No animals assigned to this household",
+  "clickAddAnimalToGetStarted": "Click add animal to get started",
   "notProvided": "Not provided",
   "notSpecified": "Not specified",
   "officeHours": "Office Hours",
@@ -460,5 +464,10 @@
   "withStudents": "With Students",
   "years": "years",
   "yes": "Yes",
-  "yesHead": "Yes (Head)"
+  "yesHead": "Yes (Head)",
+  "assignedAnimals": "Assigned Animals",
+  "removeAnimal": "Remove Animal",
+  "increaseCount": "Increase Count",
+  "decreaseCount": "Decrease Count",
+  "noAssignedAnimals": "No animals assigned to this household"
 }

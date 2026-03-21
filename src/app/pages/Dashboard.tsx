@@ -154,11 +154,27 @@ export function Dashboard() {
       sectors[sector] = (sectors[sector] || 0) + 1;
     });
 
+    // Function to translate sector names
+    const translateSector = (sector: string) => {
+      switch (sector.toLowerCase()) {
+        case "unknown":
+          return t("unknown");
+        case "government":
+          return t("government");
+        case "private":
+          return t("private");
+        case "agricultural":
+          return t("agricultural");
+        default:
+          return sector;
+      }
+    };
+
     return Object.entries(sectors).map(([sector, count]) => ({
-      sector,
+      sector: translateSector(sector),
       count,
     }));
-  }, [familyMembers]);
+  }, [familyMembers, t]);
 
   return (
     <div className="space-y-6">
