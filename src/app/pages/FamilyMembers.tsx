@@ -37,6 +37,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "../components/ui/dialog";
 import {
@@ -65,6 +66,7 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import {
   PieChart,
@@ -1064,6 +1066,11 @@ export function FamilyMembers() {
               {editingMember ? t("editMember") : t("addMember")} — {t("house")}{" "}
               {formData.houseNumber}
             </DialogTitle>
+            <DialogDescription>
+              {editingMember
+                ? t("editMemberDescription")
+                : t("addMemberDescription")}
+            </DialogDescription>
           </DialogHeader>
 
           {/* Member Type Selector */}
@@ -1521,6 +1528,7 @@ export function FamilyMembers() {
               <Home className="h-5 w-5 text-blue-600" />
               {t("householdDetails")}
             </DialogTitle>
+            <DialogDescription>{t("viewHouseholdDetails")}</DialogDescription>
           </DialogHeader>
           {viewingHouse && (
             <div className="space-y-6">
@@ -1688,6 +1696,7 @@ export function FamilyMembers() {
               <Users className="h-5 w-5 text-blue-600" />
               {t("memberDetails")}
             </DialogTitle>
+            <DialogDescription>{t("viewMemberDetails")}</DialogDescription>
           </DialogHeader>
           {viewingMember && (
             <div className="space-y-6">
@@ -1935,6 +1944,7 @@ export function FamilyMembers() {
               <AlertTriangle className="h-5 w-5" />
               {t("confirmDelete")}
             </DialogTitle>
+            <DialogDescription>{t("confirmDeleteMember")}</DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <p className="text-gray-600 text-sm">

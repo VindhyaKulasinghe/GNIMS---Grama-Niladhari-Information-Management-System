@@ -39,6 +39,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "../components/ui/dialog";
 import {
@@ -869,6 +870,11 @@ export function HouseholdManagement() {
               {editingHousehold ? t("edit") : t("add")}{" "}
               {t("households").slice(0, -1)}
             </DialogTitle>
+            <DialogDescription>
+              {editingHousehold
+                ? t("editHouseholdDescription")
+                : t("addHouseholdDescription")}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
@@ -1151,6 +1157,9 @@ export function HouseholdManagement() {
             <DialogTitle>
               {t("manageAnimals")} - {t("house")} {selectedHouseNumber}
             </DialogTitle>
+            <DialogDescription>
+              {t("manageAnimalsDescription")}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="py-4">
@@ -1308,6 +1317,7 @@ export function HouseholdManagement() {
               <DialogTitle className="text-xl font-bold text-blue-700">
                 {t("householdDetails")}
               </DialogTitle>
+              <DialogDescription>{t("viewHouseholdDetails")}</DialogDescription>
               <div className="text-right">
                 <p className="text-2xl font-bold text-blue-600">
                   {viewingHousehold?.houseNumber}
@@ -1629,6 +1639,7 @@ export function HouseholdManagement() {
               <AlertTriangle className="h-5 w-5" />
               {t("confirmDelete")}
             </DialogTitle>
+            <DialogDescription>{t("confirmDeleteHousehold")}</DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <p className="text-gray-600 text-sm">

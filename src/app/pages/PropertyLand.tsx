@@ -38,6 +38,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "../components/ui/dialog";
 import {
@@ -620,6 +621,11 @@ export function PropertyLand() {
             <DialogTitle>
               {editingProperty ? t("edit") : t("add")} {t("property")}
             </DialogTitle>
+            <DialogDescription>
+              {editingProperty
+                ? t("editPropertyDescription")
+                : t("addPropertyDescription")}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-6 py-4">
@@ -923,6 +929,9 @@ export function PropertyLand() {
             <DialogTitle>
               {t("propertyDetails")} — {viewingProperty?.oppuNumber}
             </DialogTitle>
+            <DialogDescription>
+              {t("viewDetailedPropertyInfo")}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="py-4">

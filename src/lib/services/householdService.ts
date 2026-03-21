@@ -1,82 +1,88 @@
-import { supabase } from '../supabaseClient'
-import { Household, HouseholdSchema } from '../validationSchemas'
+import { supabase } from "../supabaseClient";
+import { Household, HouseholdSchema } from "../validationSchemas";
 
 // GET ALL HOUSEHOLDS
 export async function getHouseholds(): Promise<Household[]> {
   const { data, error } = await supabase
-    .from('households')
-    .select('*')
-    .order('houseNumber', { ascending: true })
+    .from("households")
+    .select("*")
+    .order("houseNumber", { ascending: true });
 
-  if (error) throw new Error(`Failed to fetch households: ${error.message}`)
-  return data || []
+  if (error) throw new Error(`Failed to fetch households: ${error.message}`);
+  return data || [];
 }
 
 // GET SINGLE HOUSEHOLD
-export async function getHouseholdByNumber(houseNumber: string): Promise<Household | null> {
+export async function getHouseholdByNumber(
+  houseNumber: string,
+): Promise<Household | null> {
   const { data, error } = await supabase
-    .from('households')
-    .select('*')
-    .eq('houseNumber', houseNumber)
-    .single()
+    .from("households")
+    .select("*")
+    .eq("houseNumber", houseNumber)
+    .single();
 
-  if (error && error.code !== 'PGRST116') throw new Error(`Failed to fetch household: ${error.message}`)
-  return data || null
+  if (error && error.code !== "PGRST116")
+    throw new Error(`Failed to fetch household: ${error.message}`);
+  return data || null;
 }
 
 // CREATE HOUSEHOLD
-export async function createHousehold(household: Omit<Household, 'id' | 'createdAt' | 'updatedAt'>): Promise<Household> {
+export async function createHousehold(
+  household: Omit<Household, "id" | "createdAt" | "updatedAt">,
+): Promise<Household> {
   // Validate input
-  const validated = HouseholdSchema.parse(household)
+  const validated = HouseholdSchema.parse(household);
 
   const { data, error } = await supabase
-    .from('households')
+    .from("households")
     .insert([validated])
     .select()
-    .single()
+    .single();
 
-  if (error) throw new Error(`Failed to create household: ${error.message}`)
-  return data
+  if (error) throw new Error(`Failed to create household: ${error.message}`);
+  return data;
 }
 
 // UPDATE HOUSEHOLD
-export async function updateHousehold(id: number, household: Partial<Household>): Promise<Household> {
+export async function updateHousehold(
+  id: number,
+  household: Partial<Household>,
+): Promise<Household> {
+  // Remove id from update data since we don't want to update the primary key
+  const { id: _, ...updateData } = household;
+
   // Validate input
-  const validated = HouseholdSchema.partial().parse(household)
+  const validated = HouseholdSchema.partial().parse(updateData);
 
   const { data, error } = await supabase
-    .from('households')
+    .from("households")
     .update(validated)
-    .eq('id', id)
+    .eq("id", id)
     .select()
-    .single()
+    .single();
 
-  if (error) throw new Error(`Failed to update household: ${error.message}`)
-  return data
+  if (error) throw new Error(`Failed to update household: ${error.message}`);
+  return data;
 }
 
 // DELETE HOUSEHOLD
 export async function deleteHousehold(id: number): Promise<void> {
-  const { error } = await supabase
-    .from('households')
-    .delete()
-    .eq('id', id)
+  const { error } = await supabase.from("households").delete().eq("id", id);
 
-  if (error) throw new Error(`Failed to delete household: ${error.message}`)
+  if (error) throw new Error(`Failed to delete household: ${error.message}`);
 }
 
 // GET HOUSEHOLDS BY STATISTICS
 export async function getHouseholdStatistics() {
-  const { data, error } = await supabase
-    .from('households')
-    .select('*')
+  const { data, error } = await supabase.from("households").select("*");
 
-  if (error) throw new Error(`Failed to fetch statistics: ${error.message}`)
+  if (error) throw new Error(`Failed to fetch statistics: ${error.message}`);
 
-  const total = data?.length || 0
-  const withElectricity = data?.filter(h => h.electricity).length || 0
-  const withWater = data?.filter(h => h.water).length || 0
-  const withToilet = data?.filter(h => h.toilet).length || 0
+  const total = data?.length || 0;
+  const withElectricity = data?.filter((h) => h.electricity).length || 0;
+  const withWater = data?.filter((h) => h.water).length || 0;
+  const withToilet = data?.filter((h) => h.toilet).length || 0;
 
   return {
     total,
@@ -86,5 +92,5 @@ export async function getHouseholdStatistics() {
     withoutElectricity: total - withElectricity,
     withoutWater: total - withWater,
     withoutToilet: total - withToilet,
-  }
+  };
 }

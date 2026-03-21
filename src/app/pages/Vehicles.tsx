@@ -37,6 +37,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "../components/ui/dialog";
 import {
@@ -608,6 +609,11 @@ export function Vehicles() {
             <DialogTitle>
               {editingVehicle ? t("edit") : t("add")} {t("vehicles")}
             </DialogTitle>
+            <DialogDescription>
+              {editingVehicle
+                ? t("editVehicleDescription")
+                : t("addVehicleDescription")}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-6 py-4">
@@ -796,6 +802,9 @@ export function Vehicles() {
             <DialogTitle>
               {t("details")} - {viewingVehicle?.vehicleNumber}
             </DialogTitle>
+            <DialogDescription>
+              {t("viewDetailedVehicleInfo")}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="py-4">
