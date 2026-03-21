@@ -2,11 +2,21 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useHouseholdData, Vehicle } from "../context/HouseholdDataContext";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -29,12 +39,44 @@ import {
   DialogTitle,
   DialogFooter,
 } from "../components/ui/dialog";
-import { Plus, Pencil, Trash2, Search, Car, BarChart3, List, Check, Loader2, AlertCircle, Home, AlertTriangle } from "lucide-react";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  Car,
+  BarChart3,
+  List,
+  Check,
+  Loader2,
+  AlertCircle,
+  Home,
+  AlertTriangle,
+} from "lucide-react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 export function Vehicles() {
   const { t } = useTranslation();
-  const { vehicles, addVehicle, updateVehicle, deleteVehicle, familyMembers, households } = useHouseholdData();
+  const {
+    vehicles,
+    addVehicle,
+    updateVehicle,
+    deleteVehicle,
+    familyMembers,
+    households,
+  } = useHouseholdData();
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
@@ -42,17 +84,20 @@ export function Vehicles() {
   const [vehicleToDelete, setVehicleToDelete] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Vehicle>>({});
   const [userId, setUserId] = useState("");
-  const [userValidation, setUserValidation] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
+  const [userValidation, setUserValidation] = useState<
+    "idle" | "validating" | "valid" | "invalid"
+  >("idle");
   const [validatedUser, setValidatedUser] = useState<any>(null);
 
   // View dialog state
   const [viewDialog, setViewDialog] = useState(false);
   const [viewingVehicle, setViewingVehicle] = useState<Vehicle | null>(null);
 
-  const filteredVehicles = vehicles.filter(v =>
-    v.vehicleNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    v.vehicleType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    v.ownerName.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredVehicles = vehicles.filter(
+    (v) =>
+      v.vehicleNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      v.vehicleType.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      v.ownerName.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleAdd = () => {
@@ -69,10 +114,14 @@ export function Vehicles() {
     setFormData(vehicle);
     setUserId(vehicle.userId || "");
     // Auto-validate for editing
-    const member = familyMembers.find(m => m.id.toString() === vehicle.userId);
+    const member = familyMembers.find(
+      (m) => m.id.toString() === vehicle.userId,
+    );
     if (member) {
       setUserValidation("valid");
-      const household = households.find(h => h.houseNumber === member.houseNumber);
+      const household = households.find(
+        (h) => h.houseNumber === member.houseNumber,
+      );
       setValidatedUser({
         name: member.fullName,
         address: household?.address || "",
@@ -109,9 +158,11 @@ export function Vehicles() {
 
     // Simulate async validation against NIC number
     setTimeout(() => {
-      const member = familyMembers.find(m => m.nicNumber === value);
+      const member = familyMembers.find((m) => m.nicNumber === value);
       if (member) {
-        const household = households.find(h => h.houseNumber === member.houseNumber);
+        const household = households.find(
+          (h) => h.houseNumber === member.houseNumber,
+        );
         setUserValidation("valid");
         setValidatedUser({
           name: member.fullName,
@@ -119,7 +170,7 @@ export function Vehicles() {
           phone: household?.telephone || "",
           houseNumber: member.houseNumber,
         });
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           houseNumber: member.houseNumber,
           ownerName: member.fullName,
@@ -137,8 +188,10 @@ export function Vehicles() {
     const errors: { [key: string]: string } = {};
 
     if (!formData.vehicleType) errors.vehicleType = t("vehicleTypeRequired");
-    if (!formData.vehicleNumber) errors.vehicleNumber = t("vehicleNumberRequired");
-    if (!formData.registrationYear) errors.registrationYear = t("registrationYearRequired");
+    if (!formData.vehicleNumber)
+      errors.vehicleNumber = t("vehicleNumberRequired");
+    if (!formData.registrationYear)
+      errors.registrationYear = t("registrationYearRequired");
     if (userValidation !== "valid") errors.userId = t("validateNicPrompt");
 
     if (Object.keys(errors).length > 0) {
@@ -150,11 +203,13 @@ export function Vehicles() {
     const { __errors, ...cleanForm } = formData as any;
 
     if (editingVehicle) {
-      const { id, createdAt, updatedAt, userId, ...rest } = (cleanForm as Vehicle) as any;
+      const { id, createdAt, updatedAt, userId, ...rest } =
+        cleanForm as Vehicle as any;
       await updateVehicle(editingVehicle.id, rest);
       toast.success(t("vehicleUpdated"));
     } else {
-      const { id, createdAt, updatedAt, userId, ...rest } = (cleanForm as Vehicle) as any;
+      const { id, createdAt, updatedAt, userId, ...rest } =
+        cleanForm as Vehicle as any;
       await addVehicle(rest);
       toast.success(t("vehicleAdded"));
     }
@@ -162,39 +217,61 @@ export function Vehicles() {
   };
 
   // Analytics calculations
-  const vehicleTypeCounts = vehicles.reduce((acc, vehicle) => {
-    acc[vehicle.vehicleType] = (acc[vehicle.vehicleType] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const vehicleTypeCounts = vehicles.reduce(
+    (acc, vehicle) => {
+      acc[vehicle.vehicleType] = (acc[vehicle.vehicleType] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
-  const vehicleTypeData = Object.entries(vehicleTypeCounts).map(([name, value]) => ({
-    name: t(name.toLowerCase().replace(/[- ]/g, "")) || name,
-    value,
-  }));
+  const vehicleTypeData = Object.entries(vehicleTypeCounts).map(
+    ([name, value]) => ({
+      name: t(name.toLowerCase().replace(/[- ]/g, "")) || name,
+      value,
+    }),
+  );
 
-  const topVehicleKey = Object.entries(vehicleTypeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
-  const topVehicleStr = topVehicleKey ? (t(topVehicleKey.toLowerCase().replace(/[- ]/g, "")) || topVehicleKey) : "-";
+  const topVehicleKey =
+    Object.entries(vehicleTypeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+  const topVehicleStr = topVehicleKey
+    ? t(topVehicleKey.toLowerCase().replace(/[- ]/g, "")) || topVehicleKey
+    : "-";
 
-  const registrationYearData = vehicles.reduce((acc, vehicle) => {
-    const decade = Math.floor(vehicle.registrationYear / 5) * 5;
-    const label = `${decade}-${decade + 4}`;
-    acc[label] = (acc[label] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const registrationYearData = vehicles.reduce(
+    (acc, vehicle) => {
+      const decade = Math.floor(vehicle.registrationYear / 5) * 5;
+      const label = `${decade}-${decade + 4}`;
+      acc[label] = (acc[label] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
-  const yearData = Object.entries(registrationYearData).map(([name, count]) => ({
-    name,
-    count,
-  })).sort((a, b) => a.name.localeCompare(b.name));
+  const yearData = Object.entries(registrationYearData)
+    .map(([name, count]) => ({
+      name,
+      count,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'];
+  const COLORS = [
+    "#3b82f6",
+    "#10b981",
+    "#f59e0b",
+    "#8b5cf6",
+    "#ef4444",
+    "#06b6d4",
+  ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">{t("vehicles")}</h1>
-          <p className="text-slate-600 mt-1">{t("vehicleManagementSubtitle")}</p>
+          <p className="text-slate-600 mt-1">
+            {t("vehicleManagementSubtitle")}
+          </p>
         </div>
         <Button onClick={handleAdd} className="bg-slate-900 hover:bg-slate-800">
           <Plus className="h-4 w-4 mr-2" />
@@ -222,9 +299,15 @@ export function Vehicles() {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-blue-600/80 uppercase tracking-wider mb-1">{t("totalVehicles")}</p>
-                    <p className="text-3xl font-bold text-slate-800">{vehicles.length}</p>
-                    <p className="text-xs text-slate-500 mt-1">{t("registered") || "Registered"}</p>
+                    <p className="text-xs font-semibold text-blue-600/80 uppercase tracking-wider mb-1">
+                      {t("totalVehicles")}
+                    </p>
+                    <p className="text-3xl font-bold text-slate-800">
+                      {vehicles.length}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {t("registered") || "Registered"}
+                    </p>
                   </div>
                   <div className="bg-blue-500 p-3 rounded-2xl shadow-sm text-white">
                     <Car className="h-6 w-6" />
@@ -237,9 +320,15 @@ export function Vehicles() {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-emerald-600/80 uppercase tracking-wider mb-1">{t("vehicleTypes")}</p>
-                    <p className="text-3xl font-bold text-slate-800">{Object.keys(vehicleTypeCounts).length}</p>
-                    <p className="text-xs text-slate-500 mt-1">{t("categories") || "Categories"}</p>
+                    <p className="text-xs font-semibold text-emerald-600/80 uppercase tracking-wider mb-1">
+                      {t("vehicleTypes")}
+                    </p>
+                    <p className="text-3xl font-bold text-slate-800">
+                      {Object.keys(vehicleTypeCounts).length}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {t("categories") || "Categories"}
+                    </p>
                   </div>
                   <div className="bg-emerald-500 p-3 rounded-2xl shadow-sm text-white">
                     <BarChart3 className="h-6 w-6" />
@@ -252,9 +341,15 @@ export function Vehicles() {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-amber-600/80 uppercase tracking-wider mb-1">{t("householdsWithVehicles")}</p>
-                    <p className="text-3xl font-bold text-slate-800">{new Set(vehicles.map(v => v.houseNumber)).size}</p>
-                    <p className="text-xs text-slate-500 mt-1">{t("households")}</p>
+                    <p className="text-xs font-semibold text-amber-600/80 uppercase tracking-wider mb-1">
+                      {t("householdsWithVehicles")}
+                    </p>
+                    <p className="text-3xl font-bold text-slate-800">
+                      {new Set(vehicles.map((v) => v.houseNumber)).size}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {t("households")}
+                    </p>
                   </div>
                   <div className="bg-amber-500 p-3 rounded-2xl shadow-sm text-white">
                     <Home className="h-6 w-6" />
@@ -267,11 +362,15 @@ export function Vehicles() {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-purple-600/80 uppercase tracking-wider mb-1">{t("popularity")}</p>
+                    <p className="text-xs font-semibold text-purple-600/80 uppercase tracking-wider mb-1">
+                      {t("popularity")}
+                    </p>
                     <p className="text-xl font-bold text-slate-800">
                       {topVehicleStr}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">{t("vehicleType")}</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {t("vehicleType")}
+                    </p>
                   </div>
                   <div className="bg-purple-500 p-3 rounded-2xl shadow-sm text-white">
                     <Car className="h-6 w-6" />
@@ -286,7 +385,9 @@ export function Vehicles() {
             {/* Pie Chart - Vehicle Types */}
             <Card className="hover:shadow-md transition-all border-slate-200">
               <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-                <CardTitle className="text-lg text-slate-800 font-semibold">{t("vehicleDistributionByType")}</CardTitle>
+                <CardTitle className="text-lg text-slate-800 font-semibold">
+                  {t("vehicleDistributionByType")}
+                </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={300}>
@@ -299,15 +400,31 @@ export function Vehicles() {
                       outerRadius={90}
                       paddingAngle={5}
                       labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) =>
+                        `${name} ${(percent * 100).toFixed(0)}%`
+                      }
                       dataKey="value"
                     >
                       {vehicleTypeData.map((entry, index) => (
-                        <Cell key={`vehicles-pie-cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell
+                          key={`vehicles-pie-cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
                       ))}
                     </Pie>
-                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                    <Tooltip
+                      cursor={{ fill: "transparent" }}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                      }}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      height={36}
+                      iconType="circle"
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -316,16 +433,46 @@ export function Vehicles() {
             {/* Bar Chart - Registration Years */}
             <Card className="hover:shadow-md transition-all border-slate-200">
               <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-                <CardTitle className="text-lg text-slate-800 font-semibold">{t("vehiclesByRegistrationPeriod")}</CardTitle>
+                <CardTitle className="text-lg text-slate-800 font-semibold">
+                  {t("vehiclesByRegistrationPeriod")}
+                </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={yearData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} />
-                    <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                    <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                  <BarChart
+                    data={yearData}
+                    margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#e2e8f0"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b" }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b" }}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "#f1f5f9" }}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                      }}
+                    />
+                    <Bar
+                      dataKey="count"
+                      fill="#3b82f6"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={50}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -333,7 +480,12 @@ export function Vehicles() {
           </div>
 
           <div className="flex justify-center pt-4">
-            <Button onClick={handleAdd} variant="outline" size="lg" className="gap-2">
+            <Button
+              onClick={handleAdd}
+              variant="outline"
+              size="lg"
+              className="gap-2"
+            >
               <Plus className="h-5 w-5" />
               {t("addNewVehicle")}
             </Button>
@@ -352,7 +504,10 @@ export function Vehicles() {
                 className="pl-10"
               />
             </div>
-            <Button onClick={handleAdd} className="bg-slate-900 hover:bg-slate-800">
+            <Button
+              onClick={handleAdd}
+              className="bg-slate-900 hover:bg-slate-800"
+            >
               <Plus className="h-4 w-4 mr-2" />
               {t("addVehicle")}
             </Button>
@@ -369,7 +524,9 @@ export function Vehicles() {
                       <TableHead>{t("owner")}</TableHead>
                       <TableHead>{t("houseNumber")}</TableHead>
                       <TableHead>{t("registrationYear")}</TableHead>
-                      <TableHead className="text-right">{t("actions")}</TableHead>
+                      <TableHead className="text-right">
+                        {t("actions")}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -379,19 +536,24 @@ export function Vehicles() {
                         className="cursor-pointer hover:bg-blue-50"
                         onClick={(e) => {
                           // Don't trigger if clicking on buttons
-                          if ((e.target as HTMLElement).closest('button')) return;
+                          if ((e.target as HTMLElement).closest("button"))
+                            return;
                           setViewingVehicle(vehicle);
                           setViewDialog(true);
                         }}
                       >
-                        <TableCell className="font-mono font-semibold">{vehicle.vehicleNumber}</TableCell>
+                        <TableCell className="font-mono font-semibold">
+                          {vehicle.vehicleNumber}
+                        </TableCell>
                         <TableCell>
                           <span className="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full">
                             {vehicle.vehicleType}
                           </span>
                         </TableCell>
                         <TableCell>{vehicle.ownerName}</TableCell>
-                        <TableCell className="font-mono">{vehicle.houseNumber}</TableCell>
+                        <TableCell className="font-mono">
+                          {vehicle.houseNumber}
+                        </TableCell>
                         <TableCell>{vehicle.registrationYear}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex gap-1 justify-end">
@@ -415,7 +577,10 @@ export function Vehicles() {
                     ))}
                     {filteredVehicles.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center text-slate-400 py-8">
+                        <TableCell
+                          colSpan={6}
+                          className="text-center text-slate-400 py-8"
+                        >
                           {t("noVehiclesFound")}
                         </TableCell>
                       </TableRow>
@@ -450,9 +615,15 @@ export function Vehicles() {
                   className="pr-10"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {userValidation === "validating" && <Loader2 className="h-5 w-5 animate-spin text-slate-400" />}
-                  {userValidation === "valid" && <Check className="h-5 w-5 text-green-600" />}
-                  {userValidation === "invalid" && <AlertCircle className="h-5 w-5 text-red-500" />}
+                  {userValidation === "validating" && (
+                    <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                  )}
+                  {userValidation === "valid" && (
+                    <Check className="h-5 w-5 text-green-600" />
+                  )}
+                  {userValidation === "invalid" && (
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                  )}
                 </div>
               </div>
               {userValidation === "invalid" && (
@@ -463,18 +634,26 @@ export function Vehicles() {
             {/* User Details Display */}
             {userValidation === "valid" && validatedUser && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-900 mb-2">{t("validatedUserDetails")}</h4>
+                <h4 className="font-semibold text-green-900 mb-2">
+                  {t("validatedUserDetails")}
+                </h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-green-700 font-medium">{t("name")}:</p>
                     <p className="text-green-900">{validatedUser.name}</p>
                   </div>
                   <div>
-                    <p className="text-green-700 font-medium">{t("houseNumber")}:</p>
-                    <p className="text-green-900">{validatedUser.houseNumber}</p>
+                    <p className="text-green-700 font-medium">
+                      {t("houseNumber")}:
+                    </p>
+                    <p className="text-green-900">
+                      {validatedUser.houseNumber}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-green-700 font-medium">{t("address")}:</p>
+                    <p className="text-green-700 font-medium">
+                      {t("address")}:
+                    </p>
                     <p className="text-green-900">{validatedUser.address}</p>
                   </div>
                   <div>
@@ -489,24 +668,34 @@ export function Vehicles() {
             {userValidation === "valid" && (
               <>
                 <div className="border-t pt-4">
-                  <h4 className="font-semibold text-slate-900 mb-4">{t("vehicleInformation")}</h4>
+                  <h4 className="font-semibold text-slate-900 mb-4">
+                    {t("vehicleInformation")}
+                  </h4>
                   <div className="grid gap-4">
                     <div className="space-y-2">
                       <Label>{t("vehicleType")} *</Label>
                       <Select
                         value={formData.vehicleType}
-                        onValueChange={(val) => setFormData({ ...formData, vehicleType: val })}
+                        onValueChange={(val) =>
+                          setFormData({ ...formData, vehicleType: val })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={t("selectVehicleType")} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Car">{t("car")}</SelectItem>
-                          <SelectItem value="Motorcycle">{t("motorcycle")}</SelectItem>
+                          <SelectItem value="Motorcycle">
+                            {t("motorcycle")}
+                          </SelectItem>
                           <SelectItem value="Van">{t("van")}</SelectItem>
                           <SelectItem value="Truck">{t("truck")}</SelectItem>
-                          <SelectItem value="Three-Wheeler">{t("threeWheeler")}</SelectItem>
-                          <SelectItem value="Tractor">{t("tractor")}</SelectItem>
+                          <SelectItem value="Three-Wheeler">
+                            {t("threeWheeler")}
+                          </SelectItem>
+                          <SelectItem value="Tractor">
+                            {t("tractor")}
+                          </SelectItem>
                           <SelectItem value="Other">{t("other")}</SelectItem>
                         </SelectContent>
                       </Select>
@@ -520,9 +709,14 @@ export function Vehicles() {
                       <Label>{t("vehicleNumber")} *</Label>
                       <Input
                         value={formData.vehicleNumber || ""}
-                        onChange={(e) => setFormData({ ...formData, vehicleNumber: e.target.value.toUpperCase() })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            vehicleNumber: e.target.value.toUpperCase(),
+                          })
+                        }
                         placeholder="e.g., ABC1234"
-                        className="font-mono"
+                        className={`font-mono ${(formData as any).__errors?.vehicleNumber ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
                       />
                       {(formData as any).__errors?.vehicleNumber && (
                         <p className="text-xs text-red-500">
@@ -535,10 +729,20 @@ export function Vehicles() {
                       <Input
                         type="number"
                         value={formData.registrationYear || ""}
-                        onChange={(e) => setFormData({ ...formData, registrationYear: parseInt(e.target.value) })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            registrationYear: parseInt(e.target.value),
+                          })
+                        }
                         placeholder="e.g., 2020"
                         min="1900"
                         max="2026"
+                        className={
+                          (formData as any).__errors?.registrationYear
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                            : ""
+                        }
                       />
                       {(formData as any).__errors?.registrationYear && (
                         <p className="text-xs text-red-500">
@@ -588,7 +792,9 @@ export function Vehicles() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
-                  <p className="font-mono font-semibold">{viewingVehicle?.vehicleNumber}</p>
+                  <p className="font-mono font-semibold">
+                    {viewingVehicle?.vehicleNumber}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
@@ -617,7 +823,9 @@ export function Vehicles() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
-                  <p className="font-mono font-semibold">{viewingVehicle?.houseNumber}</p>
+                  <p className="font-mono font-semibold">
+                    {viewingVehicle?.houseNumber}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
@@ -644,14 +852,19 @@ export function Vehicles() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
-                  <p className="font-medium">{viewingVehicle?.registrationYear}</p>
+                  <p className="font-medium">
+                    {viewingVehicle?.registrationYear}
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
           <DialogFooter>
-            <Button onClick={() => setViewDialog(false)} className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              onClick={() => setViewDialog(false)}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
               {t("close")}
             </Button>
           </DialogFooter>
@@ -670,10 +883,17 @@ export function Vehicles() {
             <p className="text-gray-600 text-sm">{t("confirmDeleteVehicle")}</p>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
               {t("cancel")}
             </Button>
-            <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmDelete}>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={confirmDelete}
+            >
               {t("delete")}
             </Button>
           </DialogFooter>

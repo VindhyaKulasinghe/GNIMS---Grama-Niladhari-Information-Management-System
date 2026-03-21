@@ -172,35 +172,34 @@ export function HouseholdManagement() {
     const errors: { [key: string]: string } = {};
 
     if (!formData.houseNumber) {
-      errors.houseNumber = "House number is required";
+      errors.houseNumber = t("houseNumberRequired");
     }
 
     if (!formData.address || !formData.telephone) {
       if (!formData.address) {
-        errors.address = "Address is required";
+        errors.address = t("addressRequired");
       }
       if (!formData.telephone) {
-        errors.telephone = "Telephone is required";
+        errors.telephone = t("telephoneRequired");
       }
     }
 
     const phone = formData.telephone || "";
     if (!/^\d{10}$/.test(phone)) {
-      errors.telephone =
-        "Telephone must be exactly 10 digits (e.g. 0712345678)";
+      errors.telephone = t("telephoneInvalid");
     }
 
     if (!formData.roofType || !formData.wallType || !formData.floorType) {
-      errors.roofType = "Roof type is required";
-      errors.wallType = "Wall type is required";
-      errors.floorType = "Floor type is required";
+      errors.roofType = t("roofTypeRequired");
+      errors.wallType = t("wallTypeRequired");
+      errors.floorType = t("floorTypeRequired");
     }
 
     if (Object.keys(errors).length > 0) {
       // Simple way to surface all current validation errors inline + toast
-      toast.error("Please fix the highlighted household form errors.");
+      toast.error(t("fixHouseholdFormErrors"));
       // Store errors on formData via a helper key so we can read them below
-      (formData as any).__errors = errors;
+      setFormData({ ...formData, __errors: errors } as any);
       return;
     }
 
@@ -859,6 +858,11 @@ export function HouseholdManagement() {
                     setFormData({ ...formData, houseNumber: e.target.value })
                   }
                   placeholder="e.g. 23/A"
+                  className={
+                    (formData as any).__errors?.houseNumber
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      : ""
+                  }
                 />
                 {(formData as any).__errors?.houseNumber && (
                   <p className="text-xs text-red-500">
@@ -874,6 +878,11 @@ export function HouseholdManagement() {
                     setFormData({ ...formData, telephone: e.target.value })
                   }
                   placeholder="0XX XXXXXXX"
+                  className={
+                    (formData as any).__errors?.telephone
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                      : ""
+                  }
                 />
                 {(formData as any).__errors?.telephone && (
                   <p className="text-xs text-red-500">
@@ -891,7 +900,7 @@ export function HouseholdManagement() {
                   setFormData({ ...formData, address: e.target.value })
                 }
                 placeholder="Street, Village, Town"
-                className="resize-none"
+                className={`resize-none ${(formData as any).__errors?.address ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
                 rows={3}
               />
               {(formData as any).__errors?.address && (
