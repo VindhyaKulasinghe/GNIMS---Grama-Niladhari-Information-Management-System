@@ -62,7 +62,7 @@ const PURPOSE_COLORS: Record<string, string> = {
 
 export function Boarders() {
   const { t } = useTranslation();
-  const { getBoarders, households, familyMembers } = useHouseholdData();
+  const { getBoarders, households } = useHouseholdData();
   const [searchQuery, setSearchQuery] = useState("");
 
   // View dialog state
@@ -106,20 +106,6 @@ export function Boarders() {
 
   const purposeData = Object.entries(purposeGroups).map(([name, value]) => ({
     name: t(name.toLowerCase()) || name,
-    value,
-  }));
-
-  const sectorGroups = familyMembers.reduce<Record<string, number>>(
-    (acc, m) => {
-      const sector = m.sector || "Unknown";
-      acc[sector] = (acc[sector] || 0) + 1;
-      return acc;
-    },
-    {},
-  );
-
-  const sectorData = Object.entries(sectorGroups).map(([name, value]) => ({
-    name: name === "Unknown" ? t("unknown") : name,
     value,
   }));
 
@@ -262,18 +248,46 @@ export function Boarders() {
             <Card className="hover:shadow-md transition-all border-slate-200">
               <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
                 <CardTitle className="text-lg text-slate-800 font-semibold">
-                  {t("jobSector") || "Job Sector"}
+                  {t("purposeOfStay")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={sectorData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#8884d8" />
-                  </BarChart>
+                  <PieChart>
+                    <Pie
+                      data={purposeData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={5}
+                      labelLine={false}
+                      label={({ name, percent }) =>
+                        `${name} ${(percent * 100).toFixed(0)}%`
+                      }
+                      dataKey="value"
+                    >
+                      {purposeData.map((entry, index) => (
+                        <Cell
+                          key={`purpose-${entry.name}-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      cursor={{ fill: "transparent" }}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                      }}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      height={36}
+                      iconType="circle"
+                    />
+                  </PieChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
@@ -454,7 +468,7 @@ export function Boarders() {
                           </span>
                         </TableCell>
                         <TableCell className="text-sm">
-                          {boarder.boarderDistrict || "-"}
+                          {boarder.boarderCountry || "-"}
                         </TableCell>
                         <TableCell className="text-xs text-gray-600">
                           {boarder.jobType ? (
@@ -610,8 +624,8 @@ export function Boarders() {
                       {t("countryDistrictOrigin")}
                     </p>
                     <p className="font-medium text-amber-900">
-                      {viewingBoarder.boarderDistrict ||
-                        viewingBoarder.boarderCountry ||
+                      {viewingBoarder.boarderCountry ||
+                        viewingBoarder.boarderDistrict ||
                         t("notSpecified")}
                     </p>
                   </div>
