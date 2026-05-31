@@ -126,16 +126,6 @@ export function Animals() {
   const handleSave = async () => {
     setSavingAnimal(true);
     try {
-      const errors: { [key: string]: string } = {};
-      if (!formData.name) errors.name = t("animalNameRequired");
-      if (!formData.category) errors.category = t("categoryRequired");
-
-      if (Object.keys(errors).length > 0) {
-        (formData as any).__errors = errors;
-        toast.error(t("fillRequiredFields"));
-        return;
-      }
-
       const { __errors, ...cleanForm } = formData as any;
 
       if (editingAnimal) {

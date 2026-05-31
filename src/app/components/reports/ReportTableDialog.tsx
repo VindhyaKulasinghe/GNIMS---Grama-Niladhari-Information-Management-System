@@ -14,13 +14,15 @@ import { PopulationTable } from "./PopulationTable";
 import { PropertyTable } from "./PropertyTable";
 import { VehicleTable } from "./VehicleTable";
 import { AswasumaTable } from "./AswasumaTable";
+import { CertificateTable } from "./CertificateTable";
 import {
   Household,
   FamilyMember,
   Property,
   Vehicle,
   HouseholdBenefit,
-} from "../../lib/validationSchemas";
+  CertificateIssuance,
+} from "../../../lib/validationSchemas";
 
 interface ReportTableDialogProps {
   showReportTable: string | null;
@@ -30,6 +32,7 @@ interface ReportTableDialogProps {
   properties: Property[];
   vehicles: Vehicle[];
   householdBenefits: HouseholdBenefit[];
+  certificateIssuances: CertificateIssuance[];
   onDownload: () => void;
 }
 
@@ -41,6 +44,7 @@ export function ReportTableDialog({
   properties,
   vehicles,
   householdBenefits,
+  certificateIssuances,
   onDownload,
 }: ReportTableDialogProps) {
   const { t } = useTranslation();
@@ -57,6 +61,8 @@ export function ReportTableDialog({
         return t("vehicleReport");
       case "aswasuma":
         return t("aswasumaReport");
+      case "certificates":
+        return t("gnCertificatesReport");
       default:
         return "";
     }
@@ -80,6 +86,8 @@ export function ReportTableDialog({
             householdBenefits={householdBenefits}
           />
         );
+      case "certificates":
+        return <CertificateTable certificateIssuances={certificateIssuances} />;
       default:
         return null;
     }

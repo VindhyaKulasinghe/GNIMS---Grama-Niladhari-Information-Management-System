@@ -192,23 +192,6 @@ export function Vehicles() {
   const handleSave = async () => {
     setSavingVehicle(true);
     try {
-      const errors: { [key: string]: string } = {};
-
-      if (!formData.vehicleType) errors.vehicleType = t("vehicleTypeRequired");
-      if (!formData.vehicleNumber)
-        errors.vehicleNumber = t("vehicleNumberRequired");
-      if (!formData.registrationYear)
-        errors.registrationYear = t("registrationYearRequired");
-      // Only require NIC validation when adding (not editing)
-      if (!editingVehicle && userValidation !== "valid")
-        errors.userId = t("validateNicPrompt");
-
-      if (Object.keys(errors).length > 0) {
-        (formData as any).__errors = errors;
-        toast.error(t("fixFormErrors"));
-        return;
-      }
-
       const { __errors, ...cleanForm } = formData as any;
 
       if (editingVehicle) {

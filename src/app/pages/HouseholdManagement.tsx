@@ -203,63 +203,41 @@ export function HouseholdManagement() {
   const handleSave = async () => {
     setSavingHousehold(true);
     try {
-      const errors: { [key: string]: string } = {};
-
-      if (!formData.houseNumber) {
-        errors.houseNumber = t("houseNumberRequired");
-      }
-
-      if (!formData.address || !formData.telephone) {
-        if (!formData.address) {
-          errors.address = t("addressRequired");
-        }
-        if (!formData.telephone) {
-          errors.telephone = t("telephoneRequired");
-        }
-      }
-
-      const phone = formData.telephone || "";
-      if (!/^\d{10}$/.test(phone)) {
-        errors.telephone = t("telephoneInvalid");
-      }
-
-      if (!formData.roofType || !formData.wallType || !formData.floorType) {
-        errors.roofType = t("roofTypeRequired");
-        errors.wallType = t("wallTypeRequired");
-        errors.floorType = t("floorTypeRequired");
-      }
-
-      if (Object.keys(errors).length > 0) {
-        // Simple way to surface all current validation errors inline + toast
-        toast.error(t("fixHouseholdFormErrors"));
-        // Store errors on formData via a helper key so we can read them below
-        setFormData({ ...formData, __errors: errors } as any);
+      const phone = (formData.telephone || "").trim();
+      if (phone && !/^\d{10}$/.test(phone)) {
+        toast.error(t("telephoneInvalid"));
+        setFormData({
+          ...formData,
+          __errors: { telephone: t("telephoneInvalid") },
+        } as any);
         return;
       }
 
       const divisionForSave = editingHousehold?.division || userDivision;
       const normalizedHouseNumber = (formData.houseNumber || "").trim();
 
-      const duplicateHouse = households.some(
-        (h) =>
-          h.houseNumber.trim() === normalizedHouseNumber &&
-          h.division === divisionForSave &&
-          h.id !== editingHousehold?.id,
-      );
-      if (duplicateHouse) {
-        toast.error(
-          t("houseNumberDuplicateInDivision") ||
-            "This house number already exists in your division",
+      if (normalizedHouseNumber) {
+        const duplicateHouse = households.some(
+          (h) =>
+            h.houseNumber.trim() === normalizedHouseNumber &&
+            h.division === divisionForSave &&
+            h.id !== editingHousehold?.id,
         );
-        setFormData({
-          ...formData,
-          __errors: {
-            houseNumber:
-              t("houseNumberDuplicateInDivision") ||
+        if (duplicateHouse) {
+          toast.error(
+            t("houseNumberDuplicateInDivision") ||
               "This house number already exists in your division",
-          },
-        } as any);
-        return;
+          );
+          setFormData({
+            ...formData,
+            __errors: {
+              houseNumber:
+                t("houseNumberDuplicateInDivision") ||
+                "This house number already exists in your division",
+            },
+          } as any);
+          return;
+        }
       }
 
       const { __errors, ...cleanForm } = formData as any;

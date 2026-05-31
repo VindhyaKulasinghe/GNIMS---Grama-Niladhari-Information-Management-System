@@ -151,6 +151,10 @@ export const router = createBrowserRouter([
         )
       },
       { 
+        path: "certificates", 
+        element: <Navigate to="/reports?tab=certificates" replace />
+      },
+      { 
         path: "settings", 
         element: (
           <ProtectedRoute>

@@ -234,21 +234,12 @@ export function FamilyMembers() {
   const handleSave = async () => {
     setSavingMember(true);
     try {
-      const errors: { [key: string]: string } = {};
-
-      if (!formData.nicNumber) {
-        errors.nicNumber = t("nicRequired");
-      } else if (!/^(\d{9}[VvXx]|\d{12})$/.test(formData.nicNumber)) {
-        errors.nicNumber = t("nicInvalid");
-      }
-
-      if (!formData.birthYear) {
-        errors.birthYear = t("birthYearRequired");
-      }
-
-      if (Object.keys(errors).length > 0) {
-        toast.error(t("fixFormErrors"));
-        (formData as any).__errors = errors;
+      if (
+        formData.nicNumber &&
+        !/^(\d{9}[VvXx]|\d{12})$/.test(formData.nicNumber)
+      ) {
+        toast.error(t("nicInvalid"));
+        setFormData({ ...formData, __errors: { nicNumber: t("nicInvalid") } } as any);
         return;
       }
 

@@ -6,8 +6,10 @@ import * as animalService from "../../lib/services/animalService";
 import * as vehicleService from "../../lib/services/vehicleService";
 import * as propertyService from "../../lib/services/propertyService";
 import * as benefitService from "../../lib/services/benefitService";
+import * as certificateService from "../../lib/services/certificateService";
 import { useAuth } from "./AuthContext";
 import { isSameHouse, resolveUserDivision } from "../../lib/divisionScope";
+import type { CertificateType } from "../../lib/certificateTypes";
 
 export interface Animal {
   id: number;
@@ -128,6 +130,22 @@ export interface HouseholdBenefit {
   updatedAt?: string;
 }
 
+export interface CertificateIssuance {
+  id: number;
+  division: string;
+  certificateType: CertificateType;
+  issueDate: string;
+  houseNumber?: string | null;
+  recipientMemberId?: number | null;
+  recipientName: string;
+  recipientNic?: string | null;
+  recipientAddress?: string | null;
+  purpose?: string | null;
+  referenceNumber?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 interface HouseholdDataContextType {
   // State
   households: Household[];
@@ -139,6 +157,7 @@ interface HouseholdDataContextType {
   vehicles: Vehicle[];
   properties: Property[];
   householdBenefits: HouseholdBenefit[];
+  certificateIssuances: CertificateIssuance[];
   loading: boolean;
   error: string | null;
 
@@ -203,6 +222,16 @@ interface HouseholdDataContextType {
   ) => Promise<void>;
   refreshHouseholdBenefits: () => Promise<void>;
 
+  addCertificateIssuance: (
+    record: Omit<CertificateIssuance, "id" | "createdAt" | "updatedAt">,
+  ) => Promise<void>;
+  updateCertificateIssuance: (
+    id: number,
+    record: Partial<CertificateIssuance>,
+  ) => Promise<void>;
+  deleteCertificateIssuance: (id: number) => Promise<void>;
+  refreshCertificateIssuances: () => Promise<void>;
+
   // Helper functions
   getMembersForHouse: (houseNumber: string, division: string) => FamilyMember[];
   getStudents: () => FamilyMember[];
@@ -235,6 +264,9 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [householdBenefits, setHouseholdBenefits] = useState<
     HouseholdBenefit[]
   >([]);
+  const [certificateIssuances, setCertificateIssuances] = useState<
+    CertificateIssuance[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user, isAuthenticated } = useAuth();
@@ -252,7 +284,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       setLoading(true);
       setError(null);
-      const [hh, fm, a, ha, v, p, hb] = await Promise.all([
+      const [hh, fm, a, ha, v, p, hb, cert] = await Promise.all([
         householdService.getHouseholds(),
         familyMemberService.getFamilyMembers(),
         animalService.getAnimals(),
@@ -260,6 +292,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
         vehicleService.getVehicles(),
         propertyService.getProperties(),
         benefitService.getAllHouseholdBenefits(),
+        certificateService.getCertificateIssuances(),
       ]);
 
       // Apply GN-based filtering if user is a GN Officer
@@ -295,6 +328,10 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
           (b) => b.division === userDivision,
         );
 
+        const filteredCertificates = (cert as CertificateIssuance[]).filter(
+          (c) => c.division === userDivision,
+        );
+
         setHouseholds(filteredHouseholds);
         setFamilyMembers(filteredFamilyMembers);
         setAnimals(a as Animal[]);
@@ -302,6 +339,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
         setVehicles(filteredVehicles);
         setProperties(filteredPropertiesTyped);
         setHouseholdBenefits(filteredBenefits);
+        setCertificateIssuances(filteredCertificates);
       } else {
         // Admin and Divisional Secretariat see all data across divisions
         setHouseholds(hh as Household[]);
@@ -311,6 +349,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
         setVehicles(v as Vehicle[]);
         setProperties(p as Property[]);
         setHouseholdBenefits(hb as HouseholdBenefit[]);
+        setCertificateIssuances(cert as CertificateIssuance[]);
       }
     } catch (err) {
       const message =
@@ -673,6 +712,62 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     await loadAllData();
   };
 
+  const addCertificateIssuance = async (
+    record: Omit<CertificateIssuance, "id" | "createdAt" | "updatedAt">,
+  ) => {
+    try {
+      const divisionToSave = resolveUserDivision(user);
+      const withDivision = { ...record, division: divisionToSave };
+      const created = await certificateService.createCertificateIssuance(
+        withDivision as CertificateIssuance,
+      );
+      setCertificateIssuances([created as CertificateIssuance, ...certificateIssuances]);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to add certificate record";
+      setError(message);
+      throw err;
+    }
+  };
+
+  const updateCertificateIssuance = async (
+    id: number,
+    record: Partial<CertificateIssuance>,
+  ) => {
+    try {
+      const updated = await certificateService.updateCertificateIssuance(
+        id,
+        record,
+      );
+      setCertificateIssuances(
+        certificateIssuances.map((c) =>
+          c.id === id ? (updated as CertificateIssuance) : c,
+        ),
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to update certificate record";
+      setError(message);
+      throw err;
+    }
+  };
+
+  const deleteCertificateIssuance = async (id: number) => {
+    try {
+      await certificateService.deleteCertificateIssuance(id);
+      setCertificateIssuances(certificateIssuances.filter((c) => c.id !== id));
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to delete certificate record";
+      setError(message);
+      throw err;
+    }
+  };
+
+  const refreshCertificateIssuances = async () => {
+    await loadAllData();
+  };
+
   // Helper functions
   const getMembersForHouse = (houseNumber: string, division: string) =>
     familyMembers.filter((m) => isSameHouse(m, houseNumber, division));
@@ -701,6 +796,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
         vehicles,
         properties,
         householdBenefits,
+        certificateIssuances,
         loading,
         error,
         addHousehold,
@@ -727,6 +823,10 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
         refreshAnimals,
         saveHouseholdBenefits,
         refreshHouseholdBenefits,
+        addCertificateIssuance,
+        updateCertificateIssuance,
+        deleteCertificateIssuance,
+        refreshCertificateIssuances,
         getMembersForHouse,
         getStudents,
         getBoarders,

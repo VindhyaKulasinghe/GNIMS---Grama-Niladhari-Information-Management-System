@@ -3,6 +3,7 @@ import { generateHtmlReport } from "./reportHtmlExporter";
 import {
   ReportData,
   buildAswasumaReportRows,
+  buildCertificateReportRows,
   translateField,
   TranslateFn,
   usesComplexScriptPdf,
@@ -29,12 +30,17 @@ export async function generateReport(
   language: string,
   t: TranslateFn,
 ) {
-  if (usesComplexScriptPdf(language)) {
+  // pdfMake + embedded Noto fonts works reliably in Edge/Chrome for Sinhala/Tamil.
+  // HTML snapshot export is kept only as a fallback when pdfMake fails.
+  try {
+    await generatePdfMakeReport(type, data, language, t);
+  } catch (pdfError) {
+    if (!usesComplexScriptPdf(language)) {
+      throw pdfError;
+    }
+    console.warn("pdfMake report failed, trying HTML export:", pdfError);
     await generateHtmlReport(type, data, language, t);
-    return;
   }
-
-  await generatePdfMakeReport(type, data, language, t);
 }
 
 async function generatePdfMakeReport(
@@ -91,6 +97,9 @@ async function generatePdfMakeReport(
     case "aswasuma":
       title = t("aswasumaReport");
       break;
+    case "certificates":
+      title = t("gnCertificatesReport");
+      break;
   }
 
   docDefinition.content.push({
@@ -119,6 +128,8 @@ async function generatePdfMakeReport(
       docDefinition.content.push(getVehicleTable(data.vehicles, t, fontFamily));
     } else if (type === "aswasuma") {
       docDefinition.content.push(getAswasumaTable(data, t, fontFamily));
+    } else if (type === "certificates") {
+      docDefinition.content.push(getCertificatesTable(data, t, fontFamily));
     }
 
     const langCode = language.split("-")[0];
@@ -371,6 +382,40 @@ function getAswasumaTable(data: ReportData, t: TranslateFn, font: string) {
           pdfCell(row.receiverName, font),
           pdfCell(row.receiverNic, font),
           pdfCell(row.receiverAge, font),
+        ]),
+      ],
+    },
+    layout: "lightHorizontalLines",
+  };
+}
+
+function getCertificatesTable(data: ReportData, t: TranslateFn, font: string) {
+  const rows = buildCertificateReportRows(data, t);
+
+  return {
+    table: {
+      headerRows: 1,
+      widths: ["auto", "*", "auto", "*", "auto", "auto", "*", "auto"],
+      body: [
+        [
+          headerCell(t("issueDate"), font),
+          headerCell(t("certificateType"), font),
+          headerCell(t("division"), font),
+          headerCell(t("fullName"), font),
+          headerCell(t("nicNumber"), font),
+          headerCell(t("houseNumber"), font),
+          headerCell(t("address"), font),
+          headerCell(t("referenceNumber"), font),
+        ],
+        ...rows.map((row) => [
+          pdfCell(row.issueDate, font),
+          pdfCell(row.certificateType, font),
+          pdfCell(row.division, font),
+          pdfCell(row.recipientName, font),
+          pdfCell(row.recipientNic, font),
+          pdfCell(row.houseNumber, font),
+          pdfCell(row.recipientAddress, font),
+          pdfCell(row.referenceNumber, font),
         ]),
       ],
     },

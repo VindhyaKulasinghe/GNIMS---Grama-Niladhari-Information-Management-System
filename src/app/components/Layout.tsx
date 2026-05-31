@@ -65,6 +65,24 @@ export function Layout() {
     navigate("/login");
   };
 
+  const displayName = user?.fullName?.trim() || t("gnOfficerLabel");
+  const displayDivision =
+    user?.division?.trim() ||
+    (user?.role === "Admin"
+      ? t("admin")
+      : user?.role === "Divisional Secretariat"
+        ? t("divisionalSecretariat")
+        : t("hambantotaDivision"));
+
+  const avatarInitials =
+    user?.fullName
+      ?.trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? "")
+      .join("") || "GN";
+
   // Don't render layout if not authenticated
   if (!isAuthenticated) {
     return null;
@@ -103,13 +121,17 @@ export function Layout() {
               </SelectContent>
             </Select>
 
-            <div className="hidden sm:flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600">
-                <span className="text-sm font-medium">GN</span>
+            <div className="hidden sm:flex items-center gap-2 min-w-0 max-w-[12rem] md:max-w-xs">
+              <div className="h-8 w-8 shrink-0 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600">
+                <span className="text-xs font-semibold">{avatarInitials}</span>
               </div>
-              <div className="hidden md:block">
-                <p className="text-sm font-medium">{t("gnOfficerLabel")}</p>
-                <p className="text-xs text-slate-300">{t("hambantotaDivision")}</p>
+              <div className="min-w-0 hidden md:block">
+                <p className="text-sm font-medium truncate" title={displayName}>
+                  {displayName}
+                </p>
+                <p className="text-xs text-slate-300 truncate" title={displayDivision}>
+                  {displayDivision}
+                </p>
               </div>
             </div>
 

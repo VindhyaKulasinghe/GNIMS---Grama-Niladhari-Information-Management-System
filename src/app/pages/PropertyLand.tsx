@@ -193,30 +193,6 @@ export function PropertyLand() {
   const handleSave = async () => {
     setSavingProperty(true);
     try {
-      const errors: { [key: string]: string } = {};
-
-      // Only require NIC validation when adding (not editing)
-      if (
-        !formData.propertyType ||
-        !formData.oppuNumber ||
-        !formData.landSize ||
-        !formData.ownership ||
-        (!editingProperty && userValidation !== "valid")
-      ) {
-        if (!formData.propertyType)
-          errors.propertyType = t("propertyTypeRequired");
-        if (!formData.oppuNumber) errors.oppuNumber = t("oppuNumberRequired");
-        if (!formData.landSize) errors.landSize = t("landSizeRequired");
-        if (!formData.ownership) errors.ownership = t("ownershipTypeRequired");
-        if (userValidation !== "valid") errors.userId = t("validateNicPrompt");
-
-        if (Object.keys(errors).length > 0) {
-          (formData as any).__errors = errors;
-          toast.error(t("fixFormErrors"));
-          return;
-        }
-      }
-
       const { __errors, ...cleanForm } = formData as any;
 
       if (editingProperty) {

@@ -1,4 +1,6 @@
+import { resolveCertificateTypeKey } from "./certificateTypes";
 import type {
+  CertificateIssuance,
   FamilyMember,
   Household,
   HouseholdBenefit,
@@ -8,12 +10,66 @@ import type {
 
 export type TranslateFn = (key: string) => string;
 
+export interface CertificateReportFilter {
+  certificateType?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
 export interface ReportData {
   households: Household[];
   familyMembers: FamilyMember[];
   properties: Property[];
   vehicles: Vehicle[];
   householdBenefits: HouseholdBenefit[];
+  certificateIssuances?: CertificateIssuance[];
+  certificateFilter?: CertificateReportFilter;
+}
+
+export interface CertificateReportRow {
+  issueDate: string;
+  certificateType: string;
+  division: string;
+  recipientName: string;
+  recipientNic: string;
+  houseNumber: string;
+  recipientAddress: string;
+  purpose: string;
+  referenceNumber: string;
+}
+
+export function buildCertificateReportRows(
+  data: ReportData,
+  t: TranslateFn,
+): CertificateReportRow[] {
+  const records = data.certificateIssuances || [];
+  const filter = data.certificateFilter;
+
+  return records
+    .filter((record) => {
+      if (
+        filter?.certificateType &&
+        filter.certificateType !== "all" &&
+        record.certificateType !== filter.certificateType
+      ) {
+        return false;
+      }
+      if (filter?.dateFrom && record.issueDate < filter.dateFrom) return false;
+      if (filter?.dateTo && record.issueDate > filter.dateTo) return false;
+      return true;
+    })
+    .map((record) => ({
+      issueDate: record.issueDate,
+      certificateType: t(resolveCertificateTypeKey(record.certificateType)),
+      division: record.division,
+      recipientName: record.recipientName,
+      recipientNic: record.recipientNic || "-",
+      houseNumber: record.houseNumber || "-",
+      recipientAddress: record.recipientAddress || "-",
+      purpose: record.purpose || "-",
+      referenceNumber: record.referenceNumber || "-",
+    }))
+    .sort((a, b) => b.issueDate.localeCompare(a.issueDate));
 }
 
 export interface AswasumaReportRow {

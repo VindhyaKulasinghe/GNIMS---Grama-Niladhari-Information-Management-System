@@ -1,22 +1,28 @@
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useHouseholdData } from "../context/HouseholdDataContext";
-import { useState } from "react";
-import { Home, BarChart3, FileText, Car, HandHeart } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Home, BarChart3, FileText, Car, HandHeart, ScrollText } from "lucide-react";
 import {
   ReportTypeCard,
   RecentReports,
   ReportTableDialog,
 } from "../components/reports";
-
+import { CertificatesSection } from "../components/certificates/CertificatesSection";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { generateReport } from "../../lib/reportGenerator";
 
 export function Reports() {
   const { t, i18n } = useTranslation();
-  const { households, familyMembers, vehicles, properties, householdBenefits } =
+  const [searchParams] = useSearchParams();
+  const { households, familyMembers, vehicles, properties, householdBenefits, certificateIssuances } =
     useHouseholdData();
-  const [selectedReportType, setSelectedReportType] = useState<string | null>(null);
   const [showReportTable, setShowReportTable] = useState<string | null>(null);
+
+  const defaultTab = useMemo(() => {
+    return searchParams.get("tab") === "certificates" ? "certificates" : "statistics";
+  }, [searchParams]);
 
   const reportTypes = [
     {
@@ -54,13 +60,20 @@ export function Reports() {
       color: "bg-rose-500",
       type: "aswasuma",
     },
+    {
+      title: t("gnCertificatesReport"),
+      description: t("gnCertificatesReportDesc"),
+      icon: ScrollText,
+      color: "bg-indigo-500",
+      type: "certificates",
+    },
   ];
 
   const handleGenerateReport = async (reportType: string) => {
     try {
       await generateReport(
         reportType,
-        { households, familyMembers, properties, vehicles, householdBenefits },
+        { households, familyMembers, properties, vehicles, householdBenefits, certificateIssuances },
         i18n.language,
         t,
       );
@@ -83,25 +96,41 @@ export function Reports() {
           <p className="text-gray-600 mt-1">{t("reportsDescription")}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reportTypes.map((report) => (
-            <ReportTypeCard
-              key={report.title}
-              title={report.title}
-              description={report.description}
-              icon={report.icon}
-              color={report.color}
-              type={report.type}
-              onView={handleViewReport}
-              onGenerate={handleGenerateReport}
-            />
-          ))}
-        </div>
+        <Tabs defaultValue={defaultTab} className="w-full">
+          <TabsList className="flex h-auto w-full max-w-lg flex-wrap gap-1 p-1 sm:flex-nowrap">
+            <TabsTrigger value="certificates" className="flex-1 text-xs sm:text-sm">
+              {t("reportsTabCertificates")}
+            </TabsTrigger>
+            <TabsTrigger value="statistics" className="flex-1 text-xs sm:text-sm">
+              {t("reportsTabStatistics")}
+            </TabsTrigger>
+          </TabsList>
 
-        <RecentReports />
+          <TabsContent value="certificates" className="mt-6">
+            <CertificatesSection />
+          </TabsContent>
+
+          <TabsContent value="statistics" className="space-y-6 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {reportTypes.map((report) => (
+                <ReportTypeCard
+                  key={report.title}
+                  title={report.title}
+                  description={report.description}
+                  icon={report.icon}
+                  color={report.color}
+                  type={report.type}
+                  onView={handleViewReport}
+                  onGenerate={handleGenerateReport}
+                />
+              ))}
+            </div>
+
+            <RecentReports />
+          </TabsContent>
+        </Tabs>
       </div>
 
-      {/* Report Table Dialog */}
       <ReportTableDialog
         showReportTable={showReportTable}
         onClose={() => setShowReportTable(null)}
@@ -110,6 +139,7 @@ export function Reports() {
         properties={properties}
         vehicles={vehicles}
         householdBenefits={householdBenefits}
+        certificateIssuances={certificateIssuances}
         onDownload={() => {
           if (showReportTable) {
             handleGenerateReport(showReportTable);
@@ -119,4 +149,3 @@ export function Reports() {
     </>
   );
 }
-

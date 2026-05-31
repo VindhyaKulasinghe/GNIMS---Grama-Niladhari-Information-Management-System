@@ -6,3 +6,4 @@ export { PopulationTable } from "./PopulationTable";
 export { PropertyTable } from "./PropertyTable";
 export { VehicleTable } from "./VehicleTable";
 export { AswasumaTable } from "./AswasumaTable";
+export { CertificateTable } from "./CertificateTable";

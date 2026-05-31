@@ -106,11 +106,6 @@ export function HouseholdBenefitsDialog({
     }
 
     const aswasuma = rows.find((r) => r.benefitType === "aswasuma");
-    if (aswasuma?.isReceiving && !aswasuma.receiverMemberId) {
-      toast.error(t("aswasumaReceiverRequired"));
-      return;
-    }
-
     if (
       aswasuma?.isReceiving &&
       aswasuma.receiverMemberId &&

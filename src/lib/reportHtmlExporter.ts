@@ -1,9 +1,11 @@
 import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import {
   escapeHtml,
   getReportFontFamily,
   ReportData,
   buildAswasumaReportRows,
+  buildCertificateReportRows,
   translateField,
   TranslateFn,
 } from "./reportUtils";
@@ -20,6 +22,8 @@ function getReportTitle(type: string, t: TranslateFn): string {
       return t("vehicleReport");
     case "aswasuma":
       return t("aswasumaReport");
+    case "certificates":
+      return t("gnCertificatesReport");
     default:
       return t("reports");
   }
@@ -275,6 +279,34 @@ function buildAswasumaHtml(data: ReportData, t: TranslateFn): string {
   </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+function buildCertificatesHtml(data: ReportData, t: TranslateFn): string {
+  const rows = buildCertificateReportRows(data, t)
+    .map(
+      (row) => `<tr>
+        ${td(row.issueDate)}
+        ${td(row.certificateType)}
+        ${td(row.division)}
+        ${td(row.recipientName, "col-name")}
+        ${td(row.recipientNic)}
+        ${td(row.houseNumber)}
+        ${td(row.recipientAddress, "col-address")}
+        ${td(row.referenceNumber)}
+      </tr>`,
+    )
+    .join("");
+
+  return `<table><thead><tr>
+    ${th(t("issueDate"))}
+    ${th(t("certificateType"))}
+    ${th(t("division"))}
+    ${th(t("fullName"), "col-name")}
+    ${th(t("nicNumber"))}
+    ${th(t("houseNumber"))}
+    ${th(t("address"), "col-address")}
+    ${th(t("referenceNumber"))}
+  </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
 function buildReportBody(
   type: string,
   data: ReportData,
@@ -291,6 +323,8 @@ function buildReportBody(
       return buildVehicleHtml(data, t);
     case "aswasuma":
       return buildAswasumaHtml(data, t);
+    case "certificates":
+      return buildCertificatesHtml(data, t);
     default:
       return "";
   }
@@ -364,24 +398,125 @@ function buildReportDocumentHtml(
 <html lang="${lang}">
 <head>
   <meta charset="UTF-8" />
+  <style>
+    ${localFontFaceCss(origin)}
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      color: #111111;
+    }
+    ${tableStyles(fontFamily)}
+  </style>
 </head>
-<body style="margin:0;padding:0;background:#ffffff;color:#111111;">
+<body>
   <div class="report-root">
-    <style>
-      ${localFontFaceCss(origin)}
-      * { box-sizing: border-box; }
-      .report-root {
-        background: #ffffff;
-        color: #111111;
-      }
-      ${tableStyles(fontFamily)}
-    </style>
     <div class="report-title">${title}</div>
     <div class="report-date">${dateLine}</div>
     ${body}
   </div>
 </body>
 </html>`;
+}
+
+async function waitForIframeReportRoot(
+  iframe: HTMLIFrameElement,
+  timeoutMs = 8000,
+): Promise<HTMLElement> {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const doc = iframe.contentDocument ?? iframe.contentWindow?.document;
+    const root = doc?.querySelector(".report-root");
+    if (root instanceof HTMLElement) {
+      return root;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 50));
+  }
+
+  throw new Error("Failed to find report content");
+}
+
+function createHiddenReportIframe(): HTMLIFrameElement {
+  const iframe = document.createElement("iframe");
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.title = "report";
+  iframe.style.position = "fixed";
+  iframe.style.left = "-10000px";
+  iframe.style.top = "0";
+  iframe.style.width = "1100px";
+  iframe.style.height = "2400px";
+  iframe.style.border = "0";
+  iframe.style.opacity = "0";
+  iframe.style.pointerEvents = "none";
+  iframe.style.zIndex = "-1";
+  return iframe;
+}
+
+/** Mount HTML into a same-origin iframe (about:blank → write, then blob URL fallback). */
+async function mountReportHtml(
+  html: string,
+): Promise<{ iframe: HTMLIFrameElement; root: HTMLElement }> {
+  const iframe = createHiddenReportIframe();
+  document.body.appendChild(iframe);
+
+  await new Promise<void>((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      reject(new Error("Timed out preparing report frame"));
+    }, 10000);
+
+    iframe.onload = () => {
+      window.clearTimeout(timer);
+      resolve();
+    };
+    iframe.onerror = () => {
+      window.clearTimeout(timer);
+      reject(new Error("Failed to load report frame"));
+    };
+    iframe.src = "about:blank";
+  });
+
+  const writeDoc = iframe.contentDocument ?? iframe.contentWindow?.document;
+  if (writeDoc) {
+    writeDoc.open();
+    writeDoc.write(html);
+    writeDoc.close();
+
+    const writtenRoot = writeDoc.querySelector(".report-root");
+    if (writtenRoot instanceof HTMLElement) {
+      return { iframe, root: writtenRoot };
+    }
+  }
+
+  iframe.remove();
+
+  const fallbackIframe = createHiddenReportIframe();
+  document.body.appendChild(fallbackIframe);
+
+  await new Promise<void>((resolve, reject) => {
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const timer = window.setTimeout(() => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Timed out loading report content"));
+    }, 10000);
+
+    fallbackIframe.onload = () => {
+      window.clearTimeout(timer);
+      URL.revokeObjectURL(url);
+      resolve();
+    };
+    fallbackIframe.onerror = () => {
+      window.clearTimeout(timer);
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load report frame"));
+    };
+    fallbackIframe.src = url;
+  });
+
+  const root = await waitForIframeReportRoot(fallbackIframe);
+  return { iframe: fallbackIframe, root };
 }
 
 function loadImage(win: Window, src: string): Promise<HTMLImageElement> {
@@ -393,8 +528,8 @@ function loadImage(win: Window, src: string): Promise<HTMLImageElement> {
   });
 }
 
-/** Renders via SVG foreignObject so parent-page Tailwind oklch() colors are never parsed. */
-async function renderReportToCanvas(
+/** SVG snapshot fallback when html2canvas cannot capture the iframe content. */
+async function renderReportToCanvasViaSvg(
   root: HTMLElement,
   scale: number,
 ): Promise<HTMLCanvasElement> {
@@ -437,6 +572,30 @@ async function renderReportToCanvas(
   ctx.scale(scale, scale);
   ctx.drawImage(img, 0, 0, width, height);
   return canvas;
+}
+
+async function renderReportToCanvas(
+  root: HTMLElement,
+  scale: number,
+): Promise<HTMLCanvasElement> {
+  const width = Math.max(root.scrollWidth, root.clientWidth, 1100);
+
+  try {
+    return await html2canvas(root, {
+      scale,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+      width,
+      windowWidth: width,
+      // Avoid parsing parent-page Tailwind stylesheets (oklch) in Edge/Chrome.
+      foreignObjectRendering: true,
+    });
+  } catch (html2canvasError) {
+    console.warn("html2canvas failed, falling back to SVG render:", html2canvasError);
+    return renderReportToCanvasViaSvg(root, scale);
+  }
 }
 
 async function canvasToPdf(
@@ -496,23 +655,7 @@ export async function generateHtmlReport(
   const langCode = language.split("-")[0];
   const origin = window.location.origin;
 
-  const iframe = document.createElement("iframe");
-  iframe.setAttribute("aria-hidden", "true");
-  iframe.style.position = "fixed";
-  iframe.style.left = "-10000px";
-  iframe.style.top = "0";
-  iframe.style.width = "1100px";
-  iframe.style.height = "2400px";
-  iframe.style.border = "0";
-  iframe.style.visibility = "hidden";
-  document.body.appendChild(iframe);
-
-  if (!iframe.contentWindow) {
-    document.body.removeChild(iframe);
-    throw new Error("Failed to create report frame");
-  }
-
-  iframe.srcdoc = buildReportDocumentHtml(
+  const reportHtml = buildReportDocumentHtml(
     title,
     dateLine,
     buildReportBody(type, data, t),
@@ -521,29 +664,17 @@ export async function generateHtmlReport(
     origin,
   );
 
-  await new Promise<void>((resolve) => {
-    iframe.onload = () => resolve();
-    window.setTimeout(resolve, 1500);
-  });
-
-  const doc = iframe.contentDocument;
-  if (!doc?.body) {
-    document.body.removeChild(iframe);
-    throw new Error("Failed to load report content");
-  }
-
-  await waitForIframeFonts(iframe, language);
-
-  const reportRoot = doc.querySelector(".report-root");
-  if (!(reportRoot instanceof HTMLElement)) {
-    document.body.removeChild(iframe);
-    throw new Error("Failed to find report content");
-  }
+  const { iframe, root: reportRoot } = await mountReportHtml(reportHtml);
 
   try {
+    await waitForIframeFonts(iframe, language);
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+
     const canvas = await renderReportToCanvas(reportRoot, 2);
     await canvasToPdf(canvas, `${type}_report_${langCode}.pdf`);
   } finally {
-    document.body.removeChild(iframe);
+    iframe.remove();
   }
 }
