@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useHouseholdData, Household } from "../context/HouseholdDataContext";
+import { useAuth } from "../context/AuthContext";
+import { isSameHouse, resolveUserDivision } from "../../lib/divisionScope";
 import {
   Card,
   CardContent,
@@ -76,6 +78,8 @@ import {
 
 export function HouseholdManagement() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const userDivision = user ? resolveUserDivision(user) : "";
   const {
     households,
     getMembersForHouse,
@@ -90,7 +94,7 @@ export function HouseholdManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [animalsDialogOpen, setAnimalsDialogOpen] = useState(false);
-  const [selectedHouseNumber, setSelectedHouseNumber] = useState("");
+  const [selectedHouse, setSelectedHouse] = useState<Household | null>(null);
   const [editingHousehold, setEditingHousehold] = useState<Household | null>(
     null,
   );
@@ -148,7 +152,8 @@ export function HouseholdManagement() {
 
     // Load animals for this household
     const householdAnimalsList = householdAnimals.filter(
-      (ha) => ha.houseNumber === household.houseNumber,
+      (ha) =>
+        isSameHouse(ha, household.houseNumber, household.division || userDivision),
     );
     setFormAnimals(
       householdAnimalsList.map((ha, idx) => ({
@@ -219,6 +224,31 @@ export function HouseholdManagement() {
         return;
       }
 
+      const divisionForSave = editingHousehold?.division || userDivision;
+      const normalizedHouseNumber = (formData.houseNumber || "").trim();
+
+      const duplicateHouse = households.some(
+        (h) =>
+          h.houseNumber.trim() === normalizedHouseNumber &&
+          h.division === divisionForSave &&
+          h.id !== editingHousehold?.id,
+      );
+      if (duplicateHouse) {
+        toast.error(
+          t("houseNumberDuplicateInDivision") ||
+            "This house number already exists in your division",
+        );
+        setFormData({
+          ...formData,
+          __errors: {
+            houseNumber:
+              t("houseNumberDuplicateInDivision") ||
+              "This house number already exists in your division",
+          },
+        } as any);
+        return;
+      }
+
       const { __errors, ...cleanForm } = formData as any;
       const coreData = cleanForm as Household;
 
@@ -226,9 +256,10 @@ export function HouseholdManagement() {
         await updateHousehold(editingHousehold.id, coreData);
 
         const houseNumber = editingHousehold.houseNumber;
+        const division = editingHousehold.division || userDivision;
 
-        const existing = householdAnimals.filter(
-          (ha) => ha.houseNumber === houseNumber,
+        const existing = householdAnimals.filter((ha) =>
+          isSameHouse(ha, houseNumber, division),
         );
 
         const desired = formAnimals
@@ -243,12 +274,12 @@ export function HouseholdManagement() {
         await Promise.all(
           existing
             .filter((ha) => !desiredIds.has(ha.animalId))
-            .map((ha) => deleteHouseholdAnimal(houseNumber, ha.animalId)),
+            .map((ha) => deleteHouseholdAnimal(houseNumber, ha.animalId, division)),
         );
 
         await Promise.all(
           desired.map((d) =>
-            addHouseholdAnimal(houseNumber, d.animalId, d.count),
+            addHouseholdAnimal(houseNumber, d.animalId, d.count, division),
           ),
         );
         toast.success("Household updated successfully.");
@@ -267,7 +298,12 @@ export function HouseholdManagement() {
 
         await Promise.all(
           desired.map((d) =>
-            addHouseholdAnimal(houseNumber, d.animalId, d.count),
+            addHouseholdAnimal(
+              houseNumber,
+              d.animalId,
+              d.count,
+              userDivision,
+            ),
           ),
         );
         toast.success("Household added successfully.");
@@ -299,27 +335,35 @@ export function HouseholdManagement() {
     );
   };
 
-  const handleManageAnimals = (houseNumber: string) => {
-    setSelectedHouseNumber(houseNumber);
+  const handleManageAnimals = (household: Household) => {
+    setSelectedHouse(household);
     setAnimalsDialogOpen(true);
   };
 
-  const getHouseholdAnimalCount = (houseNumber: string, animalId: number) => {
+  const getHouseholdAnimalCount = (
+    houseNumber: string,
+    division: string,
+    animalId: number,
+  ) => {
     const ha = householdAnimals.find(
-      (item) => item.houseNumber === houseNumber && item.animalId === animalId,
+      (item) =>
+        isSameHouse(item, houseNumber, division) && item.animalId === animalId,
     );
     return ha ? ha.count : 0;
   };
 
   const handleAnimalCountChange = async (animalId: number, count: number) => {
-    if (!selectedHouseNumber) return;
+    if (!selectedHouse) return;
+
+    const { houseNumber, division } = selectedHouse;
+    const divisionToUse = division || userDivision;
 
     setUpdatingAnimals(true);
     try {
       if (count === 0) {
-        await deleteHouseholdAnimal(selectedHouseNumber, animalId);
+        await deleteHouseholdAnimal(houseNumber, animalId, divisionToUse);
       } else {
-        await addHouseholdAnimal(selectedHouseNumber, animalId, count);
+        await addHouseholdAnimal(houseNumber, animalId, count, divisionToUse);
       }
     } finally {
       setUpdatingAnimals(false);
@@ -328,7 +372,8 @@ export function HouseholdManagement() {
 
   // Analytics calculations
   const totalMembers = households.reduce(
-    (sum, h) => sum + getMembersForHouse(h.houseNumber).length,
+    (sum, h) =>
+      sum + getMembersForHouse(h.houseNumber, h.division || userDivision).length,
     0,
   );
   const avgHouseholdSize = households.length
@@ -720,10 +765,20 @@ export function HouseholdManagement() {
                   </TableHeader>
                   <TableBody>
                     {filteredHouseholds.map((household) => {
-                      const members = getMembersForHouse(household.houseNumber);
+                      const householdDivision =
+                        household.division || userDivision;
+                      const members = getMembersForHouse(
+                        household.houseNumber,
+                        householdDivision,
+                      );
                       const head = members.find((m) => m.isHeadOfHousehold);
                       const householdAnimalsList = householdAnimals.filter(
-                        (ha) => ha.houseNumber === household.houseNumber,
+                        (ha) =>
+                          isSameHouse(
+                            ha,
+                            household.houseNumber,
+                            householdDivision,
+                          ),
                       );
                       const totalAnimals = householdAnimalsList.reduce(
                         (sum, ha) => sum + ha.count,
@@ -765,7 +820,7 @@ export function HouseholdManagement() {
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                handleManageAnimals(household.houseNumber)
+                                handleManageAnimals(household)
                               }
                               className="gap-2"
                             >
@@ -1155,7 +1210,7 @@ export function HouseholdManagement() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {t("manageAnimals")} - {t("house")} {selectedHouseNumber}
+              {t("manageAnimals")} - {t("house")} {selectedHouse?.houseNumber}
             </DialogTitle>
             <DialogDescription>
               {t("manageAnimalsDescription")}
@@ -1170,15 +1225,19 @@ export function HouseholdManagement() {
             <div className="space-y-3">
               {animals
                 .filter((animal) => {
+                  if (!selectedHouse) return false;
                   const currentCount = getHouseholdAnimalCount(
-                    selectedHouseNumber,
+                    selectedHouse.houseNumber,
+                    selectedHouse.division || userDivision,
                     animal.id,
                   );
                   return currentCount > 0;
                 })
                 .map((animal) => {
+                  if (!selectedHouse) return null;
                   const currentCount = getHouseholdAnimalCount(
-                    selectedHouseNumber,
+                    selectedHouse.houseNumber,
+                    selectedHouse.division || userDivision,
                     animal.id,
                   );
                   return (
@@ -1266,8 +1325,10 @@ export function HouseholdManagement() {
                   );
                 })}
               {animals.filter((animal) => {
+                if (!selectedHouse) return false;
                 const currentCount = getHouseholdAnimalCount(
-                  selectedHouseNumber,
+                  selectedHouse.houseNumber,
+                  selectedHouse.division || userDivision,
                   animal.id,
                 );
                 return currentCount > 0;
@@ -1331,13 +1392,22 @@ export function HouseholdManagement() {
             {/* Quick Stats Header */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {(() => {
+                const viewDivision =
+                  viewingHousehold?.division || userDivision;
                 const householdMembers = getMembersForHouse(
                   viewingHousehold?.houseNumber || "",
+                  viewDivision,
                 );
                 const head = householdMembers.find((m) => m.isHeadOfHousehold);
                 const totalAnimals = householdAnimals
-                  .filter(
-                    (ha) => ha.houseNumber === viewingHousehold?.houseNumber,
+                  .filter((ha) =>
+                    viewingHousehold
+                      ? isSameHouse(
+                          ha,
+                          viewingHousehold.houseNumber,
+                          viewDivision,
+                        )
+                      : false,
                   )
                   .reduce((sum, ha) => sum + ha.count, 0);
 
@@ -1420,8 +1490,11 @@ export function HouseholdManagement() {
                     </span>
                   </div>
                   {(() => {
+                    const viewDivision =
+                      viewingHousehold?.division || userDivision;
                     const householdMembers = getMembersForHouse(
                       viewingHousehold?.houseNumber || "",
+                      viewDivision,
                     );
                     const head = householdMembers.find(
                       (m) => m.isHeadOfHousehold,
@@ -1536,7 +1609,12 @@ export function HouseholdManagement() {
                     {householdAnimals
                       .filter(
                         (ha) =>
-                          ha.houseNumber === viewingHousehold?.houseNumber,
+                          viewingHousehold &&
+                          isSameHouse(
+                            ha,
+                            viewingHousehold.houseNumber,
+                            viewingHousehold.division || userDivision,
+                          ),
                       )
                       .map((ha) => (
                         <div
@@ -1554,7 +1632,13 @@ export function HouseholdManagement() {
                         </div>
                       ))}
                     {householdAnimals.filter(
-                      (ha) => ha.houseNumber === viewingHousehold?.houseNumber,
+                      (ha) =>
+                        viewingHousehold &&
+                        isSameHouse(
+                          ha,
+                          viewingHousehold.houseNumber,
+                          viewingHousehold.division || userDivision,
+                        ),
                     ).length === 0 && (
                       <p className="text-gray-500 text-sm italic w-full text-center py-4">
                         {t("noAssignedAnimals")}
@@ -1575,8 +1659,11 @@ export function HouseholdManagement() {
               </CardHeader>
               <CardContent>
                 {(() => {
+                  const viewDivision =
+                    viewingHousehold?.division || userDivision;
                   const householdMembers = getMembersForHouse(
                     viewingHousehold?.houseNumber || "",
+                    viewDivision,
                   );
                   if (householdMembers.length === 0) {
                     return (

@@ -6,6 +6,7 @@ import * as animalService from "../../lib/services/animalService";
 import * as vehicleService from "../../lib/services/vehicleService";
 import * as propertyService from "../../lib/services/propertyService";
 import { useAuth } from "./AuthContext";
+import { isSameHouse, resolveUserDivision } from "../../lib/divisionScope";
 
 export interface Animal {
   id: number;
@@ -166,18 +167,23 @@ interface HouseholdDataContextType {
     houseNumber: string,
     animalId: number,
     count: number,
+    division?: string,
   ) => Promise<void>;
   deleteHouseholdAnimal: (
     houseNumber: string,
     animalId: number,
+    division?: string,
   ) => Promise<void>;
   refreshAnimals: () => Promise<void>;
 
   // Helper functions
-  getMembersForHouse: (houseNumber: string) => FamilyMember[];
+  getMembersForHouse: (houseNumber: string, division: string) => FamilyMember[];
   getStudents: () => FamilyMember[];
   getBoarders: () => FamilyMember[];
-  getAnimalsForHouse: (houseNumber: string) => HouseholdAnimal[];
+  getAnimalsForHouse: (
+    houseNumber: string,
+    division: string,
+  ) => HouseholdAnimal[];
 }
 
 const HouseholdDataContext = createContext<
@@ -281,7 +287,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   ) => {
     try {
       // Auto-inject logged in user's division
-      const divisionToSave = user?.division || "Hambantota";
+      const divisionToSave = resolveUserDivision(user);
       const householdWithDivision = {
         ...household,
         division: divisionToSave,
@@ -337,7 +343,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     member: Omit<FamilyMember, "id" | "createdAt" | "updatedAt">,
   ) => {
     try {
-      const divisionToSave = user?.division || "Hambantota";
+      const divisionToSave = resolveUserDivision(user);
       const memberWithDivision = {
         ...member,
         division: divisionToSave,
@@ -395,7 +401,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     vehicle: Omit<Vehicle, "id" | "createdAt" | "updatedAt">,
   ) => {
     try {
-      const divisionToSave = user?.division || "Hambantota";
+      const divisionToSave = resolveUserDivision(user);
       const vehicleWithDivision = {
         ...vehicle,
         division: divisionToSave,
@@ -445,7 +451,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     property: Omit<Property, "id" | "createdAt" | "updatedAt">,
   ) => {
     try {
-      const divisionToSave = user?.division || "Hambantota";
+      const divisionToSave = resolveUserDivision(user);
       const propertyWithDivision = {
         ...property,
         division: divisionToSave,
@@ -533,9 +539,10 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     houseNumber: string,
     animalId: number,
     count: number,
+    division?: string,
   ) => {
     try {
-      const divisionToSave = user?.division || "Hambantota";
+      const divisionToSave = division || resolveUserDivision(user);
       const newAnimal = await animalService.upsertHouseholdAnimal(
         houseNumber,
         animalId,
@@ -543,7 +550,9 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
         divisionToSave,
       );
       const existing = householdAnimals.findIndex(
-        (ha) => ha.houseNumber === houseNumber && ha.animalId === animalId,
+        (ha) =>
+          isSameHouse(ha, houseNumber, divisionToSave) &&
+          ha.animalId === animalId,
       );
       if (existing >= 0) {
         const updated = [...householdAnimals];
@@ -563,12 +572,22 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const deleteHouseholdAnimal = async (
     houseNumber: string,
     animalId: number,
+    division?: string,
   ) => {
     try {
-      await animalService.deleteHouseholdAnimal(houseNumber, animalId);
+      const divisionToSave = division || resolveUserDivision(user);
+      await animalService.deleteHouseholdAnimal(
+        houseNumber,
+        animalId,
+        divisionToSave,
+      );
       setHouseholdAnimals(
         householdAnimals.filter(
-          (ha) => !(ha.houseNumber === houseNumber && ha.animalId === animalId),
+          (ha) =>
+            !(
+              isSameHouse(ha, houseNumber, divisionToSave) &&
+              ha.animalId === animalId
+            ),
         ),
       );
     } catch (err) {
@@ -586,8 +605,8 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // Helper functions
-  const getMembersForHouse = (houseNumber: string) =>
-    familyMembers.filter((m) => m.houseNumber === houseNumber);
+  const getMembersForHouse = (houseNumber: string, division: string) =>
+    familyMembers.filter((m) => isSameHouse(m, houseNumber, division));
 
   const getStudents = () =>
     familyMembers.filter((m) => m.memberType === "student");
@@ -595,8 +614,8 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const getBoarders = () =>
     familyMembers.filter((m) => m.memberType === "boarder");
 
-  const getAnimalsForHouse = (houseNumber: string) =>
-    householdAnimals.filter((ha) => ha.houseNumber === houseNumber);
+  const getAnimalsForHouse = (houseNumber: string, division: string) =>
+    householdAnimals.filter((ha) => isSameHouse(ha, houseNumber, division));
 
   return (
     <HouseholdDataContext.Provider

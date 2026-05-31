@@ -79,8 +79,12 @@ export async function upsertHouseholdAnimal(
   houseNumber: string,
   animalId: number,
   count: number,
-  division?: string,
+  division: string,
 ): Promise<HouseholdAnimal> {
+  if (!division) {
+    throw new Error("Division is required for household animals");
+  }
+
   const validated = HouseholdAnimalSchema.parse({
     houseNumber,
     animalId,
@@ -90,7 +94,7 @@ export async function upsertHouseholdAnimal(
 
   const { data, error } = await supabase
     .from("household_animals")
-    .upsert([validated], { onConflict: "houseNumber,animalId" })
+    .upsert([validated], { onConflict: "division,houseNumber,animalId" })
     .select()
     .single();
 
@@ -103,12 +107,14 @@ export async function upsertHouseholdAnimal(
 export async function deleteHouseholdAnimal(
   houseNumber: string,
   animalId: number,
+  division: string,
 ): Promise<void> {
   const { error } = await supabase
     .from("household_animals")
     .delete()
     .eq("houseNumber", houseNumber)
-    .eq("animalId", animalId);
+    .eq("animalId", animalId)
+    .eq("division", division);
 
   if (error)
     throw new Error(`Failed to delete household animal: ${error.message}`);

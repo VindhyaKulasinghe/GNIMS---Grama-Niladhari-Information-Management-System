@@ -30,6 +30,7 @@ import { Button } from "../components/ui/button";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useHouseholdData } from "../context/HouseholdDataContext";
+import { findHouseholdByRef } from "../../lib/divisionScope";
 import {
   Card,
   CardContent,
@@ -81,8 +82,8 @@ export function Boarders() {
         .includes(searchQuery.toLowerCase()),
   );
 
-  const getHouseAddress = (houseNumber: string) => {
-    const house = households.find((h) => h.houseNumber === houseNumber);
+  const getHouseAddress = (houseNumber: string, division?: string) => {
+    const house = findHouseholdByRef(households, houseNumber, division);
     return house?.address || "";
   };
 
@@ -440,7 +441,7 @@ export function Boarders() {
                           </span>
                         </TableCell>
                         <TableCell className="text-xs text-gray-500">
-                          {getHouseAddress(boarder.houseNumber)}
+                          {getHouseAddress(boarder.houseNumber, boarder.division)}
                         </TableCell>
                         <TableCell className="text-xs">
                           {boarder.age} /{" "}
@@ -540,7 +541,7 @@ export function Boarders() {
                   </span>
                   <span className="text-amber-400">•</span>
                   <span className="text-sm">
-                    {getHouseAddress(viewingBoarder.houseNumber)}
+                    {getHouseAddress(viewingBoarder.houseNumber, viewingBoarder.division)}
                   </span>
                 </div>
               </div>

@@ -12,18 +12,19 @@ export async function getHouseholds(): Promise<Household[]> {
   return data || [];
 }
 
-// GET SINGLE HOUSEHOLD
+// GET SINGLE HOUSEHOLD (scoped to GN division)
 export async function getHouseholdByNumber(
   houseNumber: string,
+  division: string,
 ): Promise<Household | null> {
   const { data, error } = await supabase
     .from("households")
     .select("*")
     .eq("houseNumber", houseNumber)
-    .single();
+    .eq("division", division)
+    .maybeSingle();
 
-  if (error && error.code !== "PGRST116")
-    throw new Error(`Failed to fetch household: ${error.message}`);
+  if (error) throw new Error(`Failed to fetch household: ${error.message}`);
   return data || null;
 }
 
@@ -32,7 +33,25 @@ export async function createHousehold(
   household: Omit<Household, "id" | "createdAt" | "updatedAt">,
 ): Promise<Household> {
   // Validate input
-  const validated = HouseholdSchema.parse(household);
+  const validated = HouseholdSchema.parse({
+    ...household,
+    houseNumber: household.houseNumber.trim(),
+  });
+
+  if (!validated.division?.trim()) {
+    throw new Error("Division is required to create a household");
+  }
+  validated.division = validated.division.trim();
+
+  const existing = await getHouseholdByNumber(
+    validated.houseNumber,
+    validated.division,
+  );
+  if (existing) {
+    throw new Error(
+      `House number "${validated.houseNumber}" already exists in division "${validated.division}".`,
+    );
+  }
 
   const { data, error } = await supabase
     .from("households")
@@ -40,7 +59,22 @@ export async function createHousehold(
     .select()
     .single();
 
-  if (error) throw new Error(`Failed to create household: ${error.message}`);
+  if (error) {
+    if (error.code === "23505") {
+      const isGlobalHouseNumberKey =
+        error.message?.includes("households_houseNumber_key") ||
+        error.details?.includes("houseNumber");
+      if (isGlobalHouseNumberKey && !error.message?.includes("division")) {
+        throw new Error(
+          `Database still uses a global house-number rule. Re-run migration-division-scoped-uniques.sql in Supabase SQL Editor. Details: ${error.message}`,
+        );
+      }
+      throw new Error(
+        `House number "${validated.houseNumber}" already exists in division "${validated.division}".`,
+      );
+    }
+    throw new Error(`Failed to create household: ${error.message}`);
+  }
   return data;
 }
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useHouseholdData, Vehicle } from "../context/HouseholdDataContext";
+import { findHouseholdByRef } from "../../lib/divisionScope";
 import {
   Card,
   CardContent,
@@ -162,8 +163,10 @@ export function Vehicles() {
     setTimeout(() => {
       const member = familyMembers.find((m) => m.nicNumber === value);
       if (member) {
-        const household = households.find(
-          (h) => h.houseNumber === member.houseNumber,
+        const household = findHouseholdByRef(
+          households,
+          member.houseNumber,
+          member.division,
         );
         setUserValidation("valid");
         setValidatedUser({

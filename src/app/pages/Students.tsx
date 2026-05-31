@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useHouseholdData } from "../context/HouseholdDataContext";
+import { findHouseholdByRef } from "../../lib/divisionScope";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import {
@@ -47,8 +48,8 @@ export function Students() {
       (s.grade || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getHouseAddress = (houseNumber: string) => {
-    const house = households.find((h) => h.houseNumber === houseNumber);
+  const getHouseAddress = (houseNumber: string, division?: string) => {
+    const house = findHouseholdByRef(households, houseNumber, division);
     return house?.address || "";
   };
 
@@ -303,7 +304,7 @@ export function Students() {
                           </span>
                         </TableCell>
                         <TableCell className="text-xs text-gray-500">
-                          {getHouseAddress(student.houseNumber)}
+                          {getHouseAddress(student.houseNumber, student.division)}
                         </TableCell>
                         <TableCell>{student.age}</TableCell>
                         <TableCell className="text-xs">{student.gender ? t(student.gender.toLowerCase()) : "-"}</TableCell>
@@ -358,7 +359,7 @@ export function Students() {
                   <Home className="h-4 w-4" />
                   <span className="font-medium">{t("house")} {viewingStudent.houseNumber}</span>
                   <span className="text-blue-400">•</span>
-                  <span className="text-sm">{getHouseAddress(viewingStudent.houseNumber)}</span>
+                  <span className="text-sm">{getHouseAddress(viewingStudent.houseNumber, viewingStudent.division)}</span>
                 </div>
               </div>
 

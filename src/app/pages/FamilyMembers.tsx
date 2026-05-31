@@ -155,7 +155,10 @@ export function FamilyMembers() {
 
   // Members of selected house
   const houseMembers = selectedHouse
-    ? getMembersForHouse(selectedHouse.houseNumber)
+    ? getMembersForHouse(
+        selectedHouse.houseNumber,
+        selectedHouse.division || "",
+      )
     : [];
 
   const headOfHouse = houseMembers.find((m) => m.isHeadOfHousehold);
@@ -173,7 +176,12 @@ export function FamilyMembers() {
   const handleAddMember = () => {
     if (!selectedHouse) return;
     setEditingMember(null);
-    const nextNum = (getMembersForHouse(selectedHouse.houseNumber).length + 1)
+    const nextNum = (
+      getMembersForHouse(
+        selectedHouse.houseNumber,
+        selectedHouse.division || "",
+      ).length + 1
+    )
       .toString()
       .padStart(3, "0");
     const autoUniqueNum = `${selectedHouse.houseNumber.replace(/\//g, "")}-${nextNum}`;
@@ -254,6 +262,7 @@ export function FamilyMembers() {
           const others = familyMembers.filter(
             (m) =>
               m.houseNumber === payload.houseNumber &&
+              m.division === payload.division &&
               m.id !== editingMember.id,
           );
           await Promise.all(
@@ -269,7 +278,9 @@ export function FamilyMembers() {
       } else {
         if (payload.isHeadOfHousehold) {
           const others = familyMembers.filter(
-            (m) => m.houseNumber === payload.houseNumber,
+            (m) =>
+              m.houseNumber === payload.houseNumber &&
+              m.division === payload.division,
           );
           await Promise.all(
             others.map((m) =>
@@ -354,7 +365,7 @@ export function FamilyMembers() {
   const householdMemberCounts = households
     .map((h) => ({
       name: h.houseNumber,
-      value: getMembersForHouse(h.houseNumber).length,
+      value: getMembersForHouse(h.houseNumber, h.division || "").length,
     }))
     .filter((h) => h.value > 0)
     .sort((a, b) => b.value - a.value)
@@ -773,7 +784,10 @@ export function FamilyMembers() {
                         ? filteredHouses
                         : households
                       ).map((house) => {
-                        const members = getMembersForHouse(house.houseNumber);
+                        const members = getMembersForHouse(
+                          house.houseNumber,
+                          house.division || "",
+                        );
                         const head = members.find((m) => m.isHeadOfHousehold);
                         return (
                           <TableRow
@@ -1548,7 +1562,10 @@ export function FamilyMembers() {
                       {t("totalMembers")}
                     </p>
                     <p className="text-3xl font-bold text-blue-900">
-                      {getMembersForHouse(viewingHouse.houseNumber).length}
+                      {getMembersForHouse(
+                        viewingHouse.houseNumber,
+                        viewingHouse.division || "",
+                      ).length}
                     </p>
                   </div>
                 </div>
@@ -1583,6 +1600,7 @@ export function FamilyMembers() {
                     {(() => {
                       const head = getMembersForHouse(
                         viewingHouse.houseNumber,
+                        viewingHouse.division || "",
                       ).find((m) => m.isHeadOfHousehold);
                       return head ? head.fullName : t("notAssigned");
                     })()}
@@ -1598,6 +1616,7 @@ export function FamilyMembers() {
                     {(() => {
                       const members = getMembersForHouse(
                         viewingHouse.houseNumber,
+                        viewingHouse.division || "",
                       );
                       const regular = members.filter(
                         (m) => m.memberType === "regular",
@@ -1639,7 +1658,10 @@ export function FamilyMembers() {
                   {t("membersInThisHousehold")}
                 </h4>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {getMembersForHouse(viewingHouse.houseNumber).map(
+                  {getMembersForHouse(
+                    viewingHouse.houseNumber,
+                    viewingHouse.division || "",
+                  ).map(
                     (member) => {
                       const typeConfig = MEMBER_TYPE_CONFIG[member.memberType];
                       return (
@@ -1745,7 +1767,9 @@ export function FamilyMembers() {
                   <span className="text-sm">
                     {
                       households.find(
-                        (h) => h.houseNumber === viewingMember.houseNumber,
+                        (h) =>
+                          h.houseNumber === viewingMember.houseNumber &&
+                          h.division === viewingMember.division,
                       )?.address
                     }
                   </span>
