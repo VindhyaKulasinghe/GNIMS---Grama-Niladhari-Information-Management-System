@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { useState, FormEvent } from 'react'
-import { useNavigate, useLocation } from 'react-router'
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../components/ui/dialog'
-import { Globe, Lock, Mail, Building2, ShieldCheck, AlertCircle } from 'lucide-react'
+import { Globe, Lock, Mail, Building2, ShieldCheck, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { Alert, AlertDescription } from '../components/ui/alert'
 
 export function Login() {
@@ -29,6 +29,7 @@ export function Login() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const { login, error, clearError, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -155,14 +156,22 @@ export function Login() {
                 <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isSubmitting}
-                  className="pl-10 border-slate-300 focus:border-slate-900 focus:ring-slate-900"
+                  className="pl-10 pr-10 border-slate-300 focus:border-slate-900 focus:ring-slate-900"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 transition"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
             </div>
 

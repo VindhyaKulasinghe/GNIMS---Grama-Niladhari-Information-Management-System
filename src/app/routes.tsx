@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { createBrowserRouter, Navigate } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
@@ -15,6 +15,7 @@ import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
 import { UserManagement } from "./pages/UserManagement";
 import { DivisionManagement } from "./pages/DivisionManagement";
+import { AdminLogin } from "./pages/AdminLogin";
 import { NotFound } from "./pages/NotFound";
 import { HouseholdDataProvider } from "./context/HouseholdDataContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -63,6 +64,14 @@ export const router = createBrowserRouter([
   {
     path: "/register",
     element: <Register />,
+  },
+  {
+    path: "/admin-login",
+    element: (
+      <RootWrapper>
+        <AdminLogin />
+      </RootWrapper>
+    ),
   },
 
   // Protected routes

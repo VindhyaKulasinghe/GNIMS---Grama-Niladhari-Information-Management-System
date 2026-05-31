@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation, useNavigate } from "react-router";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Home,
@@ -14,7 +14,7 @@ import {
   X,
   Globe,
   LogOut,
-  UserCog
+  UserCog,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
@@ -28,7 +28,12 @@ import {
   SelectValue,
 } from "./ui/select";
 
-const navigation = [
+const adminNavigation = [
+  { name: "divisionManagement", icon: Landmark, path: "/divisions" },
+  { name: "userManagement", icon: UserCog, path: "/user-management" },
+];
+
+const userNavigation = [
   { name: "dashboard", icon: LayoutDashboard, path: "/" },
   { name: "householdManagement", icon: Home, path: "/households" },
   { name: "familyMembers", icon: Users, path: "/family-members" },
@@ -39,8 +44,6 @@ const navigation = [
   { name: "vehicles", icon: Car, path: "/vehicles" },
   { name: "reports", icon: FileText, path: "/reports" },
   { name: "settings", icon: SettingsIcon, path: "/settings" },
-  { name: "divisionManagement", icon: Landmark, path: "/divisions", roles: ["Admin"] },
-  { name: "userManagement", icon: UserCog, path: "/user-management", roles: ["Admin"] },
 ];
 
 export function Layout() {
@@ -130,7 +133,7 @@ export function Layout() {
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
           <nav className="h-full overflow-y-auto py-10 p-4 space-y-2">
-            {navigation.filter(item => !item.roles || (user && item.roles.includes(user.role))).map((item) => {
+            {(user?.role === "Admin" ? adminNavigation : userNavigation).map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <Link

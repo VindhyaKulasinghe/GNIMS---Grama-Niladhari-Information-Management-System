@@ -203,6 +203,8 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (isAuthenticated) {
       loadAllData();
+    } else {
+      setLoading(false);
     }
   }, [user, isAuthenticated]);
 

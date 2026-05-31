@@ -75,8 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   useEffect(() => {
     const initAuth = async () => {
-      await checkAuth();
-      setLoading(false);
+      try {
+        await checkAuth();
+      } finally {
+        setLoading(false);
+      }
     };
     initAuth();
 

@@ -1,6 +1,19 @@
 import { supabase } from '../supabaseClient'
-import { supabaseAdmin } from '../supabaseAdmin'
-import { User, UserSchema } from '../validationSchemas'
+import { User } from '../validationSchemas'
+
+// Map DB row (full_name, snake_case dates) → app User schema (name, camelCase)
+function mapDbUser(row: any): User {
+  return {
+    id: row.id,
+    name: row.full_name || '',
+    email: row.email,
+    role: row.role,
+    division: row.division,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
 
 export async function getUsers(): Promise<User[]> {
   try {
@@ -10,7 +23,7 @@ export async function getUsers(): Promise<User[]> {
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    return data || []
+    return (data || []).map(mapDbUser)
   } catch (error) {
     console.error('Error fetching users:', error)
     throw error
@@ -29,7 +42,7 @@ export async function getUserById(id: string): Promise<User | null> {
       if (error.code === 'PGRST116') return null
       throw error
     }
-    return data || null
+    return data ? mapDbUser(data) : null
   } catch (error) {
     console.error('Error fetching user:', error)
     throw error
@@ -41,67 +54,53 @@ export async function createUser(
   password?: string
 ): Promise<User> {
   try {
-    const validated = UserSchema.omit({ id: true, createdAt: true, updatedAt: true }).parse(user)
-    // 1. Create user in Supabase Auth via the secure RPC (SECURITY DEFINER)
-    // This avoids using the Service Role Key in the browser
-    const { data: authData, error: authError } = await supabase.rpc('create_user_admin', {
-      user_email: validated.email,
-      user_password: password || 'Welcome@123',
-      user_name: validated.name,
-      user_role: validated.role,
-      user_division: validated.division
-    });
+    const { data, error } = await supabase.rpc('admin_create_user', {
+      p_email:    user.email,
+      p_password: password || 'Welcome@123',
+      p_name:     user.name,
+      p_role:     user.role,
+      p_division: user.division,
+      p_status:   user.status,
+    })
 
-    if (authError) {
-      console.error('Auth RPC Error:', authError);
-      throw new Error(authError.message || 'Failed to create authentication account');
-    }
+    if (error) throw error
 
-    if (!authData) {
-      throw new Error('No data returned from user creation');
-    }
-
-    // Success! The RPC handled both Auth and Public User insertion.
-    // We fetch the newly created user to return it.
+    // Fetch the newly created user record
     const { data: newUser, error: fetchError } = await supabase
       .from('users')
       .select('*')
-      .eq('id', authData)
-      .single();
+      .eq('id', (data as any).id)
+      .single()
 
-    if (fetchError) throw fetchError;
-    return newUser;
+    if (fetchError) throw fetchError
+    return mapDbUser(newUser)
   } catch (error) {
-    console.error('Error in createUser:', error);
-    throw error;
+    console.error('Error creating user:', error)
+    throw error
   }
 }
 
 export async function updateUser(id: string, user: Partial<User>): Promise<User> {
   try {
-    const validated = UserSchema.partial().parse(user)
-
-    // Update public user record
-    const { data, error } = await supabase
-      .from('users')
-      .update(validated)
-      .eq('id', id)
-      .select()
-      .single()
+    const { error } = await supabase.rpc('admin_update_user', {
+      p_user_id:  id,
+      p_name:     user.name     ?? null,
+      p_role:     user.role     ?? null,
+      p_division: user.division ?? null,
+      p_status:   user.status   ?? null,
+      p_password: null,
+    })
 
     if (error) throw error
 
-    // Also update auth metadata if role/name changed
-    if (user.role || user.name) {
-      await supabaseAdmin.auth.admin.updateUserById(id, {
-        user_metadata: {
-          ...(user.name && { full_name: user.name }),
-          ...(user.role && { role: user.role }),
-        }
-      })
-    }
+    const { data, error: fetchError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-    return data
+    if (fetchError) throw fetchError
+    return mapDbUser(data)
   } catch (error) {
     console.error('Error updating user:', error)
     throw error
@@ -110,18 +109,9 @@ export async function updateUser(id: string, user: Partial<User>): Promise<User>
 
 export async function deleteUser(id: string): Promise<void> {
   try {
-    // 1. Delete auth user first
-    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id)
-    if (authError) {
-      console.warn('Could not delete auth user (may not exist):', authError.message)
-    }
-
-    // 2. Delete public user record
-    const { error } = await supabase
-      .from('users')
-      .delete()
-      .eq('id', id)
-
+    const { error } = await supabase.rpc('admin_delete_user', {
+      p_user_id: id,
+    })
     if (error) throw error
   } catch (error) {
     console.error('Error deleting user:', error)

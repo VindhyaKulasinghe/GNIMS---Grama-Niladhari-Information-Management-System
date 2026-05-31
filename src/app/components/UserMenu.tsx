@@ -10,7 +10,7 @@ import {
 import { Button } from '../components/ui/button'
 import { Avatar, AvatarFallback } from '../components/ui/avatar'
 import { LogOut, Settings, User as UserIcon } from 'lucide-react'
-import { useNavigate } from 'react-router'
+import { useNavigate } from "react-router-dom";
 
 export function UserMenu() {
   const { user, logout } = useAuth()
