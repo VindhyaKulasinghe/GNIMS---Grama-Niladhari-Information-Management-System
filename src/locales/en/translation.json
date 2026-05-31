@@ -566,5 +566,16 @@
   "timber_transport_letter": "Timber Transport Permit Letter",
   "passport_travel_letter": "Passport / Travel Permit Letter",
   "funeral_leave_certificate": "Funeral Leave Letter (Marana Heleeme Awasara Pathraya)",
-  "death_declaration": "Timber Transport Permit Letter"
+  "death_declaration": "Timber Transport Permit Letter",
+  "retired": "Retired",
+  "retiredPerson": "Retired person",
+  "pensionSectionDescription": "Enable to record pension details for this member.",
+  "pensionInformation": "Pension Information",
+  "pensionNumber": "Pension No. (NOOID)",
+  "pensionNumberPlaceholder": "Enter pension / NOOID number",
+  "pensionSalary": "Pension salary (monthly)",
+  "pensionSalaryPlaceholder": "Enter monthly pension amount",
+  "retiredDate": "Retired date",
+  "pensionDetails": "Special pension details",
+  "pensionDetailsPlaceholder": "Any other pension-related notes"
 }

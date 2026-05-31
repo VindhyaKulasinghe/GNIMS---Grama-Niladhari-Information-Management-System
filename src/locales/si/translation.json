@@ -577,5 +577,16 @@
   "timber_transport_letter": "දැව ප්‍රවහන අවසර පත්‍රය",
   "passport_travel_letter": "විදෙස් ගමන් අවසර පත්‍රය",
   "funeral_leave_letter": "මරණ හැලේ අවසර පත්‍රය",
-  "death_declaration": "දැව ප්‍රවහන අවසර පත්‍රය"
+  "death_declaration": "දැව ප්‍රවහන අවසර පත්‍රය",
+  "retired": "විශ්‍රාමික",
+  "retiredPerson": "විශ්‍රාමික පුද්ගලයා",
+  "pensionSectionDescription": "මෙම සාමාජිකයාගේ විශ්‍රාම වැටුප් විස්තර සටහන් කිරීමට සක්‍රිය කරන්න.",
+  "pensionInformation": "විශ්‍රාම වැටුප් විස්තර",
+  "pensionNumber": "විශ්‍රාම වැටුප් අංකය (NOOID)",
+  "pensionNumberPlaceholder": "විශ්‍රාම / NOOID අංකය ඇතුළත් කරන්න",
+  "pensionSalary": "විශ්‍රාම වැටුප (මාසික)",
+  "pensionSalaryPlaceholder": "මාසික විශ්‍රාම වැටුප ඇතුළත් කරන්න",
+  "retiredDate": "විශ්‍රාම ගිය දිනය",
+  "pensionDetails": "විශේෂ විශ්‍රාම විස්තර",
+  "pensionDetailsPlaceholder": "විශ්‍රාම වැටුප් සම්බන්ධ වෙනත් සටහන්"
 }

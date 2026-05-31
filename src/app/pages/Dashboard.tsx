@@ -48,6 +48,7 @@ export function Dashboard() {
     ).length;
     const retired = familyMembers.filter(
       (m) =>
+        m.isRetired ||
         m.trainingReceived?.toLowerCase().includes("retired") ||
         m.sector?.toLowerCase().includes("retired"),
     ).length;

@@ -102,6 +102,11 @@ export interface FamilyMember {
   trainingReceived?: string;
   sector?: string;
   monthlyIncome?: string;
+  isRetired?: boolean;
+  pensionNumber?: string | null;
+  pensionSalary?: string | null;
+  retiredDate?: string | null;
+  pensionDetails?: string | null;
   grade?: string;
   institutionName?: string;
   purpose?: string;

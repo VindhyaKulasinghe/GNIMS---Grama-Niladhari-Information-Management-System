@@ -528,5 +528,16 @@
   "timber_transport_letter": "மரக்கட்டை கொண்டு செல்ல அனுமதி கடிதம்",
   "passport_travel_letter": "வெளிநாட்டு பயண அனுமதி கடிதம்",
   "funeral_leave_certificate": "இறுதி ஊர்வல அனுமதி கடிதம்",
-  "death_declaration": "மரக்கட்டை கொண்டு செல்ல அனுமதி கடிதம்"
+  "death_declaration": "மரக்கட்டை கொண்டு செல்ல அனுமதி கடிதம்",
+  "retired": "ஓய்வு பெற்ற",
+  "retiredPerson": "ஓய்வு பெற்ற நபர்",
+  "pensionSectionDescription": "இந்த உறுப்பினரின் ஓய்வu ஊதிய விவரங்களை பதிவு செய்ய இயக்கவும்.",
+  "pensionInformation": "ஓய்வu ஊதிய விவரங்கள்",
+  "pensionNumber": "ஓய்வu ஊதிய எண் (NOOID)",
+  "pensionNumberPlaceholder": "ஓய்வu / NOOID எண்ணை உள்ளிடவும்",
+  "pensionSalary": "ஓய்வu ஊதியம் (மாதாந்திர)",
+  "pensionSalaryPlaceholder": "மாதாந்திர ஓய்வu ஊதிய தொகை",
+  "retiredDate": "ஓய்வu பெற்ற தேதி",
+  "pensionDetails": "சிறப்பு ஓய்வu விவரங்கள்",
+  "pensionDetailsPlaceholder": "ஓய்வu ஊதியம் தொடர்பான பிற குறிப்புகள்"
 }

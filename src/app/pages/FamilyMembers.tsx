@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
+import { Switch } from "../components/ui/switch";
 import {
   Table,
   TableBody,
@@ -195,6 +196,7 @@ export function FamilyMembers() {
       gender: "Male",
       maritalStatus: "Single",
       educationStatus: "Secondary",
+      isRetired: false,
     });
     setActiveTab("personal");
     setDialogOpen(true);
@@ -1392,6 +1394,7 @@ export function FamilyMembers() {
                     <SelectItem value="Student">
                       {t("studentNoIncome")}
                     </SelectItem>
+                    <SelectItem value="Retired">{t("retired")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1417,6 +1420,89 @@ export function FamilyMembers() {
                     <SelectItem value="None">{t("noIncome")}</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label htmlFor="isRetired">{t("retiredPerson")}</Label>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {t("pensionSectionDescription")}
+                    </p>
+                  </div>
+                  <Switch
+                    id="isRetired"
+                    checked={Boolean(formData.isRetired)}
+                    onCheckedChange={(checked) =>
+                      setFormData({
+                        ...formData,
+                        isRetired: checked,
+                        sector: checked ? "Retired" : formData.sector,
+                      })
+                    }
+                  />
+                </div>
+
+                {formData.isRetired && (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>{t("pensionNumber")}</Label>
+                        <Input
+                          value={formData.pensionNumber || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              pensionNumber: e.target.value,
+                            })
+                          }
+                          placeholder={t("pensionNumberPlaceholder")}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>{t("pensionSalary")}</Label>
+                        <Input
+                          value={formData.pensionSalary || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              pensionSalary: e.target.value,
+                            })
+                          }
+                          placeholder={t("pensionSalaryPlaceholder")}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t("retiredDate")}</Label>
+                      <Input
+                        type="date"
+                        value={formData.retiredDate || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            retiredDate: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t("pensionDetails")}</Label>
+                      <Textarea
+                        value={formData.pensionDetails || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            pensionDetails: e.target.value,
+                          })
+                        }
+                        placeholder={t("pensionDetailsPlaceholder")}
+                        className="resize-none"
+                        rows={3}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </TabsContent>
 
@@ -1873,6 +1959,47 @@ export function FamilyMembers() {
                   </p>
                 </div>
               </div>
+
+              {(viewingMember.isRetired ||
+                viewingMember.pensionNumber ||
+                viewingMember.pensionSalary ||
+                viewingMember.retiredDate ||
+                viewingMember.pensionDetails) && (
+                <div className="bg-pink-50 border border-pink-200 rounded-lg p-4 mt-4">
+                  <h4 className="font-semibold text-pink-900 mb-3 flex items-center gap-2">
+                    <Briefcase className="h-5 w-5" />
+                    {t("pensionInformation")}
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-pink-700">{t("pensionNumber")}</p>
+                      <p className="font-medium text-pink-900">
+                        {viewingMember.pensionNumber || t("notSpecified")}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-pink-700">{t("pensionSalary")}</p>
+                      <p className="font-medium text-pink-900">
+                        {viewingMember.pensionSalary || t("notSpecified")}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-pink-700">{t("retiredDate")}</p>
+                      <p className="font-medium text-pink-900">
+                        {viewingMember.retiredDate
+                          ? new Date(viewingMember.retiredDate).toLocaleDateString()
+                          : t("notSpecified")}
+                      </p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-sm text-pink-700">{t("pensionDetails")}</p>
+                      <p className="font-medium text-pink-900 whitespace-pre-wrap">
+                        {viewingMember.pensionDetails || t("none")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Student Details (if applicable) */}
               {viewingMember.memberType === "student" && (
