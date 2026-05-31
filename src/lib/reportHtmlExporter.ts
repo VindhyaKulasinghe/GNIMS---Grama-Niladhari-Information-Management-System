@@ -1,4 +1,3 @@
-import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import {
   escapeHtml,
@@ -334,26 +333,79 @@ function buildReportDocumentHtml(
 <html lang="${lang}">
 <head>
   <meta charset="UTF-8" />
-  <style>
-    ${localFontFaceCss(origin)}
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #ffffff;
-      color: #111111;
-    }
-    ${tableStyles(fontFamily)}
-  </style>
 </head>
-<body>
+<body style="margin:0;padding:0;background:#ffffff;color:#111111;">
   <div class="report-root">
+    <style>
+      ${localFontFaceCss(origin)}
+      * { box-sizing: border-box; }
+      .report-root {
+        background: #ffffff;
+        color: #111111;
+      }
+      ${tableStyles(fontFamily)}
+    </style>
     <div class="report-title">${title}</div>
     <div class="report-date">${dateLine}</div>
     ${body}
   </div>
 </body>
 </html>`;
+}
+
+function loadImage(win: Window, src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new win.Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Failed to render report snapshot"));
+    img.src = src;
+  });
+}
+
+/** Renders via SVG foreignObject so parent-page Tailwind oklch() colors are never parsed. */
+async function renderReportToCanvas(
+  root: HTMLElement,
+  scale: number,
+): Promise<HTMLCanvasElement> {
+  const doc = root.ownerDocument;
+  const win = doc.defaultView;
+  if (!doc || !win) {
+    throw new Error("Report frame is not attached to a window");
+  }
+
+  const width = Math.max(root.scrollWidth, root.clientWidth, 1100);
+  const height = Math.max(root.scrollHeight, root.clientHeight, 1);
+  const svgNs = "http://www.w3.org/2000/svg";
+  const svg = doc.createElementNS(svgNs, "svg");
+  svg.setAttribute("width", String(width));
+  svg.setAttribute("height", String(height));
+  svg.setAttribute("xmlns", svgNs);
+
+  const foreignObject = doc.createElementNS(svgNs, "foreignObject");
+  foreignObject.setAttribute("width", "100%");
+  foreignObject.setAttribute("height", "100%");
+  foreignObject.appendChild(root.cloneNode(true));
+  svg.appendChild(foreignObject);
+
+  const svgMarkup = new XMLSerializer().serializeToString(svg);
+  const img = await loadImage(
+    win,
+    `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`,
+  );
+
+  const canvas = doc.createElement("canvas");
+  canvas.width = Math.ceil(width * scale);
+  canvas.height = Math.ceil(height * scale);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Failed to create report canvas");
+  }
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.scale(scale, scale);
+  ctx.drawImage(img, 0, 0, width, height);
+  return canvas;
 }
 
 async function canvasToPdf(
@@ -424,8 +476,7 @@ export async function generateHtmlReport(
   iframe.style.visibility = "hidden";
   document.body.appendChild(iframe);
 
-  const contentWindow = iframe.contentWindow;
-  if (!contentWindow) {
+  if (!iframe.contentWindow) {
     document.body.removeChild(iframe);
     throw new Error("Failed to create report frame");
   }
@@ -452,18 +503,14 @@ export async function generateHtmlReport(
 
   await waitForIframeFonts(iframe, language);
 
-  try {
-    const canvas = await html2canvas(doc.body, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-      logging: false,
-      window: contentWindow,
-      width: 1100,
-      scrollX: 0,
-      scrollY: 0,
-    });
+  const reportRoot = doc.querySelector(".report-root");
+  if (!(reportRoot instanceof HTMLElement)) {
+    document.body.removeChild(iframe);
+    throw new Error("Failed to find report content");
+  }
 
+  try {
+    const canvas = await renderReportToCanvas(reportRoot, 2);
     await canvasToPdf(canvas, `${type}_report_${langCode}.pdf`);
   } finally {
     document.body.removeChild(iframe);
