@@ -60,6 +60,7 @@ import {
   AlertTriangle,
   Activity,
   Users,
+  HandHeart,
   Loader2,
 } from "lucide-react";
 import {
@@ -75,6 +76,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { HouseholdBenefitsDialog } from "../components/household/HouseholdBenefitsDialog";
 
 export function HouseholdManagement() {
   const { t } = useTranslation();
@@ -90,6 +92,8 @@ export function HouseholdManagement() {
     deleteHousehold,
     addHouseholdAnimal,
     deleteHouseholdAnimal,
+    getBenefitsForHouse,
+    saveHouseholdBenefits,
   } = useHouseholdData();
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -124,6 +128,10 @@ export function HouseholdManagement() {
   const [savingHousehold, setSavingHousehold] = useState(false);
   const [deletingHousehold, setDeletingHousehold] = useState(false);
   const [updatingAnimals, setUpdatingAnimals] = useState(false);
+  const [benefitsDialogOpen, setBenefitsDialogOpen] = useState(false);
+  const [benefitsHousehold, setBenefitsHousehold] = useState<Household | null>(
+    null,
+  );
 
   const filteredHouseholds = households.filter(
     (h) =>
@@ -164,6 +172,11 @@ export function HouseholdManagement() {
     );
 
     setDialogOpen(true);
+  };
+
+  const handleManageBenefits = (household: Household) => {
+    setBenefitsHousehold(household);
+    setBenefitsDialogOpen(true);
   };
 
   const handleDeleteClick = (id: number) => {
@@ -880,6 +893,14 @@ export function HouseholdManagement() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex gap-1 justify-end">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleManageBenefits(household)}
+                                title={t("sahanadara")}
+                              >
+                                <HandHeart className="h-4 w-4 text-rose-600" />
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -1647,6 +1668,72 @@ export function HouseholdManagement() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Sahanadara Card */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <HandHeart className="h-5 w-5 text-rose-600" />
+                    {t("sahanadara")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    const viewDivision =
+                      viewingHousehold?.division || userDivision;
+                    const benefits = getBenefitsForHouse(
+                      viewingHousehold?.houseNumber || "",
+                      viewDivision,
+                    );
+                    const active = benefits.filter((b) => b.isReceiving);
+
+                    if (active.length === 0) {
+                      return (
+                        <p className="text-gray-500 text-sm italic text-center py-4">
+                          {t("noSahanadaraRecorded")}
+                        </p>
+                      );
+                    }
+
+                    const members = getMembersForHouse(
+                      viewingHousehold?.houseNumber || "",
+                      viewDivision,
+                    );
+
+                    return (
+                      <div className="space-y-2">
+                        {active.map((benefit) => {
+                          const receiver = members.find(
+                            (m) => m.id === benefit.receiverMemberId,
+                          );
+                          return (
+                            <div
+                              key={benefit.benefitType}
+                              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 p-3 rounded-lg border bg-rose-50 border-rose-200"
+                            >
+                              <span className="text-sm font-medium">
+                                {t(benefit.benefitType)}
+                              </span>
+                              {benefit.benefitType === "aswasuma" &&
+                              receiver ? (
+                                <span className="text-xs text-gray-700">
+                                  {t("aswasumaReceiver")}: {receiver.fullName}
+                                </span>
+                              ) : null}
+                              {benefit.benefitType === "other" &&
+                              benefit.otherNotes ? (
+                                <span className="text-xs text-gray-700">
+                                  {benefit.otherNotes}
+                                </span>
+                              ) : null}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
             </div>
 
             {/* Members Summary */}
@@ -1719,6 +1806,30 @@ export function HouseholdManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <HouseholdBenefitsDialog
+        open={benefitsDialogOpen}
+        onOpenChange={setBenefitsDialogOpen}
+        household={benefitsHousehold}
+        members={
+          benefitsHousehold
+            ? getMembersForHouse(
+                benefitsHousehold.houseNumber,
+                benefitsHousehold.division || userDivision,
+              )
+            : []
+        }
+        benefits={
+          benefitsHousehold
+            ? getBenefitsForHouse(
+                benefitsHousehold.houseNumber,
+                benefitsHousehold.division || userDivision,
+              )
+            : []
+        }
+        onSave={saveHouseholdBenefits}
+      />
+
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>

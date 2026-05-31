@@ -2,6 +2,7 @@ import { pdfMake, setupPdfFonts } from "./pdfFontSetup";
 import { generateHtmlReport } from "./reportHtmlExporter";
 import {
   ReportData,
+  buildAswasumaReportRows,
   translateField,
   TranslateFn,
   usesComplexScriptPdf,
@@ -87,6 +88,9 @@ async function generatePdfMakeReport(
     case "vehicle":
       title = t("vehicleReport");
       break;
+    case "aswasuma":
+      title = t("aswasumaReport");
+      break;
   }
 
   docDefinition.content.push({
@@ -113,6 +117,8 @@ async function generatePdfMakeReport(
       docDefinition.content.push(getPropertyTable(data.properties, t, fontFamily));
     } else if (type === "vehicle") {
       docDefinition.content.push(getVehicleTable(data.vehicles, t, fontFamily));
+    } else if (type === "aswasuma") {
+      docDefinition.content.push(getAswasumaTable(data, t, fontFamily));
     }
 
     const langCode = language.split("-")[0];
@@ -333,6 +339,38 @@ function getVehicleTable(
           pdfCell(translateField(t, v.vehicleType), font),
           pdfCell(v.registrationYear, font),
           pdfCell(v.ownerPhone, font),
+        ]),
+      ],
+    },
+    layout: "lightHorizontalLines",
+  };
+}
+
+function getAswasumaTable(data: ReportData, t: TranslateFn, font: string) {
+  const rows = buildAswasumaReportRows(data);
+
+  return {
+    table: {
+      headerRows: 1,
+      widths: ["auto", "auto", "*", "auto", "*", "auto", "auto"],
+      body: [
+        [
+          headerCell(t("houseNumber"), font),
+          headerCell(t("division"), font),
+          headerCell(t("address"), font),
+          headerCell(t("telephone"), font),
+          headerCell(t("fullName"), font),
+          headerCell(t("nicNumber"), font),
+          headerCell(t("age"), font),
+        ],
+        ...rows.map((row) => [
+          pdfCell(row.houseNumber, font),
+          pdfCell(row.division, font),
+          pdfCell(row.address, font),
+          pdfCell(row.telephone, font),
+          pdfCell(row.receiverName, font),
+          pdfCell(row.receiverNic, font),
+          pdfCell(row.receiverAge, font),
         ]),
       ],
     },

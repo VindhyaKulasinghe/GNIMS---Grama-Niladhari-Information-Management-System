@@ -5,3 +5,4 @@ export { HouseholdTable } from "./HouseholdTable";
 export { PopulationTable } from "./PopulationTable";
 export { PropertyTable } from "./PropertyTable";
 export { VehicleTable } from "./VehicleTable";
+export { AswasumaTable } from "./AswasumaTable";

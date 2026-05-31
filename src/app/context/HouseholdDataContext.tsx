@@ -5,6 +5,7 @@ import * as familyMemberService from "../../lib/services/familyMemberService";
 import * as animalService from "../../lib/services/animalService";
 import * as vehicleService from "../../lib/services/vehicleService";
 import * as propertyService from "../../lib/services/propertyService";
+import * as benefitService from "../../lib/services/benefitService";
 import { useAuth } from "./AuthContext";
 import { isSameHouse, resolveUserDivision } from "../../lib/divisionScope";
 
@@ -109,6 +110,24 @@ export interface FamilyMember {
   updatedAt?: string;
 }
 
+export interface HouseholdBenefit {
+  id?: number;
+  houseNumber: string;
+  division: string;
+  benefitType:
+    | "aswasuma"
+    | "wadihiti_deemana"
+    | "mahajana_adara"
+    | "abaditha_deemana"
+    | "wakugadu_adara"
+    | "other";
+  isReceiving: boolean;
+  receiverMemberId?: number | null;
+  otherNotes?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 interface HouseholdDataContextType {
   // State
   households: Household[];
@@ -119,6 +138,7 @@ interface HouseholdDataContextType {
   setHouseholdAnimals: React.Dispatch<React.SetStateAction<HouseholdAnimal[]>>;
   vehicles: Vehicle[];
   properties: Property[];
+  householdBenefits: HouseholdBenefit[];
   loading: boolean;
   error: string | null;
 
@@ -176,6 +196,13 @@ interface HouseholdDataContextType {
   ) => Promise<void>;
   refreshAnimals: () => Promise<void>;
 
+  saveHouseholdBenefits: (
+    houseNumber: string,
+    division: string,
+    benefits: benefitService.BenefitSaveInput[],
+  ) => Promise<void>;
+  refreshHouseholdBenefits: () => Promise<void>;
+
   // Helper functions
   getMembersForHouse: (houseNumber: string, division: string) => FamilyMember[];
   getStudents: () => FamilyMember[];
@@ -184,6 +211,10 @@ interface HouseholdDataContextType {
     houseNumber: string,
     division: string,
   ) => HouseholdAnimal[];
+  getBenefitsForHouse: (
+    houseNumber: string,
+    division: string,
+  ) => HouseholdBenefit[];
 }
 
 const HouseholdDataContext = createContext<
@@ -201,6 +232,9 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   );
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
+  const [householdBenefits, setHouseholdBenefits] = useState<
+    HouseholdBenefit[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user, isAuthenticated } = useAuth();
@@ -218,13 +252,14 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       setLoading(true);
       setError(null);
-      const [hh, fm, a, ha, v, p] = await Promise.all([
+      const [hh, fm, a, ha, v, p, hb] = await Promise.all([
         householdService.getHouseholds(),
         familyMemberService.getFamilyMembers(),
         animalService.getAnimals(),
         animalService.getAllHouseholdAnimals(),
         vehicleService.getVehicles(),
         propertyService.getProperties(),
+        benefitService.getAllHouseholdBenefits(),
       ]);
 
       // Apply GN-based filtering if user is a GN Officer
@@ -256,12 +291,17 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
           (han) => han.division === userDivision,
         );
 
+        const filteredBenefits = (hb as HouseholdBenefit[]).filter(
+          (b) => b.division === userDivision,
+        );
+
         setHouseholds(filteredHouseholds);
         setFamilyMembers(filteredFamilyMembers);
         setAnimals(a as Animal[]);
         setHouseholdAnimals(filteredHouseholdAnimals);
         setVehicles(filteredVehicles);
         setProperties(filteredPropertiesTyped);
+        setHouseholdBenefits(filteredBenefits);
       } else {
         // Admin and Divisional Secretariat see all data across divisions
         setHouseholds(hh as Household[]);
@@ -270,6 +310,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
         setHouseholdAnimals(ha as HouseholdAnimal[]);
         setVehicles(v as Vehicle[]);
         setProperties(p as Property[]);
+        setHouseholdBenefits(hb as HouseholdBenefit[]);
       }
     } catch (err) {
       const message =
@@ -604,6 +645,34 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     await loadAllData();
   };
 
+  const saveHouseholdBenefits = async (
+    houseNumber: string,
+    division: string,
+    benefits: benefitService.BenefitSaveInput[],
+  ) => {
+    try {
+      const saved = await benefitService.saveBenefitsForHouse(
+        houseNumber,
+        division,
+        benefits,
+      );
+
+      const withoutHouse = householdBenefits.filter(
+        (b) => !isSameHouse(b, houseNumber, division),
+      );
+      setHouseholdBenefits([...withoutHouse, ...saved]);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to save household benefits";
+      setError(message);
+      throw err;
+    }
+  };
+
+  const refreshHouseholdBenefits = async () => {
+    await loadAllData();
+  };
+
   // Helper functions
   const getMembersForHouse = (houseNumber: string, division: string) =>
     familyMembers.filter((m) => isSameHouse(m, houseNumber, division));
@@ -617,6 +686,9 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const getAnimalsForHouse = (houseNumber: string, division: string) =>
     householdAnimals.filter((ha) => isSameHouse(ha, houseNumber, division));
 
+  const getBenefitsForHouse = (houseNumber: string, division: string) =>
+    householdBenefits.filter((b) => isSameHouse(b, houseNumber, division));
+
   return (
     <HouseholdDataContext.Provider
       value={{
@@ -628,6 +700,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
         setHouseholdAnimals,
         vehicles,
         properties,
+        householdBenefits,
         loading,
         error,
         addHousehold,
@@ -652,10 +725,13 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
         addHouseholdAnimal,
         deleteHouseholdAnimal,
         refreshAnimals,
+        saveHouseholdBenefits,
+        refreshHouseholdBenefits,
         getMembersForHouse,
         getStudents,
         getBoarders,
         getAnimalsForHouse,
+        getBenefitsForHouse,
       }}
     >
       {children}

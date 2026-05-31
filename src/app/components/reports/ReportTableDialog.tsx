@@ -13,11 +13,13 @@ import { HouseholdTable } from "./HouseholdTable";
 import { PopulationTable } from "./PopulationTable";
 import { PropertyTable } from "./PropertyTable";
 import { VehicleTable } from "./VehicleTable";
+import { AswasumaTable } from "./AswasumaTable";
 import {
   Household,
   FamilyMember,
   Property,
   Vehicle,
+  HouseholdBenefit,
 } from "../../lib/validationSchemas";
 
 interface ReportTableDialogProps {
@@ -27,6 +29,7 @@ interface ReportTableDialogProps {
   familyMembers: FamilyMember[];
   properties: Property[];
   vehicles: Vehicle[];
+  householdBenefits: HouseholdBenefit[];
   onDownload: () => void;
 }
 
@@ -37,6 +40,7 @@ export function ReportTableDialog({
   familyMembers,
   properties,
   vehicles,
+  householdBenefits,
   onDownload,
 }: ReportTableDialogProps) {
   const { t } = useTranslation();
@@ -51,6 +55,8 @@ export function ReportTableDialog({
         return t("propertyReport");
       case "vehicle":
         return t("vehicleReport");
+      case "aswasuma":
+        return t("aswasumaReport");
       default:
         return "";
     }
@@ -66,6 +72,14 @@ export function ReportTableDialog({
         return <PropertyTable properties={properties} />;
       case "vehicle":
         return <VehicleTable vehicles={vehicles} />;
+      case "aswasuma":
+        return (
+          <AswasumaTable
+            households={households}
+            familyMembers={familyMembers}
+            householdBenefits={householdBenefits}
+          />
+        );
       default:
         return null;
     }

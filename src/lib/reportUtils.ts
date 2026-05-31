@@ -1,6 +1,7 @@
 import type {
   FamilyMember,
   Household,
+  HouseholdBenefit,
   Property,
   Vehicle,
 } from "./validationSchemas";
@@ -12,6 +13,51 @@ export interface ReportData {
   familyMembers: FamilyMember[];
   properties: Property[];
   vehicles: Vehicle[];
+  householdBenefits: HouseholdBenefit[];
+}
+
+export interface AswasumaReportRow {
+  houseNumber: string;
+  division: string;
+  address: string;
+  telephone: string;
+  receiverName: string;
+  receiverNic: string;
+  receiverAge: number | string;
+}
+
+export function buildAswasumaReportRows(data: ReportData): AswasumaReportRow[] {
+  const receiving = data.householdBenefits.filter(
+    (b) => b.benefitType === "aswasuma" && b.isReceiving,
+  );
+
+  return receiving
+    .map((benefit) => {
+      const household = data.households.find(
+        (h) =>
+          h.houseNumber === benefit.houseNumber &&
+          h.division === benefit.division,
+      );
+      const receiver = data.familyMembers.find(
+        (m) => m.id === benefit.receiverMemberId,
+      );
+
+      if (!household || !receiver) {
+        return null;
+      }
+
+      return {
+        houseNumber: household.houseNumber,
+        division: household.division || "-",
+        address: household.address,
+        telephone: household.telephone,
+        receiverName: receiver.fullName,
+        receiverNic: receiver.nicNumber,
+        receiverAge: receiver.age,
+      };
+    })
+    .filter((row): row is AswasumaReportRow => row !== null)
+    .sort((a, b) => a.houseNumber.localeCompare(b.houseNumber));
 }
 
 export function normalizeText(value?: string | null): string {

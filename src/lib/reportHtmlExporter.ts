@@ -3,6 +3,7 @@ import {
   escapeHtml,
   getReportFontFamily,
   ReportData,
+  buildAswasumaReportRows,
   translateField,
   TranslateFn,
 } from "./reportUtils";
@@ -17,6 +18,8 @@ function getReportTitle(type: string, t: TranslateFn): string {
       return t("propertyReport");
     case "vehicle":
       return t("vehicleReport");
+    case "aswasuma":
+      return t("aswasumaReport");
     default:
       return t("reports");
   }
@@ -246,6 +249,32 @@ function buildVehicleHtml(data: ReportData, t: TranslateFn): string {
   </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+function buildAswasumaHtml(data: ReportData, t: TranslateFn): string {
+  const rows = buildAswasumaReportRows(data)
+    .map(
+      (row) => `<tr>
+        ${td(row.houseNumber)}
+        ${td(row.division)}
+        ${td(row.address, "col-address")}
+        ${td(row.telephone)}
+        ${td(row.receiverName, "col-name")}
+        ${td(row.receiverNic)}
+        ${td(row.receiverAge)}
+      </tr>`,
+    )
+    .join("");
+
+  return `<table><thead><tr>
+    ${th(t("houseNumber"))}
+    ${th(t("division"))}
+    ${th(t("address"), "col-address")}
+    ${th(t("telephone"))}
+    ${th(t("fullName"), "col-name")}
+    ${th(t("nicNumber"))}
+    ${th(t("age"))}
+  </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
 function buildReportBody(
   type: string,
   data: ReportData,
@@ -260,6 +289,8 @@ function buildReportBody(
       return buildPropertyHtml(data, t);
     case "vehicle":
       return buildVehicleHtml(data, t);
+    case "aswasuma":
+      return buildAswasumaHtml(data, t);
     default:
       return "";
   }

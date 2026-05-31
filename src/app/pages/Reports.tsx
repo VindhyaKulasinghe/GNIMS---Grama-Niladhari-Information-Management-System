@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useHouseholdData } from "../context/HouseholdDataContext";
 import { useState } from "react";
-import { Home, BarChart3, FileText, Car } from "lucide-react";
+import { Home, BarChart3, FileText, Car, HandHeart } from "lucide-react";
 import {
   ReportTypeCard,
   RecentReports,
@@ -13,7 +13,7 @@ import { generateReport } from "../../lib/reportGenerator";
 
 export function Reports() {
   const { t, i18n } = useTranslation();
-  const { households, familyMembers, vehicles, properties } =
+  const { households, familyMembers, vehicles, properties, householdBenefits } =
     useHouseholdData();
   const [selectedReportType, setSelectedReportType] = useState<string | null>(null);
   const [showReportTable, setShowReportTable] = useState<string | null>(null);
@@ -47,13 +47,20 @@ export function Reports() {
       color: "bg-orange-500",
       type: "vehicle",
     },
+    {
+      title: t("aswasumaReport"),
+      description: t("aswasumaReportDesc"),
+      icon: HandHeart,
+      color: "bg-rose-500",
+      type: "aswasuma",
+    },
   ];
 
   const handleGenerateReport = async (reportType: string) => {
     try {
       await generateReport(
         reportType,
-        { households, familyMembers, properties, vehicles },
+        { households, familyMembers, properties, vehicles, householdBenefits },
         i18n.language,
         t,
       );
@@ -102,6 +109,7 @@ export function Reports() {
         familyMembers={familyMembers}
         properties={properties}
         vehicles={vehicles}
+        householdBenefits={householdBenefits}
         onDownload={() => {
           if (showReportTable) {
             handleGenerateReport(showReportTable);

@@ -1,5 +1,6 @@
 /* eslint-disable */
 import { z } from "zod";
+import { BENEFIT_TYPES } from "./benefitTypes";
 
 // Household Schema
 export const HouseholdSchema = z.object({
@@ -126,6 +127,20 @@ export const HouseholdAnimalSchema = z.object({
 });
 
 export type HouseholdAnimal = z.infer<typeof HouseholdAnimalSchema>;
+
+export const HouseholdBenefitSchema = z.object({
+  id: z.number().optional(),
+  houseNumber: z.string().min(1, "House number is required"),
+  division: z.string().min(1, "Division is required"),
+  benefitType: z.enum(BENEFIT_TYPES),
+  isReceiving: z.boolean(),
+  receiverMemberId: z.number().nullish(),
+  otherNotes: z.string().nullish(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+
+export type HouseholdBenefit = z.infer<typeof HouseholdBenefitSchema>;
 
 // User Schema
 export const UserSchema = z.object({
