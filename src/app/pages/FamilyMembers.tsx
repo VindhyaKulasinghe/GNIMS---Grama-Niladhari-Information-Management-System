@@ -383,8 +383,8 @@ export function FamilyMembers() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="page-toolbar">
+        <div className="flex items-center gap-3 min-w-0">
           {view === "house" && (
             <Button
               variant="ghost"
@@ -400,7 +400,7 @@ export function FamilyMembers() {
             </Button>
           )}
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
               {t("familyMembers")}
             </h1>
             <p className="text-slate-600 mt-1">
@@ -1074,7 +1074,7 @@ export function FamilyMembers() {
 
       {/* Add/Edit Member Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-1rem)] sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>
               {editingMember ? t("editMember") : t("addMember")} — {t("house")}{" "}
@@ -1140,12 +1140,12 @@ export function FamilyMembers() {
             className="w-full"
           >
             <TabsList
-              className={`grid w-full ${
+              className={`grid w-full h-auto ${
                 memberTypeValue === "student"
-                  ? "grid-cols-3"
+                  ? "grid-cols-1 sm:grid-cols-3"
                   : memberTypeValue === "boarder"
-                    ? "grid-cols-3"
-                    : "grid-cols-2"
+                    ? "grid-cols-1 sm:grid-cols-3"
+                    : "grid-cols-1 sm:grid-cols-2"
               }`}
             >
               <TabsTrigger value="personal">{t("personalInfo")}</TabsTrigger>
@@ -1168,7 +1168,7 @@ export function FamilyMembers() {
 
             {/* Personal Info Tab */}
             <TabsContent value="personal" className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t("uniqueNumber")}</Label>
                   <Input
@@ -1211,7 +1211,7 @@ export function FamilyMembers() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t("birthYear")}</Label>
                   <Input
@@ -1263,7 +1263,7 @@ export function FamilyMembers() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t("nationality")}</Label>
                   <Input
@@ -1297,7 +1297,7 @@ export function FamilyMembers() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t("maritalStatus")}</Label>
                   <Select
@@ -1536,7 +1536,7 @@ export function FamilyMembers() {
 
       {/* View Household Details Dialog */}
       <Dialog open={viewHouseDialog} onOpenChange={setViewHouseDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-1rem)] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Home className="h-5 w-5 text-blue-600" />
@@ -1572,7 +1572,7 @@ export function FamilyMembers() {
               </div>
 
               {/* Details Grid */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-gray-600 text-sm">
                     <MapPin className="h-4 w-4" />
@@ -1712,7 +1712,7 @@ export function FamilyMembers() {
 
       {/* View Member Details Dialog */}
       <Dialog open={viewMemberDialog} onOpenChange={setViewMemberDialog}>
-        <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-1rem)] sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-blue-600" />
@@ -1781,7 +1781,7 @@ export function FamilyMembers() {
                 <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">
                   {t("personalInformation")}
                 </h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">
                       {t("nationalIdNic")}
@@ -1848,7 +1848,7 @@ export function FamilyMembers() {
               <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">
                 {t("employmentAndIncome")}
               </h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">
                     {t("jobTypeOccupation")}
@@ -1890,7 +1890,7 @@ export function FamilyMembers() {
                     <GraduationCap className="h-5 w-5" />
                     {t("studentInformation")}
                   </h4>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-blue-600">
                         {t("gradeYearOfStudy")}
@@ -1918,7 +1918,7 @@ export function FamilyMembers() {
                     <UserCheck className="h-5 w-5" />
                     {t("boarderInformation")}
                   </h4>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-amber-600">
                         {t("purposeOfStay")}

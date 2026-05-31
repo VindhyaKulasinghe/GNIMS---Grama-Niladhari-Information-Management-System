@@ -71,11 +71,11 @@ export function Layout() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       {/* Header */}
       <header className="bg-slate-900/95 backdrop-blur-md text-white shadow-sm fixed top-0 left-0 right-0 z-50 border-b border-slate-800">
-        <div className="flex items-center justify-between px-6 h-16">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between gap-2 px-3 sm:px-6 h-14 sm:h-16 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             <Button
               variant="ghost"
               size="icon"
@@ -85,15 +85,15 @@ export function Layout() {
               {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
             <div>
-              <h1 className="font-extrabold text-xl lg:text-2xl tracking-tight text-white">{t("appName")}</h1>
+              <h1 className="font-extrabold text-base sm:text-xl lg:text-2xl tracking-tight text-white truncate">{t("appName")}</h1>
               <p className="text-[10px] uppercase tracking-[0.1em] font-semibold text-slate-400 hidden sm:block leading-none mt-0.5">{t("southernProvinceHambantota")}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
             <Select value={i18n.language} onValueChange={(val) => i18n.changeLanguage(val)}>
-              <SelectTrigger className="w-[140px] bg-slate-800 border-slate-700 text-white hover:bg-slate-700">
-                <Globe className="h-4 w-4 mr-2" />
+              <SelectTrigger className="w-[7.5rem] sm:w-[140px] bg-slate-800 border-slate-700 text-white hover:bg-slate-700 h-9 px-2 sm:px-3">
+                <Globe className="h-4 w-4 sm:mr-2 shrink-0" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -126,10 +126,10 @@ export function Layout() {
         </div>
       </header>
 
-      <div className="flex pt-16">
+      <div className="flex pt-14 sm:pt-16">
         {/* Sidebar - Fixed */}
         <aside className={`
-          fixed top-16 bottom-0 left-0 z-40 w-64 bg-slate-900 shadow-xl transform transition-transform duration-300 ease-in-out border-r border-slate-800
+          fixed top-14 sm:top-16 bottom-0 left-0 z-40 w-64 bg-slate-900 shadow-xl transform transition-transform duration-300 ease-in-out border-r border-slate-800
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
           <nav className="h-full overflow-y-auto py-10 p-4 space-y-2">
@@ -165,7 +165,7 @@ export function Layout() {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 lg:ml-64 p-6 lg:p-10 min-h-[calc(100vh-64px)]">
+        <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-10 min-h-[calc(100vh-3.5rem)] sm:min-h-[calc(100vh-4rem)] min-w-0 w-full max-w-full">
           <Outlet />
         </main>
       </div>

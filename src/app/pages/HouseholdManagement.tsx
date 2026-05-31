@@ -461,9 +461,9 @@ export function HouseholdManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="page-toolbar">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
             {t("householdManagement")}
           </h1>
           <p className="text-slate-600 mt-1">
@@ -739,8 +739,8 @@ export function HouseholdManagement() {
 
         {/* All Households Tab */}
         <TabsContent value="all-households" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="relative flex-1 max-w-md">
+          <div className="toolbar-row">
+            <div className="relative w-full sm:flex-1 sm:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder={`${t("search")} by house no., address or telephone...`}
@@ -940,7 +940,7 @@ export function HouseholdManagement() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-1rem)] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {editingHousehold ? t("edit") : t("add")}{" "}
@@ -954,7 +954,7 @@ export function HouseholdManagement() {
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t("houseNumber")}</Label>
                 <Input
@@ -1017,7 +1017,7 @@ export function HouseholdManagement() {
 
             <div className="space-y-3">
               <Label className="text-base">{t("utilities")}</Label>
-              <div className="grid grid-cols-3 gap-4 bg-gray-50 rounded-lg p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">⚡ {t("electricity")}</span>
                   <Switch
@@ -1050,7 +1050,7 @@ export function HouseholdManagement() {
 
             <div className="space-y-3">
               <Label className="text-base">{t("housingMaterials")}</Label>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label className="text-xs text-gray-500">
                     {t("roofType")}
@@ -1145,7 +1145,7 @@ export function HouseholdManagement() {
                       key={formAnimal.id}
                       className="flex gap-3 items-start p-3 bg-gray-50 rounded-lg border"
                     >
-                      <div className="flex-1 grid grid-cols-2 gap-3">
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-2">
                           <Label className="text-xs text-gray-500">
                             {t("selectAnimal")}
@@ -1228,7 +1228,7 @@ export function HouseholdManagement() {
 
       {/* Animals Dialog */}
       <Dialog open={animalsDialogOpen} onOpenChange={setAnimalsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-1rem)] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {t("manageAnimals")} - {t("house")} {selectedHouse?.houseNumber}
@@ -1393,7 +1393,7 @@ export function HouseholdManagement() {
 
       {/* View Dialog */}
       <Dialog open={viewDialog} onOpenChange={setViewDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-1rem)] sm:max-w-2xl lg:max-w-4xl">
           <DialogHeader className="pb-2">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-xl font-bold text-blue-700">
@@ -1411,7 +1411,7 @@ export function HouseholdManagement() {
 
           <div className="py-4 space-y-6">
             {/* Quick Stats Header */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {(() => {
                 const viewDivision =
                   viewingHousehold?.division || userDivision;

@@ -282,9 +282,9 @@ export function PropertyLand() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="page-toolbar">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
             {t("propertyLand")}
           </h1>
           <p className="text-slate-600 mt-1">{t("propertyLandDescription")}</p>
@@ -510,8 +510,8 @@ export function PropertyLand() {
 
         {/* Property Details Tab */}
         <TabsContent value="property-details" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="relative flex-1 max-w-md">
+          <div className="toolbar-row">
+            <div className="relative w-full sm:flex-1 sm:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder={t("searchPropertyPlaceholder")}
@@ -619,7 +619,7 @@ export function PropertyLand() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-1rem)] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {editingProperty ? t("edit") : t("add")} {t("property")}
@@ -672,7 +672,7 @@ export function PropertyLand() {
                       ? t("currentOwnerDetails")
                       : t("validatedUserDetails")}
                   </h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="text-green-700 font-medium">{t("name")}:</p>
                       <p className="text-green-900">{validatedUser.name}</p>
@@ -764,7 +764,7 @@ export function PropertyLand() {
                     {t("propertyInformation")}
                   </h4>
                   <div className="grid gap-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>{t("propertyType")} *</Label>
                         <Select
@@ -824,7 +824,7 @@ export function PropertyLand() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>{t("landSize")} *</Label>
                         <Input
@@ -927,7 +927,7 @@ export function PropertyLand() {
 
       {/* View Dialog */}
       <Dialog open={viewDialog} onOpenChange={setViewDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-1rem)] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {t("propertyDetails")} — {viewingProperty?.oppuNumber}

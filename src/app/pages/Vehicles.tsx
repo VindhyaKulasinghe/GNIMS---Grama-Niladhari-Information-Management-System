@@ -278,9 +278,9 @@ export function Vehicles() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="page-toolbar">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">{t("vehicles")}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">{t("vehicles")}</h1>
           <p className="text-slate-600 mt-1">
             {t("vehicleManagementSubtitle")}
           </p>
@@ -506,8 +506,8 @@ export function Vehicles() {
 
         {/* Vehicle Details Tab */}
         <TabsContent value="vehicle-details" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="relative flex-1 max-w-md">
+          <div className="toolbar-row">
+            <div className="relative w-full sm:flex-1 sm:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder={t("searchVehiclesPlaceholder")}
@@ -607,7 +607,7 @@ export function Vehicles() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-1rem)] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {editingVehicle ? t("edit") : t("add")} {t("vehicles")}
@@ -660,7 +660,7 @@ export function Vehicles() {
                       ? t("currentOwnerDetails")
                       : t("validatedUserDetails")}
                   </h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="text-green-700 font-medium">{t("name")}:</p>
                       <p className="text-green-900">{validatedUser.name}</p>
@@ -800,7 +800,7 @@ export function Vehicles() {
 
       {/* View Dialog */}
       <Dialog open={viewDialog} onOpenChange={setViewDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-1rem)] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {t("details")} - {viewingVehicle?.vehicleNumber}

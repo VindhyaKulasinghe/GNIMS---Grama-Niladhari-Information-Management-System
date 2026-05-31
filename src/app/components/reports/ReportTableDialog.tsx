@@ -87,15 +87,15 @@ export function ReportTableDialog({
 
   return (
     <Dialog open={!!showReportTable} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-1rem)] max-w-[calc(100%-1rem)] sm:max-w-6xl max-h-[85vh] overflow-hidden flex flex-col p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{getTitle()}</DialogTitle>
           <DialogDescription>
             {t("viewReportData", "View and download the report data.")}
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4">
-          <div>{renderTable()}</div>
+        <div className="py-4 overflow-y-auto flex-1 min-h-0 -mx-1 px-1">
+          <div className="overflow-x-auto">{renderTable()}</div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>

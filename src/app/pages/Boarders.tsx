@@ -135,9 +135,9 @@ export function Boarders() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="page-toolbar">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">{t("boarders")}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">{t("boarders")}</h1>
           <p className="text-slate-600 mt-1">{t("boardersDescription")}</p>
         </div>
       </div>
@@ -510,7 +510,7 @@ export function Boarders() {
 
       {/* View Boarder Details Dialog */}
       <Dialog open={viewDialog} onOpenChange={setViewDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-1rem)] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserCheck className="h-5 w-5 text-amber-600" />
@@ -551,7 +551,7 @@ export function Boarders() {
                 <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">
                   {t("personalInformation")}
                 </h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">{t("nic")}</p>
                     <p className="font-medium text-gray-900">
@@ -605,7 +605,7 @@ export function Boarders() {
                   <UserCheck className="h-5 w-5" />
                   {t("boarderInformation")}
                 </h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-amber-600">
                       {t("purposeOfStay")}
@@ -635,7 +635,7 @@ export function Boarders() {
                   <h4 className="font-semibold text-gray-900 mb-3 pb-2 border-b">
                     {t("employmentAndIncome")}
                   </h4>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-600">{t("jobType")}</p>
                       <p className="font-medium text-gray-900">

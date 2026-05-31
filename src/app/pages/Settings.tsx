@@ -20,16 +20,16 @@ export function Settings() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{t("settings")}</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t("settings")}</h1>
         <p className="text-gray-600 mt-1">{t("settingsDescription")}</p>
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList>
-          <TabsTrigger value="general">{t("general")}</TabsTrigger>
-          <TabsTrigger value="notifications">{t("notifications")}</TabsTrigger>
-          <TabsTrigger value="security">{t("security")}</TabsTrigger>
-          <TabsTrigger value="data">{t("dataManagement")}</TabsTrigger>
+        <TabsList className="flex h-auto w-full flex-wrap gap-1 p-1 sm:flex-nowrap">
+          <TabsTrigger value="general" className="flex-1 text-xs sm:text-sm">{t("general")}</TabsTrigger>
+          <TabsTrigger value="notifications" className="flex-1 text-xs sm:text-sm">{t("notifications")}</TabsTrigger>
+          <TabsTrigger value="security" className="flex-1 text-xs sm:text-sm">{t("security")}</TabsTrigger>
+          <TabsTrigger value="data" className="flex-1 text-xs sm:text-sm">{t("dataManagement")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-6 mt-6">
@@ -113,7 +113,7 @@ export function Settings() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-medium">{t("emailNotifications")}</p>
                   <p className="text-sm text-gray-600">{t("emailNotificationsDesc")}</p>
@@ -121,7 +121,7 @@ export function Settings() {
                 <Switch defaultChecked />
               </div>
               
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-medium">{t("newRegistrationAlerts")}</p>
                   <p className="text-sm text-gray-600">{t("newRegistrationAlertsDesc")}</p>
@@ -129,7 +129,7 @@ export function Settings() {
                 <Switch defaultChecked />
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-medium">{t("reportGenComplete")}</p>
                   <p className="text-sm text-gray-600">{t("reportGenCompleteDesc")}</p>
@@ -137,7 +137,7 @@ export function Settings() {
                 <Switch defaultChecked />
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-medium">{t("systemUpdates")}</p>
                   <p className="text-sm text-gray-600">{t("systemUpdatesDesc")}</p>
@@ -177,7 +177,7 @@ export function Settings() {
               </Button>
 
               <div className="pt-4 border-t mt-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="font-medium">{t("twoFactorAuth")}</p>
                     <p className="text-sm text-gray-600">{t("twoFactorAuthDesc")}</p>
@@ -186,7 +186,7 @@ export function Settings() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-medium">{t("sessionTimeout")}</p>
                   <p className="text-sm text-gray-600">{t("sessionTimeoutDesc")}</p>

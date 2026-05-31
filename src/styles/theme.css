@@ -179,3 +179,13 @@
     line-height: 1.5;
   }
 }
+
+@layer utilities {
+  .page-toolbar {
+    @apply flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between;
+  }
+
+  .toolbar-row {
+    @apply flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between;
+  }
+}

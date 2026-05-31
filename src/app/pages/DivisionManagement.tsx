@@ -119,9 +119,9 @@ export function DivisionManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="page-toolbar">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
             {t("divisionManagement") || "GN Division Management"}
           </h1>
           <p className="text-gray-600 mt-1">
