@@ -49,13 +49,13 @@ export function Reports() {
     },
   ];
 
-  const handleGenerateReport = (reportType: string) => {
+  const handleGenerateReport = async (reportType: string) => {
     try {
-      generateReport(
+      await generateReport(
         reportType,
         { households, familyMembers, properties, vehicles },
-        "en",
-        t
+        i18n.language,
+        t,
       );
       toast.success(t("reportGenerated", "Report generated successfully"));
     } catch (error) {
