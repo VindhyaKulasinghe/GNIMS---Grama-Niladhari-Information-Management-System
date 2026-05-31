@@ -39,6 +39,7 @@ const navigation = [
   { name: "vehicles", icon: Car, path: "/vehicles" },
   { name: "reports", icon: FileText, path: "/reports" },
   { name: "settings", icon: SettingsIcon, path: "/settings" },
+  { name: "divisionManagement", icon: Landmark, path: "/divisions", roles: ["Admin"] },
   { name: "userManagement", icon: UserCog, path: "/user-management", roles: ["Admin"] },
 ];
 

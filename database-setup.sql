@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS households (
   cow INT DEFAULT 0,
   chicken INT DEFAULT 0,
   goat INT DEFAULT 0,
+  division VARCHAR(255) NOT NULL,
   "createdAt" TIMESTAMP DEFAULT NOW(),
   "updatedAt" TIMESTAMP DEFAULT NOW()
 );
@@ -41,6 +42,7 @@ CREATE TABLE IF NOT EXISTS family_members (
   "institutionName" VARCHAR(255),
   purpose VARCHAR(255),
   "boarderDistrict" VARCHAR(100),
+  division VARCHAR(255) NOT NULL,
   "createdAt" TIMESTAMP DEFAULT NOW(),
   "updatedAt" TIMESTAMP DEFAULT NOW()
 );
@@ -56,6 +58,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
   "vehicleType" VARCHAR(100) NOT NULL,
   "vehicleNumber" VARCHAR(50) NOT NULL,
   "registrationYear" INT NOT NULL,
+  division VARCHAR(255) NOT NULL,
   "createdAt" TIMESTAMP DEFAULT NOW(),
   "updatedAt" TIMESTAMP DEFAULT NOW()
 );
@@ -74,6 +77,7 @@ CREATE TABLE IF NOT EXISTS properties (
   "landSize" VARCHAR(100) NOT NULL,
   ownership VARCHAR(100) NOT NULL,
   "agriculturalUse" TEXT,
+  division VARCHAR(255) NOT NULL,
   "createdAt" TIMESTAMP DEFAULT NOW(),
   "updatedAt" TIMESTAMP DEFAULT NOW()
 );
@@ -93,6 +97,7 @@ CREATE TABLE IF NOT EXISTS household_animals (
   "houseNumber" VARCHAR(50) NOT NULL REFERENCES households("houseNumber") ON DELETE CASCADE,
   "animalId" BIGINT NOT NULL REFERENCES animals(id) ON DELETE CASCADE,
   count INT NOT NULL DEFAULT 1,
+  division VARCHAR(255) NOT NULL,
   "createdAt" TIMESTAMP DEFAULT NOW(),
   "updatedAt" TIMESTAMP DEFAULT NOW(),
   UNIQUE("houseNumber", "animalId")
@@ -276,8 +281,41 @@ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+  CREATE POLICY "Enable delete for authenticated users" ON users FOR DELETE USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- Create divisions table
+CREATE TABLE IF NOT EXISTS divisions (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  name VARCHAR(255) UNIQUE NOT NULL,
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW()
+);
+
+-- Enable RLS for divisions
+ALTER TABLE divisions ENABLE ROW LEVEL SECURITY;
+
 DO $$
 BEGIN
-  CREATE POLICY "Enable delete for authenticated users" ON users FOR DELETE USING (true);
+  CREATE POLICY "Enable read access for all users" ON divisions FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  CREATE POLICY "Enable insert for authenticated users" ON divisions FOR INSERT WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  CREATE POLICY "Enable update for authenticated users" ON divisions FOR UPDATE USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  CREATE POLICY "Enable delete for authenticated users" ON divisions FOR DELETE USING (true);
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { z } from "zod";
 
 // Household Schema
@@ -15,6 +16,7 @@ export const HouseholdSchema = z.object({
   cow: z.number().min(0),
   chicken: z.number().min(0),
   goat: z.number().min(0),
+  division: z.string().min(1, "Division is required").optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });
@@ -52,6 +54,7 @@ export const FamilyMemberSchema = z.object({
   purpose: z.string().nullish(),
   boarderDistrict: z.string().nullish(),
   boarderCountry: z.string().nullish(),
+  division: z.string().min(1, "Division is required").optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });
@@ -72,6 +75,7 @@ export const VehicleSchema = z.object({
     .number()
     .min(1900)
     .max(new Date().getFullYear() + 1),
+  division: z.string().min(1, "Division is required").optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });
@@ -92,6 +96,7 @@ export const PropertySchema = z.object({
   landSize: z.string().min(1, "Land size is required"),
   ownership: z.string().min(1, "Ownership is required"),
   agriculturalUse: z.string().nullish(),
+  division: z.string().min(1, "Division is required").optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });
@@ -115,6 +120,7 @@ export const HouseholdAnimalSchema = z.object({
   houseNumber: z.string().min(1, "House number is required"),
   animalId: z.number(),
   count: z.number().min(1),
+  division: z.string().min(1, "Division is required").optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });

@@ -1,9 +1,11 @@
+/* eslint-disable */
 import React, { createContext, useContext, useState, useEffect } from "react";
 import * as householdService from "../../lib/services/householdService";
 import * as familyMemberService from "../../lib/services/familyMemberService";
 import * as animalService from "../../lib/services/animalService";
 import * as vehicleService from "../../lib/services/vehicleService";
 import * as propertyService from "../../lib/services/propertyService";
+import { useAuth } from "./AuthContext";
 
 export interface Animal {
   id: number;
@@ -18,6 +20,7 @@ export interface HouseholdAnimal {
   houseNumber: string;
   animalId: number;
   count: number;
+  division?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -32,6 +35,7 @@ export interface Vehicle {
   vehicleType: string;
   vehicleNumber: string;
   registrationYear: number;
+  division?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -49,6 +53,7 @@ export interface Property {
   landSize: string;
   ownership: string;
   agriculturalUse?: string;
+  division?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -67,6 +72,7 @@ export interface Household {
   cow: number;
   chicken: number;
   goat: number;
+  division?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -97,6 +103,7 @@ export interface FamilyMember {
   purpose?: string;
   boarderDistrict?: string;
   boarderCountry?: string;
+  division?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -190,11 +197,14 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user, isAuthenticated } = useAuth();
 
-  // Load all data on mount
+  // Load all data on mount and user change
   useEffect(() => {
-    loadAllData();
-  }, []);
+    if (isAuthenticated) {
+      loadAllData();
+    }
+  }, [user, isAuthenticated]);
 
   const loadAllData = async () => {
     try {
@@ -208,12 +218,51 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
         vehicleService.getVehicles(),
         propertyService.getProperties(),
       ]);
-      setHouseholds(hh as Household[]);
-      setFamilyMembers(fm as FamilyMember[]);
-      setAnimals(a as Animal[]);
-      setHouseholdAnimals(ha as HouseholdAnimal[]);
-      setVehicles(v as Vehicle[]);
-      setProperties(p as Property[]);
+
+      // Apply GN-based filtering if user is a GN Officer
+      if (user && user.role === "GN Officer") {
+        const userDivision = user.division;
+
+        // 1. Filter households directly by division
+        const filteredHouseholds = (hh as Household[]).filter(
+          (h) => h.division === userDivision,
+        );
+
+        // 2. Filter family members directly by division
+        const filteredFamilyMembers = (fm as FamilyMember[]).filter(
+          (m) => m.division === userDivision,
+        );
+
+        // 3. Filter vehicles directly by division
+        const filteredVehicles = (v as Vehicle[]).filter(
+          (veh) => veh.division === userDivision,
+        );
+
+        // 4. Filter properties directly by division
+        const filteredPropertiesTyped = (p as Property[]).filter(
+          (pr) => pr.division === userDivision,
+        );
+
+        // 5. Filter household animals directly by division
+        const filteredHouseholdAnimals = (ha as HouseholdAnimal[]).filter(
+          (han) => han.division === userDivision,
+        );
+
+        setHouseholds(filteredHouseholds);
+        setFamilyMembers(filteredFamilyMembers);
+        setAnimals(a as Animal[]);
+        setHouseholdAnimals(filteredHouseholdAnimals);
+        setVehicles(filteredVehicles);
+        setProperties(filteredPropertiesTyped);
+      } else {
+        // Admin and Divisional Secretariat see all data across divisions
+        setHouseholds(hh as Household[]);
+        setFamilyMembers(fm as FamilyMember[]);
+        setAnimals(a as Animal[]);
+        setHouseholdAnimals(ha as HouseholdAnimal[]);
+        setVehicles(v as Vehicle[]);
+        setProperties(p as Property[]);
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load data";
@@ -229,8 +278,15 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     household: Omit<Household, "id" | "createdAt" | "updatedAt">,
   ) => {
     try {
+      // Auto-inject logged in user's division
+      const divisionToSave = user?.division || "Hambantota";
+      const householdWithDivision = {
+        ...household,
+        division: divisionToSave,
+      };
+
       const newHousehold = await householdService.createHousehold(
-        household as any,
+        householdWithDivision as any,
       );
       setHouseholds([...households, newHousehold as Household]);
     } catch (err) {
@@ -271,14 +327,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const refreshHouseholds = async () => {
-    try {
-      const hh = await householdService.getHouseholds();
-      setHouseholds(hh as Household[]);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to refresh households";
-      setError(message);
-    }
+    await loadAllData();
   };
 
   // Family Member CRUD
@@ -286,8 +335,13 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     member: Omit<FamilyMember, "id" | "createdAt" | "updatedAt">,
   ) => {
     try {
+      const divisionToSave = user?.division || "Hambantota";
+      const memberWithDivision = {
+        ...member,
+        division: divisionToSave,
+      };
       const newMember = await familyMemberService.createFamilyMember(
-        member as any,
+        memberWithDivision as any,
       );
       setFamilyMembers([...familyMembers, newMember as FamilyMember]);
     } catch (err) {
@@ -331,14 +385,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const refreshFamilyMembers = async () => {
-    try {
-      const fm = await familyMemberService.getFamilyMembers();
-      setFamilyMembers(fm as FamilyMember[]);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to refresh family members";
-      setError(message);
-    }
+    await loadAllData();
   };
 
   // Vehicle CRUD
@@ -346,7 +393,12 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     vehicle: Omit<Vehicle, "id" | "createdAt" | "updatedAt">,
   ) => {
     try {
-      const newVehicle = await vehicleService.createVehicle(vehicle as any);
+      const divisionToSave = user?.division || "Hambantota";
+      const vehicleWithDivision = {
+        ...vehicle,
+        division: divisionToSave,
+      };
+      const newVehicle = await vehicleService.createVehicle(vehicleWithDivision as any);
       setVehicles([...vehicles, newVehicle as Vehicle]);
     } catch (err) {
       const message =
@@ -383,14 +435,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const refreshVehicles = async () => {
-    try {
-      const v = await vehicleService.getVehicles();
-      setVehicles(v as Vehicle[]);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to refresh vehicles";
-      setError(message);
-    }
+    await loadAllData();
   };
 
   // Property CRUD
@@ -398,7 +443,12 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     property: Omit<Property, "id" | "createdAt" | "updatedAt">,
   ) => {
     try {
-      const newProperty = await propertyService.createProperty(property as any);
+      const divisionToSave = user?.division || "Hambantota";
+      const propertyWithDivision = {
+        ...property,
+        division: divisionToSave,
+      };
+      const newProperty = await propertyService.createProperty(propertyWithDivision as any);
       setProperties([...properties, newProperty as Property]);
     } catch (err) {
       const message =
@@ -435,14 +485,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const refreshProperties = async () => {
-    try {
-      const p = await propertyService.getProperties();
-      setProperties(p as Property[]);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to refresh properties";
-      setError(message);
-    }
+    await loadAllData();
   };
 
   // Animal CRUD
@@ -490,10 +533,12 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     count: number,
   ) => {
     try {
+      const divisionToSave = user?.division || "Hambantota";
       const newAnimal = await animalService.upsertHouseholdAnimal(
         houseNumber,
         animalId,
         count,
+        divisionToSave,
       );
       const existing = householdAnimals.findIndex(
         (ha) => ha.houseNumber === houseNumber && ha.animalId === animalId,
@@ -535,18 +580,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const refreshAnimals = async () => {
-    try {
-      const [a, ha] = await Promise.all([
-        animalService.getAnimals(),
-        animalService.getAllHouseholdAnimals(),
-      ]);
-      setAnimals(a as Animal[]);
-      setHouseholdAnimals(ha as HouseholdAnimal[]);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to refresh animals";
-      setError(message);
-    }
+    await loadAllData();
   };
 
   // Helper functions

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useState, FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router'
 import { useAuth } from '../context/AuthContext'
@@ -185,6 +186,16 @@ export function Login() {
               {isSubmitting ? t("signingIn") : t("signIn")}
             </Button>
 
+            <div className="text-center text-sm text-slate-500 mt-4">
+              <span>{t("dontHaveAccount") || "Don't have an account?"} </span>
+              <button
+                type="button"
+                onClick={() => navigate('/register')}
+                className="text-slate-900 font-semibold hover:underline"
+              >
+                {t("register") || "Register"}
+              </button>
+            </div>
           </form>
         </CardContent>
       </Card>

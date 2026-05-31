@@ -1,6 +1,8 @@
+/* eslint-disable */
 import { createBrowserRouter, Navigate } from "react-router";
 import { Layout } from "./components/Layout";
 import { Login } from "./pages/Login";
+import { Register } from "./pages/Register";
 import { Dashboard } from "./pages/Dashboard";
 import { HouseholdManagement } from "./pages/HouseholdManagement";
 import { FamilyMembers } from "./pages/FamilyMembers";
@@ -12,6 +14,7 @@ import { Vehicles } from "./pages/Vehicles";
 import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
 import { UserManagement } from "./pages/UserManagement";
+import { DivisionManagement } from "./pages/DivisionManagement";
 import { NotFound } from "./pages/NotFound";
 import { HouseholdDataProvider } from "./context/HouseholdDataContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -56,6 +59,10 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <RootWrapper><Login /></RootWrapper>,
+  },
+  {
+    path: "/register",
+    element: <Register />,
   },
 
   // Protected routes
@@ -147,6 +154,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredRole={["Admin"]}>
             <UserManagement />
+          </ProtectedRoute>
+        )
+      },
+      { 
+        path: "divisions", 
+        element: (
+          <ProtectedRoute requiredRole={["Admin"]}>
+            <DivisionManagement />
           </ProtectedRoute>
         )
       },

@@ -12,19 +12,16 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error('Missing SUPABASE_URL or SUPABASE_KEY in .env');
+  console.error('❌ Error: Missing SUPABASE_URL or SUPABASE_KEY/VITE_SUPABASE_SERVICE_ROLE_KEY in your .env file.');
   process.exit(1);
 }
 
-const sqlPath = path.join(__dirname, 'create_user_rpc.sql');
+const sqlPath = path.join(__dirname, 'cleanup-and-setup.sql');
 const sql = fs.readFileSync(sqlPath, 'utf8');
 
 async function runSQL() {
-  console.log('Deploying Create User RPC...');
+  console.log('⏳ Connecting to Supabase and executing cleanup/schema migration...');
   try {
-    // Note: This relies on the "execute_sql" RPC being present in the project.
-    // Most Supabase local/development setups add this or allow direct SQL via REST.
-    // If "execute_sql" doesn't exist, we might need another way.
     const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/execute_sql`, {
       method: 'POST',
       headers: {
@@ -37,18 +34,13 @@ async function runSQL() {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('Error deploying RPC:', error);
-      
-      if (error.includes('function "execute_sql" does not exist')) {
-          console.log('\n⚠️  The "execute_sql" RPC is not installed in your Supabase project.');
-          console.log('Please copy the content of "create_user_rpc.sql" and run it manually in the Supabase SQL Editor.');
-      }
+      console.error('❌ Error executing SQL on Supabase:', error);
       return;
     }
 
-    console.log('✅ RPC deployed successfully!');
+    console.log('✅ Success! Database successfully truncated and schema updated with the "division" column on all tables.');
   } catch (err) {
-    console.error('Deployment error:', err.message);
+    console.error('❌ Fetch error (verify your internet connection and .env credentials):', err.message);
   }
 }
 

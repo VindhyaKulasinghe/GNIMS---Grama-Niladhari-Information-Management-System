@@ -79,11 +79,13 @@ export async function upsertHouseholdAnimal(
   houseNumber: string,
   animalId: number,
   count: number,
+  division?: string,
 ): Promise<HouseholdAnimal> {
   const validated = HouseholdAnimalSchema.parse({
     houseNumber,
     animalId,
     count,
+    division,
   });
 
   const { data, error } = await supabase

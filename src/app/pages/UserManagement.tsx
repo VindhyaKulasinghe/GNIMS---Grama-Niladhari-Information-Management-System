@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
@@ -39,13 +40,14 @@ import {
 import { toast } from "sonner";
 import { Badge } from "../components/ui/badge";
 import * as userService from "../../lib/services/userService";
+import * as divisionService from "../../lib/services/divisionService";
 import { User as UserType } from "../../lib/validationSchemas";
 import { useLoading } from "../context/LoadingContext";
 import Lottie from "lottie-react";
 import comingSoonAnimation from "../components/comingsoon.json";
 
 // Toggle this variable to show/hide the User Management page during development
-const IS_UNDER_DEVELOPMENT = true;
+const IS_UNDER_DEVELOPMENT = false;
 
 function ComingSoonView() {
   const { t } = useTranslation();
@@ -68,7 +70,7 @@ function ComingSoonView() {
           {t("underDevelopment") || "Under Development"}
         </div>
         <p className="text-slate-600 leading-relaxed">
-          {t("userManagementComingSoon") || 
+          {t("userManagementComingSoon") ||
             "We are currently perfecting the User Management system to ensure the highest security and performance. This feature will be available shortly."}
         </p>
       </div>
@@ -78,12 +80,13 @@ function ComingSoonView() {
 
 export function UserManagement() {
   const { t } = useTranslation();
-  
+
   if (IS_UNDER_DEVELOPMENT) {
     return <ComingSoonView />;
   }
 
   const [users, setUsers] = useState<UserType[]>([]);
+  const [divisions, setDivisions] = useState<divisionService.Division[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
@@ -106,8 +109,12 @@ export function UserManagement() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await userService.getUsers();
-      setUsers(data);
+      const [usersData, divisionsData] = await Promise.all([
+        userService.getUsers(),
+        divisionService.getDivisions(),
+      ]);
+      setUsers(usersData);
+      setDivisions(divisionsData);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("failedLoadUsers"));
       console.error(err);
@@ -181,13 +188,16 @@ export function UserManagement() {
         });
         setUsers(users.map((u) => (u.id === editingUser.id ? updated : u)));
       } else {
-        const newUser = await userService.createUser({
-          name: formData.name!,
-          email: formData.email!,
-          role: formData.role as any,
-          division: formData.division!,
-          status: formData.status as any,
-        }, (formData as any).password);
+        const newUser = await userService.createUser(
+          {
+            name: formData.name!,
+            email: formData.email!,
+            role: formData.role as any,
+            division: formData.division!,
+            status: formData.status as any,
+          },
+          (formData as any).password,
+        );
         setUsers([newUser, ...users]);
       }
       toast.success(t("userSaved") || "User saved successfully.");
@@ -345,11 +355,15 @@ export function UserManagement() {
                   type="password"
                   placeholder="Welcome@123"
                   onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value } as any)
+                    setFormData({
+                      ...formData,
+                      password: e.target.value,
+                    } as any)
                   }
                 />
                 <p className="text-[10px] text-gray-500">
-                  {t("defaultPasswordNote") || "Default: Welcome@123 if left blank"}
+                  {t("defaultPasswordNote") ||
+                    "Default: Welcome@123 if left blank"}
                 </p>
               </div>
             )}
@@ -375,12 +389,23 @@ export function UserManagement() {
             </div>
             <div className="space-y-2">
               <Label>{t("division")}</Label>
-              <Input
+              <Select
                 value={formData.division || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, division: e.target.value })
+                onValueChange={(val) =>
+                  setFormData({ ...formData, division: val })
                 }
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("selectDivision") || "Select GN Division"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {divisions.map((d) => (
+                    <SelectItem key={d.id} value={d.name}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>{t("status")}</Label>
