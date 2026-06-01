@@ -182,8 +182,8 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t("dashboard")}</h1>
-        <p className="text-gray-600 mt-1">{t("overviewVillageStats")}</p>
+        <h1 className="page-title">{t("dashboard")}</h1>
+        <p className="page-subtitle mt-1">{t("overviewVillageStats")}</p>
       </div>
 
       {error && (
@@ -229,15 +229,16 @@ export function Dashboard() {
               <CardHeader>
                 <CardTitle>{t("incomeDistribution")}</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="chart-wrap">
                 <ResponsiveContainer
                   key={`income-${dataRevision}`}
                   width="100%"
-                  height={260}
+                  height={220}
+                  className="min-h-[220px] sm:min-h-[260px]"
                 >
-                  <BarChart id="income-chart" data={incomeData}>
+                  <BarChart id="income-chart" data={incomeData} margin={{ left: -12, right: 4 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="range" />
+                    <XAxis dataKey="range" tick={{ fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={50} />
                     <YAxis />
                     <Tooltip />
                     <Legend />
@@ -256,11 +257,11 @@ export function Dashboard() {
               <CardHeader>
                 <CardTitle>{t("educationLevels")}</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="chart-wrap">
                 <ResponsiveContainer
                   key={`education-${dataRevision}`}
                   width="100%"
-                  height={260}
+                  height={240}
                 >
                   <PieChart id="education-chart">
                     <Pie
@@ -269,7 +270,7 @@ export function Dashboard() {
                       cy="50%"
                       labelLine={false}
                       label={(entry) => `${entry.name}: ${entry.value}`}
-                      outerRadius={80}
+                      outerRadius={70}
                       fill="#8884d8"
                       dataKey="value"
                       nameKey="name"
@@ -292,15 +293,15 @@ export function Dashboard() {
               <CardHeader>
                 <CardTitle>{t("employmentSectors")}</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="chart-wrap">
                 <ResponsiveContainer
                   key={`employment-${dataRevision}`}
                   width="100%"
-                  height={260}
+                  height={240}
                 >
-                  <BarChart id="employment-chart" data={employmentData}>
+                  <BarChart id="employment-chart" data={employmentData} margin={{ left: -12, right: 4 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="sector" />
+                    <XAxis dataKey="sector" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={60} />
                     <YAxis />
                     <Tooltip />
                     <Legend />

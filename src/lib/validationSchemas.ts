@@ -33,7 +33,10 @@ const looseYear = z.preprocess((val) => {
     return currentYear;
   }
   const n = Number(val);
-  return Number.isFinite(n) ? n : currentYear;
+  if (!Number.isFinite(n) || n < 1900) {
+    return currentYear;
+  }
+  return n;
 }, z.number().min(1900).max(currentYear + 1));
 
 const looseCount = z.preprocess((val) => {

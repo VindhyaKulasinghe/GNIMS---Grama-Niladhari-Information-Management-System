@@ -62,7 +62,7 @@ export function Login() {
   const isSubmitting = loading || authLoading
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] relative overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
         <div
@@ -74,14 +74,14 @@ export function Login() {
       </div>
 
       {/* Language selector */}
-      <div className="absolute top-6 right-6 z-10">
+      <div className="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 z-10">
         <Select
           value={i18n.language}
           onValueChange={(val) => i18n.changeLanguage(val)}
         >
-          <SelectTrigger className="w-[160px] bg-slate-800/80 border-slate-700 text-white backdrop-blur-sm">
-            <Globe className="h-5 w-5 mr-2" />
-            <SelectValue />
+          <SelectTrigger className="w-10 sm:w-[160px] bg-slate-800/80 border-slate-700 text-white backdrop-blur-sm justify-center sm:justify-between">
+            <Globe className="h-5 w-5 sm:mr-2 shrink-0" />
+            <span className="hidden sm:inline"><SelectValue /></span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="en">English</SelectItem>

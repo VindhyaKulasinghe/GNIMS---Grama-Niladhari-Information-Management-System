@@ -2,24 +2,67 @@ import { supabase } from '../supabaseClient'
 import { FamilyMember, FamilyMemberSchema } from '../validationSchemas'
 
 const OPTIONAL_DATE_FIELDS = ['retiredDate'] as const
+const STUDENT_PENSION_FIELDS = [
+  'pensionNumber',
+  'pensionSalary',
+  'retiredDate',
+  'pensionDetails',
+] as const
 
-/** Postgres DATE columns reject ""; normalize before insert/update. */
-function sanitizeFamilyMemberForDb<T extends Record<string, unknown>>(row: T): T {
+/** Normalize raw form/API payloads before Zod parse. */
+function normalizeFamilyMemberInput(
+  member: Record<string, unknown>,
+): Record<string, unknown> {
+  const next = { ...member }
+
+  for (const field of OPTIONAL_DATE_FIELDS) {
+    if (next[field] === '' || next[field] === undefined) {
+      delete next[field]
+    }
+  }
+
+  const birthYear = Number(next.birthYear)
+  if (!Number.isFinite(birthYear) || birthYear < 1900) {
+    delete next.birthYear
+  }
+
+  if (next.memberType === 'student') {
+    next.isRetired = false
+    for (const field of STUDENT_PENSION_FIELDS) {
+      delete next[field]
+    }
+  }
+
+  return next
+}
+
+/** Build the row sent to Supabase — never send "" to DATE columns. */
+function prepareFamilyMemberRow(
+  row: Record<string, unknown>,
+  mode: 'insert' | 'update',
+): Record<string, unknown> {
   const next = { ...row }
 
   for (const field of OPTIONAL_DATE_FIELDS) {
-    if (field in next && (next[field] === '' || next[field] === undefined)) {
+    if (next[field] === '') {
       next[field] = null
+    }
+    if (mode === 'insert' && (next[field] === null || next[field] === undefined)) {
+      delete next[field]
     }
   }
 
   if (next.memberType === 'student') {
     next.isRetired = false
-    next.retiredDate = null
-    for (const field of ['pensionNumber', 'pensionSalary', 'pensionDetails'] as const) {
-      if (field in next && next[field] === '') {
-        next[field] = null
+    if (mode === 'insert') {
+      for (const field of STUDENT_PENSION_FIELDS) {
+        delete next[field]
       }
+    } else {
+      next.pensionNumber = null
+      next.pensionSalary = null
+      next.retiredDate = null
+      next.pensionDetails = null
     }
   }
 
@@ -75,14 +118,13 @@ export async function getBoarders(): Promise<FamilyMember[]> {
 
 // CREATE FAMILY MEMBER
 export async function createFamilyMember(member: Omit<FamilyMember, 'id' | 'createdAt' | 'updatedAt'>): Promise<FamilyMember> {
-  // Validate input
-  const validated = sanitizeFamilyMemberForDb(
-    FamilyMemberSchema.parse(member) as Record<string, unknown>,
-  )
+  const normalized = normalizeFamilyMemberInput(member as Record<string, unknown>)
+  const validated = FamilyMemberSchema.parse(normalized)
+  const row = prepareFamilyMemberRow(validated as Record<string, unknown>, 'insert')
 
   const { data, error } = await supabase
     .from('family_members')
-    .insert([validated])
+    .insert([row])
     .select()
     .single()
 
@@ -92,14 +134,13 @@ export async function createFamilyMember(member: Omit<FamilyMember, 'id' | 'crea
 
 // UPDATE FAMILY MEMBER
 export async function updateFamilyMember(id: number, member: Partial<FamilyMember>): Promise<FamilyMember> {
-  // Validate input
-  const validated = sanitizeFamilyMemberForDb(
-    FamilyMemberSchema.partial().parse(member) as Record<string, unknown>,
-  )
+  const normalized = normalizeFamilyMemberInput(member as Record<string, unknown>)
+  const validated = FamilyMemberSchema.partial().parse(normalized)
+  const row = prepareFamilyMemberRow(validated as Record<string, unknown>, 'update')
 
   const { data, error } = await supabase
     .from('family_members')
-    .update(validated)
+    .update(row)
     .eq('id', id)
     .select()
     .single()

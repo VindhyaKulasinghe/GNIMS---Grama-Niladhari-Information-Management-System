@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { ZodError } from "zod";
 import {
   useHouseholdData,
   FamilyMember,
@@ -205,7 +206,16 @@ export function FamilyMembers() {
   // ---- Edit member ----
   const handleEditMember = (member: FamilyMember) => {
     setEditingMember(member);
-    setFormData(member);
+    if (member.memberType === "student") {
+      const { pensionNumber, pensionSalary, retiredDate, pensionDetails, ...studentFields } =
+        member;
+      setFormData({
+        ...studentFields,
+        isRetired: false,
+      });
+    } else {
+      setFormData(member);
+    }
     setActiveTab(member.memberType === "student" ? "student" : "personal");
     setDialogOpen(true);
   };
@@ -233,6 +243,23 @@ export function FamilyMembers() {
   };
 
   // ---- Save member ----
+  const buildMemberPayload = () => {
+    const { __errors, ...cleanForm } = formData as any;
+    const age = formData.birthYear ? calculateAge(formData.birthYear) : 0;
+    const payload = { ...(cleanForm as FamilyMember), age };
+
+    if (payload.memberType === "student") {
+      payload.isRetired = false;
+      delete (payload as any).pensionNumber;
+      delete (payload as any).pensionSalary;
+      delete (payload as any).retiredDate;
+      delete (payload as any).pensionDetails;
+    }
+
+    const { id, createdAt, updatedAt, ...rest } = payload as any;
+    return rest;
+  };
+
   const handleSave = async () => {
     setSavingMember(true);
     try {
@@ -245,25 +272,14 @@ export function FamilyMembers() {
         return;
       }
 
-      const age = formData.birthYear ? calculateAge(formData.birthYear) : 0;
-
-      const { __errors, ...cleanForm } = formData as any;
-      const payload = { ...(cleanForm as FamilyMember), age };
-
-      if (payload.memberType === "student") {
-        payload.isRetired = false;
-        payload.pensionNumber = null;
-        payload.pensionSalary = null;
-        payload.retiredDate = null;
-        payload.pensionDetails = null;
-      }
+      const rest = buildMemberPayload();
 
       if (editingMember) {
-        if (payload.isHeadOfHousehold) {
+        if (rest.isHeadOfHousehold) {
           const others = familyMembers.filter(
             (m) =>
-              m.houseNumber === payload.houseNumber &&
-              m.division === payload.division &&
+              m.houseNumber === rest.houseNumber &&
+              m.division === rest.division &&
               m.id !== editingMember.id,
           );
           await Promise.all(
@@ -273,15 +289,14 @@ export function FamilyMembers() {
           );
         }
 
-        const { id, createdAt, updatedAt, ...rest } = payload as any;
         await updateFamilyMember(editingMember.id, rest);
         toast.success(t("memberUpdated"));
       } else {
-        if (payload.isHeadOfHousehold) {
+        if (rest.isHeadOfHousehold) {
           const others = familyMembers.filter(
             (m) =>
-              m.houseNumber === payload.houseNumber &&
-              m.division === payload.division,
+              m.houseNumber === rest.houseNumber &&
+              m.division === rest.division,
           );
           await Promise.all(
             others.map((m) =>
@@ -290,14 +305,17 @@ export function FamilyMembers() {
           );
         }
 
-        const { id, createdAt, updatedAt, ...rest } = payload as any;
         await addFamilyMember(rest);
         toast.success(t("memberAdded"));
       }
       setDialogOpen(false);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : t("error") || "Failed to save member";
+        err instanceof ZodError
+          ? err.issues.map((issue) => issue.message).join(", ")
+          : err instanceof Error
+            ? err.message
+            : t("error") || "Failed to save member";
       toast.error(message);
     } finally {
       setSavingMember(false);
@@ -405,10 +423,8 @@ export function FamilyMembers() {
             </Button>
           )}
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-              {t("familyMembers")}
-            </h1>
-            <p className="text-slate-600 mt-1">
+            <h1 className="page-title">{t("familyMembers")}</h1>
+            <p className="page-subtitle mt-1">
               {view === "search"
                 ? t("manageFamilyMembersAcrossHouseholds")
                 : `${t("house")} ${selectedHouse?.houseNumber} — ${selectedHouse?.address}`}
@@ -429,7 +445,7 @@ export function FamilyMembers() {
       {/* SEARCH VIEW */}
       {view === "search" && (
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 sm:max-w-md">
             <TabsTrigger value="overview" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               {t("overview")}
@@ -887,22 +903,20 @@ export function FamilyMembers() {
       {view === "house" && selectedHouse && (
         <>
           {/* House Info Banner */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-wrap gap-4 items-start">
-            <div className="flex items-center gap-3 flex-1 min-w-[200px]">
-              <div className="h-12 w-12 bg-blue-600 rounded-xl flex items-center justify-center">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="h-12 w-12 shrink-0 bg-blue-600 rounded-xl flex items-center justify-center">
                 <Home className="h-6 w-6 text-white" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="font-bold text-blue-900 text-lg">
                   {t("houseNo")}: {selectedHouse.houseNumber}
                 </p>
-                <p className="text-blue-700 text-sm">{selectedHouse.address}</p>
-                <p className="text-blue-600 text-xs">
-                  {selectedHouse.telephone}
-                </p>
+                <p className="text-blue-700 text-sm break-words">{selectedHouse.address}</p>
+                <p className="text-blue-600 text-xs">{selectedHouse.telephone}</p>
               </div>
             </div>
-            <div className="flex gap-4 text-center">
+            <div className="mobile-stat-grid w-full sm:w-auto">
               <div>
                 <p className="text-2xl font-bold text-blue-800">
                   {houseMembers.length}
@@ -1100,8 +1114,9 @@ export function FamilyMembers() {
           </DialogHeader>
 
           {/* Member Type Selector */}
-          <div className="bg-gray-50 rounded-lg p-4 flex flex-wrap gap-3 items-center">
-            <Label className="text-sm font-medium">{t("memberType")}:</Label>
+          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <Label className="text-sm font-medium block">{t("memberType")}</Label>
+            <div className="mobile-chip-row">
             {(["regular", "student", "boarder"] as MemberType[]).map((type) => {
               const cfg = MEMBER_TYPE_CONFIG[type];
               return (
@@ -1126,7 +1141,7 @@ export function FamilyMembers() {
                     });
                     setActiveTab(isStudent ? "student" : "personal");
                   }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-sm transition-all ${
+                  className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full border-2 text-sm transition-all min-h-11 flex-1 min-w-[calc(50%-0.25rem)] sm:min-w-0 sm:flex-initial ${
                     formData.memberType === type
                       ? "border-blue-500 bg-blue-50 text-blue-700 font-medium"
                       : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
@@ -1137,9 +1152,10 @@ export function FamilyMembers() {
                 </button>
               );
             })}
+            </div>
 
-            <div className="ml-auto flex items-center gap-2">
-              <Label className="text-sm">{t("headOfHousehold")}:</Label>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end pt-1 border-t border-gray-200">
+              <Label className="text-sm">{t("headOfHousehold")}</Label>
               <button
                 type="button"
                 onClick={() =>
@@ -1148,7 +1164,7 @@ export function FamilyMembers() {
                     isHeadOfHousehold: !formData.isHeadOfHousehold,
                   })
                 }
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-sm transition-all ${
+                className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border-2 text-sm transition-all min-h-11 w-full sm:w-auto ${
                   formData.isHeadOfHousehold
                     ? "border-amber-400 bg-amber-50 text-amber-700 font-medium"
                     : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
@@ -1247,12 +1263,13 @@ export function FamilyMembers() {
                     min="1900"
                     max="2026"
                     value={formData.birthYear || ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const raw = e.target.value;
                       setFormData({
                         ...formData,
-                        birthYear: parseInt(e.target.value) || 0,
-                      })
-                    }
+                        birthYear: raw ? parseInt(raw, 10) : undefined,
+                      });
+                    }}
                     className={
                       (formData as any).__errors?.birthYear
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
@@ -1632,7 +1649,7 @@ export function FamilyMembers() {
             )}
           </Tabs>
 
-          <DialogFooter className="sticky bottom-0 z-10 -mx-4 border-t bg-background px-4 pt-4 sm:-mx-6 sm:px-6">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"

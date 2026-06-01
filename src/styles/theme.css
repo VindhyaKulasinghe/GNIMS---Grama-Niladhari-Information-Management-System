@@ -126,6 +126,11 @@
 
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+  }
+
+  html {
+    overflow-x: hidden;
   }
 
   /**
@@ -185,6 +190,11 @@
     @apply flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between;
   }
 
+  .page-toolbar > button,
+  .page-toolbar > .btn-toolbar-action {
+    @apply w-full sm:w-auto;
+  }
+
   .toolbar-row {
     @apply flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between;
   }
@@ -194,7 +204,7 @@
   }
 
   .page-subtitle {
-    @apply text-base text-slate-600 sm:text-sm;
+    @apply text-base text-slate-600 sm:text-sm line-clamp-2 sm:line-clamp-none;
   }
 
   .stat-card-label {
@@ -211,6 +221,18 @@
 
   .mobile-scroll-tabs {
     @apply w-full max-w-full overflow-x-auto;
+  }
+
+  .mobile-stat-grid {
+    @apply grid grid-cols-2 gap-3 sm:flex sm:gap-4 sm:text-center;
+  }
+
+  .mobile-chip-row {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .chart-wrap {
+    @apply w-full min-w-0 overflow-hidden;
   }
 }
 
@@ -238,6 +260,14 @@
   main .text-\[10px\] {
     font-size: 0.75rem;
     line-height: 1rem;
+  }
+
+  [data-slot="table-container"] {
+    -webkit-overflow-scrolling: touch;
+    margin-left: -0.25rem;
+    margin-right: -0.25rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
   }
 
   [data-slot="table"] {
@@ -293,20 +323,53 @@
     text-align: center;
   }
 
+  [data-slot="dialog-overlay"] {
+    z-index: 100;
+  }
+
   [data-slot="dialog-content"] {
-    width: calc(100% - 0.75rem);
-    max-width: calc(100% - 0.75rem);
-    max-height: min(92vh, 900px);
+    z-index: 101;
+    inset-inline: 0;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 92dvh;
+    transform: none;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
     padding: 1rem;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 
   [data-slot="dialog-title"] {
     font-size: 1.25rem;
     padding-right: 2rem;
+    text-align: left;
   }
 
   [data-slot="dialog-description"] {
     font-size: 1rem;
+    text-align: left;
+  }
+
+  [data-slot="dialog-header"] {
+    text-align: left;
+  }
+
+  [data-slot="dialog-footer"] {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    margin-top: 0.5rem;
+    margin-inline: -1rem;
+    padding: 1rem;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    background: var(--background);
   }
 
   [data-slot="select-trigger"][data-size="default"] {
@@ -333,5 +396,18 @@
   [data-slot="button"]:not([class*="size-icon"]) {
     min-height: 2.75rem;
     font-size: 1rem;
+  }
+
+  .recharts-wrapper,
+  .recharts-surface {
+    max-width: 100%;
+  }
+
+  .recharts-legend-wrapper {
+    max-width: 100% !important;
+  }
+
+  .recharts-legend-item-text {
+    font-size: 0.875rem !important;
   }
 }
