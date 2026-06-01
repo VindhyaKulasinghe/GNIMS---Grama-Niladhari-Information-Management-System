@@ -90,9 +90,9 @@ export function Layout() {
 
   return (
     <div className="min-h-screen bg-slate-50 overflow-x-hidden">
-      {/* Header */}
-      <header className="bg-slate-900/95 backdrop-blur-md text-white shadow-sm fixed top-0 left-0 right-0 z-50 border-b border-slate-800">
-        <div className="flex items-center justify-between gap-2 px-3 sm:px-6 h-16 sm:h-16 min-w-0">
+      {/* Header — full width on mobile; beside sidebar on lg+ */}
+      <header className="bg-slate-900/95 backdrop-blur-md text-white shadow-sm fixed top-0 left-0 right-0 z-50 border-b border-slate-800 lg:left-64 lg:w-[calc(100%-16rem)]">
+        <div className="flex items-center justify-between gap-2 px-3 sm:px-6 min-h-16 py-2 min-w-0">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             <Button
               variant="ghost"
@@ -148,13 +148,18 @@ export function Layout() {
         </div>
       </header>
 
-      <div className="flex pt-16">
-        {/* Sidebar - Fixed */}
+      <div className="flex pt-[4.75rem] sm:pt-16 lg:pt-16">
+        {/* Sidebar — drawer on mobile; fixed column on desktop */}
         <aside className={`
-          fixed top-16 bottom-0 left-0 z-40 w-[min(88vw,280px)] bg-slate-900 shadow-xl transform transition-transform duration-300 ease-in-out border-r border-slate-800
+          fixed top-16 bottom-0 left-0 z-40 flex w-[min(88vw,16rem)] flex-col bg-slate-900 shadow-xl transform transition-transform duration-300 ease-in-out border-r border-slate-800
+          lg:top-0 lg:z-30 lg:w-64 lg:shadow-none
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
-          <nav className="h-full overflow-y-auto py-6 p-3 sm:p-4 space-y-1.5">
+          <div className="hidden lg:block px-4 py-4 border-b border-slate-800">
+            <p className="font-bold text-white text-sm leading-tight truncate">{t("appName")}</p>
+            <p className="text-[10px] uppercase tracking-wider text-slate-400 mt-1 truncate">{displayDivision}</p>
+          </div>
+          <nav className="h-full overflow-y-auto py-4 p-3 sm:p-4 space-y-1.5 lg:flex-1">
             {(user?.role === "Admin" ? adminNavigation : userNavigation).map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -186,8 +191,8 @@ export function Layout() {
           />
         )}
 
-        {/* Main Content */}
-        <main className="flex-1 lg:ml-64 p-3 sm:p-6 lg:p-10 min-h-[calc(100vh-4rem)] min-w-0 w-full max-w-full">
+        {/* Main Content — offset matches sidebar (w-64) and header height */}
+        <main className="relative z-0 flex-1 w-full min-w-0 max-w-full p-3 sm:p-6 lg:ml-64 lg:p-10 min-h-[calc(100vh-4rem)] lg:min-h-[calc(100vh-4rem)]">
           <Outlet />
         </main>
       </div>
