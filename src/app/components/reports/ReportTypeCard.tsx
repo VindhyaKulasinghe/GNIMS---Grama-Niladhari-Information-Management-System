@@ -32,8 +32,8 @@ export function ReportTypeCard({
             <Icon className="h-6 w-6 text-white" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-lg">{title}</h3>
-            <p className="text-sm text-gray-600 mt-1">{description}</p>
+            <h3 className="font-semibold text-xl sm:text-lg">{title}</h3>
+            <p className="text-base text-gray-600 mt-1 sm:text-sm">{description}</p>
           </div>
         </div>
       </CardHeader>
@@ -43,7 +43,6 @@ export function ReportTypeCard({
             onClick={() => onView(type)}
             variant="outline"
             className="flex-1"
-            size="sm"
           >
             <Eye className="h-4 w-4 mr-2" />
             {t("view")}
@@ -51,7 +50,6 @@ export function ReportTypeCard({
           <Button
             onClick={() => onGenerate(type)}
             className="flex-1 bg-blue-600 hover:bg-blue-700"
-            size="sm"
           >
             <Download className="h-4 w-4 mr-2" />
             {t("generate")}

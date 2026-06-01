@@ -92,25 +92,25 @@ export function Layout() {
     <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       {/* Header */}
       <header className="bg-slate-900/95 backdrop-blur-md text-white shadow-sm fixed top-0 left-0 right-0 z-50 border-b border-slate-800">
-        <div className="flex items-center justify-between gap-2 px-3 sm:px-6 h-14 sm:h-16 min-w-0">
+        <div className="flex items-center justify-between gap-2 px-3 sm:px-6 h-16 sm:h-16 min-w-0">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden text-white hover:bg-slate-800"
+              className="lg:hidden text-white hover:bg-slate-800 shrink-0"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
               {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
-            <div>
-              <h1 className="font-extrabold text-base sm:text-xl lg:text-2xl tracking-tight text-white truncate">{t("appName")}</h1>
-              <p className="text-[10px] uppercase tracking-[0.1em] font-semibold text-slate-400 hidden sm:block leading-none mt-0.5">{t("southernProvinceHambantota")}</p>
+            <div className="min-w-0">
+              <h1 className="font-extrabold text-lg sm:text-xl lg:text-2xl tracking-tight text-white truncate leading-tight">{t("appName")}</h1>
+              <p className="text-xs sm:text-[10px] uppercase tracking-[0.1em] font-semibold text-slate-400 leading-none mt-0.5 truncate">{displayDivision}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
             <Select value={i18n.language} onValueChange={(val) => i18n.changeLanguage(val)}>
-              <SelectTrigger className="w-[7.5rem] sm:w-[140px] bg-slate-800 border-slate-700 text-white hover:bg-slate-700 h-9 px-2 sm:px-3">
+              <SelectTrigger className="w-[6.5rem] sm:w-[140px] bg-slate-800 border-slate-700 text-white hover:bg-slate-700 h-10 px-2 sm:px-3 text-base sm:text-sm">
                 <Globe className="h-4 w-4 sm:mr-2 shrink-0" />
                 <SelectValue />
               </SelectTrigger>
@@ -121,15 +121,15 @@ export function Layout() {
               </SelectContent>
             </Select>
 
-            <div className="hidden sm:flex items-center gap-2 min-w-0 max-w-[12rem] md:max-w-xs">
-              <div className="h-8 w-8 shrink-0 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600">
-                <span className="text-xs font-semibold">{avatarInitials}</span>
+            <div className="flex items-center gap-2 min-w-0 max-w-[5rem] sm:max-w-[12rem] md:max-w-xs">
+              <div className="h-9 w-9 sm:h-8 sm:w-8 shrink-0 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600">
+                <span className="text-sm sm:text-xs font-semibold">{avatarInitials}</span>
               </div>
-              <div className="min-w-0 hidden md:block">
+              <div className="min-w-0 hidden sm:block">
                 <p className="text-sm font-medium truncate" title={displayName}>
                   {displayName}
                 </p>
-                <p className="text-xs text-slate-300 truncate" title={displayDivision}>
+                <p className="text-xs text-slate-300 truncate hidden md:block" title={displayDivision}>
                   {displayDivision}
                 </p>
               </div>
@@ -138,23 +138,23 @@ export function Layout() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-white hover:bg-slate-800 gap-2"
+              className="text-white hover:bg-slate-800 gap-2 px-2 sm:px-3"
               onClick={handleLogout}
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-5 w-5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">{t("logout")}</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="flex pt-14 sm:pt-16">
+      <div className="flex pt-16">
         {/* Sidebar - Fixed */}
         <aside className={`
-          fixed top-14 sm:top-16 bottom-0 left-0 z-40 w-64 bg-slate-900 shadow-xl transform transition-transform duration-300 ease-in-out border-r border-slate-800
+          fixed top-16 bottom-0 left-0 z-40 w-[min(88vw,280px)] bg-slate-900 shadow-xl transform transition-transform duration-300 ease-in-out border-r border-slate-800
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
-          <nav className="h-full overflow-y-auto py-10 p-4 space-y-2">
+          <nav className="h-full overflow-y-auto py-6 p-3 sm:p-4 space-y-1.5">
             {(user?.role === "Admin" ? adminNavigation : userNavigation).map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -163,15 +163,15 @@ export function Layout() {
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
                   className={`
-                    flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+                    flex items-center gap-3 px-4 py-3.5 rounded-lg transition-colors text-base sm:text-sm
                     ${isActive
                       ? 'bg-slate-800 text-white font-medium shadow-sm'
                       : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
                     }
                   `}
                 >
-                  <item.icon className="h-5 w-5" />
-                  <span className="text-sm">{t(item.name)}</span>
+                  <item.icon className="h-5 w-5 shrink-0" />
+                  <span>{t(item.name)}</span>
                 </Link>
               );
             })}
@@ -187,7 +187,7 @@ export function Layout() {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-10 min-h-[calc(100vh-3.5rem)] sm:min-h-[calc(100vh-4rem)] min-w-0 w-full max-w-full">
+        <main className="flex-1 lg:ml-64 p-3 sm:p-6 lg:p-10 min-h-[calc(100vh-4rem)] min-w-0 w-full max-w-full">
           <Outlet />
         </main>
       </div>

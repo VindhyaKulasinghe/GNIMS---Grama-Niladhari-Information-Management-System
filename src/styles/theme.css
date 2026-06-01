@@ -188,4 +188,150 @@
   .toolbar-row {
     @apply flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between;
   }
+
+  .page-title {
+    @apply text-xl font-bold text-slate-900 sm:text-2xl lg:text-3xl;
+  }
+
+  .page-subtitle {
+    @apply text-base text-slate-600 sm:text-sm;
+  }
+
+  .stat-card-label {
+    @apply text-sm font-semibold uppercase tracking-wider sm:text-xs;
+  }
+
+  .stat-card-value {
+    @apply text-3xl font-bold sm:text-3xl;
+  }
+
+  .stat-card-meta {
+    @apply text-sm text-slate-500 sm:text-xs;
+  }
+
+  .mobile-scroll-tabs {
+    @apply w-full max-w-full overflow-x-auto;
+  }
+}
+
+/* Mobile readability — larger base size and boosted utility text */
+@media (max-width: 639px) {
+  :root {
+    --font-size: 16px;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  main .text-xs {
+    font-size: 0.875rem;
+    line-height: 1.375rem;
+  }
+
+  main .text-sm {
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+  }
+
+  main .text-\[10px\] {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  [data-slot="table"] {
+    font-size: 1rem;
+  }
+
+  [data-slot="table-head"] {
+    height: auto;
+    min-height: 2.75rem;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.9375rem;
+    white-space: normal;
+  }
+
+  [data-slot="table-cell"] {
+    padding: 0.75rem;
+    font-size: 1rem;
+    white-space: normal;
+  }
+
+  [data-slot="card-header"],
+  [data-slot="card-content"],
+  [data-slot="card-footer"] {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  [data-slot="card-header"] {
+    padding-top: 1rem;
+  }
+
+  [data-slot="card-content"]:last-child,
+  [data-slot="card-footer"] {
+    padding-bottom: 1rem;
+  }
+
+  [data-slot="tabs-list"] {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 2.75rem;
+    flex-wrap: wrap;
+    justify-content: stretch;
+    gap: 0.25rem;
+  }
+
+  [data-slot="tabs-trigger"] {
+    min-height: 2.75rem;
+    flex: 1 1 auto;
+    font-size: 0.9375rem;
+    padding: 0.5rem 0.75rem;
+    white-space: normal;
+    text-align: center;
+  }
+
+  [data-slot="dialog-content"] {
+    width: calc(100% - 0.75rem);
+    max-width: calc(100% - 0.75rem);
+    max-height: min(92vh, 900px);
+    padding: 1rem;
+  }
+
+  [data-slot="dialog-title"] {
+    font-size: 1.25rem;
+    padding-right: 2rem;
+  }
+
+  [data-slot="dialog-description"] {
+    font-size: 1rem;
+  }
+
+  [data-slot="select-trigger"][data-size="default"] {
+    min-height: 2.75rem;
+    font-size: 1rem;
+  }
+
+  [data-slot="select-item"] {
+    font-size: 1rem;
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+
+  [data-slot="label"] {
+    font-size: 1rem;
+  }
+
+  [data-slot="input"],
+  [data-slot="textarea"] {
+    font-size: 1rem;
+    min-height: 2.75rem;
+  }
+
+  [data-slot="button"]:not([class*="size-icon"]) {
+    min-height: 2.75rem;
+    font-size: 1rem;
+  }
 }
