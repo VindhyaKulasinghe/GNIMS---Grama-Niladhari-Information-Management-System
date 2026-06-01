@@ -177,6 +177,8 @@ export function Dashboard() {
     }));
   }, [familyMembers, t]);
 
+  const dataRevision = `${households.length}-${familyMembers.length}-${vehicles.length}`;
+
   return (
     <div className="space-y-6">
       <div>
@@ -193,9 +195,9 @@ export function Dashboard() {
       <>
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {stats.map((stat, idx) => (
+            {stats.map((stat) => (
               <Card
-                key={`stat-${idx}`}
+                key={stat.title}
                 className="hover:shadow-lg transition-shadow"
               >
                 <CardContent className="p-4">
@@ -228,7 +230,11 @@ export function Dashboard() {
                 <CardTitle>{t("incomeDistribution")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={260}>
+                <ResponsiveContainer
+                  key={`income-${dataRevision}`}
+                  width="100%"
+                  height={260}
+                >
                   <BarChart id="income-chart" data={incomeData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="range" />
@@ -251,7 +257,11 @@ export function Dashboard() {
                 <CardTitle>{t("educationLevels")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={260}>
+                <ResponsiveContainer
+                  key={`education-${dataRevision}`}
+                  width="100%"
+                  height={260}
+                >
                   <PieChart id="education-chart">
                     <Pie
                       data={educationData}
@@ -265,7 +275,10 @@ export function Dashboard() {
                       nameKey="name"
                     >
                       {educationData.map((entry, index) => (
-                        <Cell key={`edu-cell-${index}`} fill={entry.color} />
+                        <Cell
+                          key={`edu-cell-${dataRevision}-${entry.name}-${index}`}
+                          fill={entry.color}
+                        />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -280,7 +293,11 @@ export function Dashboard() {
                 <CardTitle>{t("employmentSectors")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={260}>
+                <ResponsiveContainer
+                  key={`employment-${dataRevision}`}
+                  width="100%"
+                  height={260}
+                >
                   <BarChart id="employment-chart" data={employmentData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="sector" />

@@ -5,6 +5,9 @@ import {
   Briefcase,
   BarChart3,
   List,
+  Trash2,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import {
   PieChart,
@@ -25,11 +28,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "../components/ui/dialog";
 import { Button } from "../components/ui/button";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHouseholdData } from "../context/HouseholdDataContext";
+import { toast } from "sonner";
+import { useHouseholdData, FamilyMember } from "../context/HouseholdDataContext";
 import { findHouseholdByRef } from "../../lib/divisionScope";
 import {
   Card,
@@ -63,12 +68,17 @@ const PURPOSE_COLORS: Record<string, string> = {
 
 export function Boarders() {
   const { t } = useTranslation();
-  const { getBoarders, households } = useHouseholdData();
+  const { getBoarders, households, deleteFamilyMember } = useHouseholdData();
   const [searchQuery, setSearchQuery] = useState("");
 
   // View dialog state
   const [viewDialog, setViewDialog] = useState(false);
-  const [viewingBoarder, setViewingBoarder] = useState<any>(null);
+  const [viewingBoarder, setViewingBoarder] = useState<FamilyMember | null>(
+    null,
+  );
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [boarderToDelete, setBoarderToDelete] = useState<number | null>(null);
+  const [deletingBoarder, setDeletingBoarder] = useState(false);
 
   const boarders = getBoarders();
 
@@ -132,6 +142,31 @@ export function Boarders() {
     "#ef4444",
     "#06b6d4",
   ];
+
+  const handleDeleteClick = (id: number, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setBoarderToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (boarderToDelete === null) return;
+    setDeletingBoarder(true);
+    try {
+      await deleteFamilyMember(boarderToDelete);
+      toast.success(t("boarderDeleted"));
+      setDeleteDialogOpen(false);
+      setBoarderToDelete(null);
+      if (viewingBoarder?.id === boarderToDelete) {
+        setViewDialog(false);
+        setViewingBoarder(null);
+      }
+    } catch {
+      toast.error(t("error") || "Failed to delete boarder");
+    } finally {
+      setDeletingBoarder(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -417,6 +452,7 @@ export function Boarders() {
                       <TableHead>{t("purpose")}</TableHead>
                       <TableHead>{t("countryOrigin")}</TableHead>
                       <TableHead>{t("employment")}</TableHead>
+                      <TableHead className="text-right">{t("actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -424,7 +460,10 @@ export function Boarders() {
                       <TableRow
                         key={boarder.id}
                         className="cursor-pointer hover:bg-amber-50"
-                        onClick={() => {
+                        onClick={(e) => {
+                          if ((e.target as HTMLElement).closest("button")) {
+                            return;
+                          }
                           setViewingBoarder(boarder);
                           setViewDialog(true);
                         }}
@@ -486,12 +525,24 @@ export function Boarders() {
                             "-"
                           )}
                         </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title={t("deleteRecord")}
+                            onClick={(e) =>
+                              boarder.id != null && handleDeleteClick(boarder.id, e)
+                            }
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                     {filteredBoarders.length === 0 && (
                       <TableRow>
                         <TableCell
-                          colSpan={9}
+                          colSpan={10}
                           className="text-center text-gray-400 py-8"
                         >
                           {boarders.length === 0
@@ -665,8 +716,44 @@ export function Boarders() {
               )}
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:justify-between">
+            {viewingBoarder?.id != null && (
+              <Button
+                variant="destructive"
+                className="mr-auto bg-red-600 hover:bg-red-700"
+                onClick={() => handleDeleteClick(viewingBoarder.id!)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {t("deleteRecord")}
+              </Button>
+            )}
             <Button onClick={() => setViewDialog(false)}>{t("close")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              {t("confirmDelete")}
+            </DialogTitle>
+            <DialogDescription>{t("confirmDeleteBoarder")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDelete}
+              disabled={deletingBoarder}
+            >
+              {deletingBoarder && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {t("delete")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

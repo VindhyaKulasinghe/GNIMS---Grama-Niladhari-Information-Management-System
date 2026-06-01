@@ -100,8 +100,72 @@ export async function updateHousehold(
   return data;
 }
 
-// DELETE HOUSEHOLD
+// DELETE HOUSEHOLD and all records linked to that house (members, animals, etc.)
+async function deleteRecordsForHouse(
+  houseNumber: string,
+  division: string,
+): Promise<void> {
+  const scopedTables = [
+    "household_benefits",
+    "household_animals",
+    "family_members",
+    "vehicles",
+    "properties",
+  ] as const;
+
+  for (const table of scopedTables) {
+    const { error } = await supabase
+      .from(table)
+      .delete()
+      .eq("houseNumber", houseNumber)
+      .eq("division", division);
+
+    if (error) {
+      throw new Error(
+        `Failed to delete ${table} for house ${houseNumber}: ${error.message}`,
+      );
+    }
+  }
+
+  const { error: certError } = await supabase
+    .from("certificate_issuances")
+    .delete()
+    .eq("houseNumber", houseNumber)
+    .eq("division", division);
+
+  if (
+    certError &&
+    !certError.message?.includes("Could not find the table") &&
+    certError.code !== "PGRST205"
+  ) {
+    throw new Error(
+      `Failed to delete certificates for house ${houseNumber}: ${certError.message}`,
+    );
+  }
+}
+
 export async function deleteHousehold(id: number): Promise<void> {
+  const { data: household, error: fetchError } = await supabase
+    .from("households")
+    .select("houseNumber, division")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (fetchError) {
+    throw new Error(`Failed to load household for delete: ${fetchError.message}`);
+  }
+
+  if (!household) {
+    throw new Error("Household not found");
+  }
+
+  const division = String(household.division ?? "").trim();
+  if (!division) {
+    throw new Error("Household division is missing; cannot delete related records safely.");
+  }
+
+  await deleteRecordsForHouse(household.houseNumber, division);
+
   const { error } = await supabase.from("households").delete().eq("id", id);
 
   if (error) throw new Error(`Failed to delete household: ${error.message}`);

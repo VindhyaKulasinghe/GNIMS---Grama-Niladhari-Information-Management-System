@@ -446,8 +446,34 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const deleteHousehold = async (id: number) => {
     try {
+      const household = households.find((h) => h.id === id);
+      if (!household) {
+        throw new Error("Household not found");
+      }
+
+      const division = household.division?.trim() || "";
       await householdService.deleteHousehold(id);
-      setHouseholds(households.filter((h) => h.id !== id));
+
+      const matchesDeletedHouse = (record: {
+        houseNumber: string;
+        division?: string;
+      }) =>
+        record.houseNumber === household.houseNumber &&
+        (!division || record.division === division);
+
+      setHouseholds((prev) => prev.filter((h) => h.id !== id));
+      setFamilyMembers((prev) => prev.filter((m) => !matchesDeletedHouse(m)));
+      setHouseholdAnimals((prev) =>
+        prev.filter((ha) => !matchesDeletedHouse(ha)),
+      );
+      setVehicles((prev) => prev.filter((v) => !matchesDeletedHouse(v)));
+      setProperties((prev) => prev.filter((p) => !matchesDeletedHouse(p)));
+      setHouseholdBenefits((prev) =>
+        prev.filter((b) => !matchesDeletedHouse(b)),
+      );
+      setCertificateIssuances((prev) =>
+        prev.filter((c) => !matchesDeletedHouse(c)),
+      );
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete household";
@@ -505,7 +531,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const deleteFamilyMember = async (id: number) => {
     try {
       await familyMemberService.deleteFamilyMember(id);
-      setFamilyMembers(familyMembers.filter((m) => m.id !== id));
+      setFamilyMembers((prev) => prev.filter((m) => m.id !== id));
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete family member";
