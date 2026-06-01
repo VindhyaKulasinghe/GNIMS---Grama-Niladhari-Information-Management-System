@@ -77,6 +77,13 @@ const looseIssueDate = z.preprocess((val) => {
   return text || new Date().toISOString().slice(0, 10);
 }, z.string());
 
+/** Empty strings → null for optional Postgres DATE columns */
+const looseOptionalDate = z.preprocess((val) => {
+  if (val === null || val === undefined) return null;
+  const text = String(val).trim();
+  return text === "" ? null : text;
+}, z.string().nullable().optional());
+
 // Household Schema — all fields optional for partial GN records
 export const HouseholdSchema = z.object({
   id: z.number().optional(),
@@ -122,7 +129,7 @@ export const FamilyMemberSchema = z.object({
   isRetired: z.boolean().default(false),
   pensionNumber: z.string().nullish(),
   pensionSalary: z.string().nullish(),
-  retiredDate: z.string().nullish(),
+  retiredDate: looseOptionalDate,
   pensionDetails: z.string().nullish(),
   grade: z.string().nullish(),
   institutionName: z.string().nullish(),

@@ -499,7 +499,7 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
       const newMember = await familyMemberService.createFamilyMember(
         memberWithDivision as any,
       );
-      setFamilyMembers([...familyMembers, newMember as FamilyMember]);
+      setFamilyMembers((prev) => [...prev, newMember as FamilyMember]);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to add family member";

@@ -252,10 +252,10 @@ export function FamilyMembers() {
 
       if (payload.memberType === "student") {
         payload.isRetired = false;
-        payload.pensionNumber = "";
-        payload.pensionSalary = "";
-        payload.retiredDate = "";
-        payload.pensionDetails = "";
+        payload.pensionNumber = null;
+        payload.pensionSalary = null;
+        payload.retiredDate = null;
+        payload.pensionDetails = null;
       }
 
       if (editingMember) {
@@ -295,6 +295,10 @@ export function FamilyMembers() {
         toast.success(t("memberAdded"));
       }
       setDialogOpen(false);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : t("error") || "Failed to save member";
+      toast.error(message);
     } finally {
       setSavingMember(false);
     }
@@ -1112,10 +1116,10 @@ export function FamilyMembers() {
                       ...(isStudent
                         ? {
                             isRetired: false,
-                            pensionNumber: "",
-                            pensionSalary: "",
-                            retiredDate: "",
-                            pensionDetails: "",
+                            pensionNumber: null,
+                            pensionSalary: null,
+                            retiredDate: null,
+                            pensionDetails: null,
                             sector: "Student",
                           }
                         : {}),
@@ -1628,11 +1632,16 @@ export function FamilyMembers() {
             )}
           </Tabs>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="sticky bottom-0 z-10 -mx-4 border-t bg-background px-4 pt-4 sm:-mx-6 sm:px-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDialogOpen(false)}
+            >
               {t("cancel")}
             </Button>
             <Button
+              type="button"
               onClick={handleSave}
               disabled={savingMember}
               className="bg-blue-600 hover:bg-blue-700"

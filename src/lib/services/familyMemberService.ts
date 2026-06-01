@@ -1,6 +1,31 @@
 import { supabase } from '../supabaseClient'
 import { FamilyMember, FamilyMemberSchema } from '../validationSchemas'
 
+const OPTIONAL_DATE_FIELDS = ['retiredDate'] as const
+
+/** Postgres DATE columns reject ""; normalize before insert/update. */
+function sanitizeFamilyMemberForDb<T extends Record<string, unknown>>(row: T): T {
+  const next = { ...row }
+
+  for (const field of OPTIONAL_DATE_FIELDS) {
+    if (field in next && (next[field] === '' || next[field] === undefined)) {
+      next[field] = null
+    }
+  }
+
+  if (next.memberType === 'student') {
+    next.isRetired = false
+    next.retiredDate = null
+    for (const field of ['pensionNumber', 'pensionSalary', 'pensionDetails'] as const) {
+      if (field in next && next[field] === '') {
+        next[field] = null
+      }
+    }
+  }
+
+  return next
+}
+
 // GET ALL FAMILY MEMBERS
 export async function getFamilyMembers(): Promise<FamilyMember[]> {
   const { data, error } = await supabase
@@ -51,7 +76,9 @@ export async function getBoarders(): Promise<FamilyMember[]> {
 // CREATE FAMILY MEMBER
 export async function createFamilyMember(member: Omit<FamilyMember, 'id' | 'createdAt' | 'updatedAt'>): Promise<FamilyMember> {
   // Validate input
-  const validated = FamilyMemberSchema.parse(member)
+  const validated = sanitizeFamilyMemberForDb(
+    FamilyMemberSchema.parse(member) as Record<string, unknown>,
+  )
 
   const { data, error } = await supabase
     .from('family_members')
@@ -66,7 +93,9 @@ export async function createFamilyMember(member: Omit<FamilyMember, 'id' | 'crea
 // UPDATE FAMILY MEMBER
 export async function updateFamilyMember(id: number, member: Partial<FamilyMember>): Promise<FamilyMember> {
   // Validate input
-  const validated = FamilyMemberSchema.partial().parse(member)
+  const validated = sanitizeFamilyMemberForDb(
+    FamilyMemberSchema.partial().parse(member) as Record<string, unknown>,
+  )
 
   const { data, error } = await supabase
     .from('family_members')
