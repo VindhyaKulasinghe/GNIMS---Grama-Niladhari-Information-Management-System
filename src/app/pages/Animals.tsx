@@ -1,6 +1,15 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useHouseholdData, Animal } from "../context/HouseholdDataContext";
+import {
+  DOMESTIC_ANIMAL_CATEGORIES,
+  SOUTHERN_SRI_LANKA_DOMESTIC_ANIMALS,
+  findDomesticAnimalPreset,
+  getAnimalDisplayName,
+  getCategoryDisplayName,
+  groupDomesticAnimalsByCategory,
+  seedMissingDomesticAnimals,
+} from "../../lib/domesticAnimals";
 import {
   Card,
   CardContent,
@@ -19,7 +28,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
@@ -65,16 +76,27 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+const CUSTOM_ANIMAL_PRESET = "__custom__";
+
 export function Animals() {
   const { t } = useTranslation();
-  const { animals, householdAnimals, addAnimal, updateAnimal, deleteAnimal } =
-    useHouseholdData();
+  const {
+    animals,
+    householdAnimals,
+    addAnimal,
+    updateAnimal,
+    deleteAnimal,
+    refreshAnimals,
+  } = useHouseholdData();
+  const animalsByCategory = useMemo(() => groupDomesticAnimalsByCategory(), []);
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAnimal, setEditingAnimal] = useState<Animal | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [animalToDelete, setAnimalToDelete] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Animal>>({});
+  const [presetKey, setPresetKey] = useState("");
+  const [loadingDefaults, setLoadingDefaults] = useState(false);
 
   // View dialog state
   const [viewDialog, setViewDialog] = useState(false);
@@ -93,13 +115,43 @@ export function Animals() {
   const handleAdd = () => {
     setEditingAnimal(null);
     setFormData({});
+    setPresetKey("");
     setDialogOpen(true);
   };
 
   const handleEdit = (animal: Animal) => {
     setEditingAnimal(animal);
     setFormData(animal);
+    setPresetKey(findDomesticAnimalPreset(animal.name)?.key ?? CUSTOM_ANIMAL_PRESET);
     setDialogOpen(true);
+  };
+
+  const handlePresetSelect = (key: string) => {
+    setPresetKey(key);
+    if (key === CUSTOM_ANIMAL_PRESET) {
+      return;
+    }
+    const preset = SOUTHERN_SRI_LANKA_DOMESTIC_ANIMALS.find((p) => p.key === key);
+    if (preset) {
+      setFormData({ ...formData, name: preset.nameEn, category: preset.category });
+    }
+  };
+
+  const handleLoadDefaultList = async () => {
+    setLoadingDefaults(true);
+    try {
+      const count = await seedMissingDomesticAnimals(animals, addAnimal);
+      await refreshAnimals();
+      if (count > 0) {
+        toast.success(t("defaultAnimalsLoaded", { count }));
+      } else {
+        toast.info(t("allDefaultAnimalsExist"));
+      }
+    } catch {
+      toast.error(t("error") || "Failed to load animal list");
+    } finally {
+      setLoadingDefaults(false);
+    }
   };
 
   const handleDeleteClick = (id: number) => {
@@ -166,7 +218,7 @@ export function Animals() {
         .filter((ha) => ha.animalId === animal.id)
         .reduce((sum, ha) => sum + ha.count, 0);
       return {
-        name: animal.name,
+        name: getAnimalDisplayName(animal.name, t),
         count: total,
         category: animal.category,
       };
@@ -196,6 +248,46 @@ export function Animals() {
           {t("addAnimalType")}
         </Button>
       </div>
+
+      <Card className="border-slate-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">{t("villageDomesticAnimalsList")}</CardTitle>
+          <p className="text-sm text-slate-600">{t("villageDomesticAnimalsListDesc")}</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {DOMESTIC_ANIMAL_CATEGORIES.map((category) => {
+              const items = animalsByCategory[category];
+              if (items.length === 0) return null;
+              return (
+                <div key={category} className="rounded-lg border border-slate-100 bg-slate-50/80 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                    {getCategoryDisplayName(category, t)}
+                  </p>
+                  <ul className="space-y-1 text-sm text-slate-800">
+                    {items.map((preset) => (
+                      <li key={preset.key} className="flex items-center gap-2">
+                        <PawPrint className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        {t(`domesticAnimal.${preset.key}`)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleLoadDefaultList}
+            disabled={loadingDefaults}
+            className="w-full sm:w-auto"
+          >
+            {loadingDefaults && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            {t("loadDefaultAnimalList")}
+          </Button>
+        </CardContent>
+      </Card>
 
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2">
@@ -427,12 +519,10 @@ export function Animals() {
                           </div>
                           <div>
                             <h4 className="font-semibold text-slate-900">
-                              {animal.name}
+                              {getAnimalDisplayName(animal.name, t)}
                             </h4>
                             <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
-                              {t(
-                                animal.category.toLowerCase().replace(" ", ""),
-                              )}
+                              {getCategoryDisplayName(animal.category, t)}
                             </span>
                           </div>
                         </div>
@@ -539,14 +629,12 @@ export function Animals() {
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-2">
                               <PawPrint className="h-4 w-4 text-slate-600" />
-                              {animal.name}
+                              {getAnimalDisplayName(animal.name, t)}
                             </div>
                           </TableCell>
                           <TableCell>
                             <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">
-                              {t(
-                                animal.category.toLowerCase().replace(" ", ""),
-                              )}
+                              {getCategoryDisplayName(animal.category, t)}
                             </span>
                           </TableCell>
                           <TableCell className="text-right font-semibold">
@@ -606,13 +694,48 @@ export function Animals() {
 
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
+              <Label>{t("selectFromVillageList")}</Label>
+              <Select
+                value={presetKey || CUSTOM_ANIMAL_PRESET}
+                onValueChange={handlePresetSelect}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("selectFromVillageList")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {DOMESTIC_ANIMAL_CATEGORIES.map((category) => (
+                    <SelectGroup key={category}>
+                      <SelectLabel>
+                        {getCategoryDisplayName(category, t)}
+                      </SelectLabel>
+                      {animalsByCategory[category].map((preset) => (
+                        <SelectItem key={preset.key} value={preset.key}>
+                          {t(`domesticAnimal.${preset.key}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ))}
+                  <SelectItem value={CUSTOM_ANIMAL_PRESET}>
+                    {t("customAnimalName")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label>{t("animalName")} *</Label>
               <Input
                 value={formData.name || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
+                onChange={(e) => {
+                  setPresetKey(CUSTOM_ANIMAL_PRESET);
+                  setFormData({ ...formData, name: e.target.value });
+                }}
+                disabled={
+                  presetKey !== CUSTOM_ANIMAL_PRESET &&
+                  presetKey !== "" &&
+                  !editingAnimal
                 }
-                placeholder="e.g. Horse, Rabbit, Duck"
+                placeholder={t("customAnimalName")}
               />
               {(formData as any).__errors?.name && (
                 <p className="text-xs text-red-500">
@@ -671,7 +794,10 @@ export function Animals() {
         <DialogContent className="w-[calc(100%-1rem)] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {t("details")} - {viewingAnimal?.name}
+              {t("details")} -{" "}
+              {viewingAnimal
+                ? getAnimalDisplayName(viewingAnimal.name, t)
+                : ""}
             </DialogTitle>
             <p className="text-sm text-slate-600">{t("viewDetailedInfo")}</p>
           </DialogHeader>
@@ -688,7 +814,11 @@ export function Animals() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
-                  <p className="font-medium">{viewingAnimal?.name}</p>
+                  <p className="font-medium">
+                    {viewingAnimal
+                      ? getAnimalDisplayName(viewingAnimal.name, t)
+                      : ""}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
@@ -698,7 +828,9 @@ export function Animals() {
                 <div className="flex items-center gap-3">
                   <Label className="text-xs text-gray-500">:</Label>
                   <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">
-                    {viewingAnimal?.category}
+                    {viewingAnimal
+                      ? getCategoryDisplayName(viewingAnimal.category, t)
+                      : ""}
                   </span>
                 </div>
               </div>

@@ -3,6 +3,10 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import * as householdService from "../../lib/services/householdService";
 import * as familyMemberService from "../../lib/services/familyMemberService";
 import * as animalService from "../../lib/services/animalService";
+import {
+  filterActiveDomesticAnimals,
+  isRemovedDomesticAnimal,
+} from "../../lib/domesticAnimals";
 import * as vehicleService from "../../lib/services/vehicleService";
 import * as propertyService from "../../lib/services/propertyService";
 import * as benefitService from "../../lib/services/benefitService";
@@ -285,10 +289,33 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [user, isAuthenticated]);
 
+  const normalizeAnimalData = (
+    animalList: Animal[],
+    householdAnimalList: HouseholdAnimal[],
+  ) => {
+    const activeAnimals = filterActiveDomesticAnimals(animalList);
+    const activeIds = new Set(
+      activeAnimals
+        .map((animal) => animal.id)
+        .filter((id): id is number => id != null),
+    );
+    const activeHouseholdAnimals = householdAnimalList.filter((ha) =>
+      activeIds.has(ha.animalId),
+    );
+    return { activeAnimals, activeHouseholdAnimals };
+  };
+
   const loadAllData = async () => {
     try {
       setLoading(true);
       setError(null);
+
+      try {
+        await animalService.purgeRemovedDomesticAnimals();
+      } catch (purgeErr) {
+        console.warn("Could not purge removed animal types:", purgeErr);
+      }
+
       const [hh, fm, a, ha, v, p, hb, cert] = await Promise.all([
         householdService.getHouseholds(),
         familyMemberService.getFamilyMembers(),
@@ -337,20 +364,30 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
           (c) => c.division === userDivision,
         );
 
+        const { activeAnimals, activeHouseholdAnimals } = normalizeAnimalData(
+          a as Animal[],
+          filteredHouseholdAnimals,
+        );
+
         setHouseholds(filteredHouseholds);
         setFamilyMembers(filteredFamilyMembers);
-        setAnimals(a as Animal[]);
-        setHouseholdAnimals(filteredHouseholdAnimals);
+        setAnimals(activeAnimals);
+        setHouseholdAnimals(activeHouseholdAnimals);
         setVehicles(filteredVehicles);
         setProperties(filteredPropertiesTyped);
         setHouseholdBenefits(filteredBenefits);
         setCertificateIssuances(filteredCertificates);
       } else {
         // Admin and Divisional Secretariat see all data across divisions
+        const { activeAnimals, activeHouseholdAnimals } = normalizeAnimalData(
+          a as Animal[],
+          ha as HouseholdAnimal[],
+        );
+
         setHouseholds(hh as Household[]);
         setFamilyMembers(fm as FamilyMember[]);
-        setAnimals(a as Animal[]);
-        setHouseholdAnimals(ha as HouseholdAnimal[]);
+        setAnimals(activeAnimals);
+        setHouseholdAnimals(activeHouseholdAnimals);
         setVehicles(v as Vehicle[]);
         setProperties(p as Property[]);
         setHouseholdBenefits(hb as HouseholdBenefit[]);
@@ -586,6 +623,9 @@ export const HouseholdDataProvider: React.FC<{ children: React.ReactNode }> = ({
     animal: Omit<Animal, "id" | "createdAt" | "updatedAt">,
   ) => {
     try {
+      if (isRemovedDomesticAnimal(animal.name)) {
+        throw new Error("This animal type is not used in the village list.");
+      }
       const newAnimal = await animalService.createAnimal(animal as any);
       setAnimals([...animals, newAnimal as Animal]);
     } catch (err) {

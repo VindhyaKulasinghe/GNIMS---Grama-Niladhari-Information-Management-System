@@ -1,4 +1,5 @@
 import { supabase } from "../supabaseClient";
+import { isRemovedDomesticAnimal } from "../domesticAnimals";
 import {
   Animal,
   HouseholdAnimal,
@@ -7,6 +8,38 @@ import {
 } from "../validationSchemas";
 
 // ANIMALS CRUD
+
+/** Delete goat, duck, horse, quail and their household links if still in DB */
+export async function purgeRemovedDomesticAnimals(): Promise<number> {
+  const { data, error } = await supabase.from("animals").select("id, name");
+
+  if (error) {
+    throw new Error(`Failed to list animals for cleanup: ${error.message}`);
+  }
+
+  const toRemove = (data || []).filter((row) =>
+    isRemovedDomesticAnimal(String(row.name ?? "")),
+  );
+
+  for (const animal of toRemove) {
+    if (animal.id == null) continue;
+
+    const { error: linkError } = await supabase
+      .from("household_animals")
+      .delete()
+      .eq("animalId", animal.id);
+
+    if (linkError) {
+      throw new Error(
+        `Failed to remove household links for animal ${animal.id}: ${linkError.message}`,
+      );
+    }
+
+    await deleteAnimal(animal.id);
+  }
+
+  return toRemove.length;
+}
 
 // GET ALL ANIMALS
 export async function getAnimals(): Promise<Animal[]> {

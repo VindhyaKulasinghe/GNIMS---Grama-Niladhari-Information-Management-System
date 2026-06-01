@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHouseholdData } from "../context/HouseholdDataContext";
+import { toast } from "sonner";
+import { useHouseholdData, FamilyMember } from "../context/HouseholdDataContext";
 import { findHouseholdByRef } from "../../lib/divisionScope";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -24,19 +25,33 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "../components/ui/dialog";
 import { Button } from "../components/ui/button";
-import { Search, GraduationCap, Home, Users, BarChart3, List, MapPin, Phone } from "lucide-react";
+import {
+  Search,
+  GraduationCap,
+  Home,
+  Users,
+  BarChart3,
+  List,
+  Trash2,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 export function Students() {
   const { t } = useTranslation();
-  const { getStudents, households } = useHouseholdData();
+  const { getStudents, households, deleteFamilyMember } = useHouseholdData();
   const [searchQuery, setSearchQuery] = useState("");
 
   // View dialog state
   const [viewDialog, setViewDialog] = useState(false);
-  const [viewingStudent, setViewingStudent] = useState<any>(null);
+  const [viewingStudent, setViewingStudent] = useState<FamilyMember | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<number | null>(null);
+  const [deletingStudent, setDeletingStudent] = useState(false);
 
   const students = getStudents();
 
@@ -91,6 +106,31 @@ export function Students() {
     }));
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'];
+
+  const handleDeleteClick = (id: number, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setStudentToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (studentToDelete === null) return;
+    setDeletingStudent(true);
+    try {
+      await deleteFamilyMember(studentToDelete);
+      toast.success(t("studentDeleted"));
+      setDeleteDialogOpen(false);
+      setStudentToDelete(null);
+      if (viewingStudent?.id === studentToDelete) {
+        setViewDialog(false);
+        setViewingStudent(null);
+      }
+    } catch {
+      toast.error(t("error") || "Failed to delete student");
+    } finally {
+      setDeletingStudent(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -282,6 +322,7 @@ export function Students() {
                       <TableHead>{t("gender")}</TableHead>
                       <TableHead>{t("grade")}</TableHead>
                       <TableHead>{t("institutionName")}</TableHead>
+                      <TableHead className="text-right">{t("actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -289,7 +330,8 @@ export function Students() {
                       <TableRow 
                         key={student.id}
                         className="cursor-pointer hover:bg-blue-50"
-                        onClick={() => {
+                        onClick={(e) => {
+                          if ((e.target as HTMLElement).closest("button")) return;
                           setViewingStudent(student);
                           setViewDialog(true);
                         }}
@@ -314,11 +356,21 @@ export function Students() {
                           </span>
                         </TableCell>
                         <TableCell className="text-sm">{student.institutionName || "-"}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title={t("deleteRecord")}
+                            onClick={(e) => student.id != null && handleDeleteClick(student.id, e)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                     {filteredStudents.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center text-gray-400 py-8">
+                        <TableCell colSpan={9} className="text-center text-gray-400 py-8">
                           {students.length === 0
                             ? t("noStudentsRegistered")
                             : t("noStudentsMatch")}
@@ -432,8 +484,44 @@ export function Students() {
               )}
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:justify-between">
+            {viewingStudent?.id != null && (
+              <Button
+                variant="destructive"
+                className="mr-auto bg-red-600 hover:bg-red-700"
+                onClick={() => handleDeleteClick(viewingStudent.id!)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {t("deleteRecord")}
+              </Button>
+            )}
             <Button onClick={() => setViewDialog(false)}>{t("close")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              {t("confirmDelete")}
+            </DialogTitle>
+            <DialogDescription>{t("confirmDeleteStudent")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              {t("cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDelete}
+              disabled={deletingStudent}
+            >
+              {deletingStudent && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {t("delete")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

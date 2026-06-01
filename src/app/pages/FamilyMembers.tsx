@@ -206,7 +206,7 @@ export function FamilyMembers() {
   const handleEditMember = (member: FamilyMember) => {
     setEditingMember(member);
     setFormData(member);
-    setActiveTab("personal");
+    setActiveTab(member.memberType === "student" ? "student" : "personal");
     setDialogOpen(true);
   };
 
@@ -249,6 +249,14 @@ export function FamilyMembers() {
 
       const { __errors, ...cleanForm } = formData as any;
       const payload = { ...(cleanForm as FamilyMember), age };
+
+      if (payload.memberType === "student") {
+        payload.isRetired = false;
+        payload.pensionNumber = "";
+        payload.pensionSalary = "";
+        payload.retiredDate = "";
+        payload.pensionDetails = "";
+      }
 
       if (editingMember) {
         if (payload.isHeadOfHousehold) {
@@ -1038,16 +1046,23 @@ export function FamilyMembers() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleEditMember(member)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditMember(member);
+                                  }}
                                 >
                                   <Pencil className="h-4 w-4" />
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() =>
-                                    handleDeleteMemberClick(member.id)
-                                  }
+                                  title={t("deleteRecord")}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (member.id != null) {
+                                      handleDeleteMemberClick(member.id);
+                                    }
+                                  }}
                                 >
                                   <Trash2 className="h-4 w-4 text-red-500" />
                                 </Button>
@@ -1090,8 +1105,22 @@ export function FamilyMembers() {
                   key={type}
                   type="button"
                   onClick={() => {
-                    setFormData({ ...formData, memberType: type });
-                    setActiveTab("personal"); // Reset to first tab when switching member type
+                    const isStudent = type === "student";
+                    setFormData({
+                      ...formData,
+                      memberType: type,
+                      ...(isStudent
+                        ? {
+                            isRetired: false,
+                            pensionNumber: "",
+                            pensionSalary: "",
+                            retiredDate: "",
+                            pensionDetails: "",
+                            sector: "Student",
+                          }
+                        : {}),
+                    });
+                    setActiveTab(isStudent ? "student" : "personal");
                   }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 text-sm transition-all ${
                     formData.memberType === type
@@ -1135,16 +1164,18 @@ export function FamilyMembers() {
             <TabsList
               className={`grid w-full h-auto ${
                 memberTypeValue === "student"
-                  ? "grid-cols-1 sm:grid-cols-3"
+                  ? "grid-cols-1 sm:grid-cols-2"
                   : memberTypeValue === "boarder"
                     ? "grid-cols-1 sm:grid-cols-3"
                     : "grid-cols-1 sm:grid-cols-2"
               }`}
             >
               <TabsTrigger value="personal">{t("personalInfo")}</TabsTrigger>
-              <TabsTrigger value="employment">
-                {t("employmentAndIncome")}
-              </TabsTrigger>
+              {memberTypeValue !== "student" && (
+                <TabsTrigger value="employment">
+                  {t("employmentAndIncome")}
+                </TabsTrigger>
+              )}
               {memberTypeValue === "student" && (
                 <TabsTrigger value="student">
                   <GraduationCap className="h-3.5 w-3.5 mr-1" />
@@ -1340,7 +1371,8 @@ export function FamilyMembers() {
               </div>
             </TabsContent>
 
-            {/* Employment Tab */}
+            {/* Employment Tab — not shown for students (no pension / employment) */}
+            {memberTypeValue !== "student" && (
             <TabsContent value="employment" className="space-y-4 mt-4">
               <div className="space-y-2">
                 <Label>{t("jobTypeOccupation")}</Label>
@@ -1505,6 +1537,7 @@ export function FamilyMembers() {
                 )}
               </div>
             </TabsContent>
+            )}
 
             {/* Student Details Tab */}
             {memberTypeValue === "student" && (
@@ -1960,11 +1993,12 @@ export function FamilyMembers() {
                 </div>
               </div>
 
-              {(viewingMember.isRetired ||
-                viewingMember.pensionNumber ||
-                viewingMember.pensionSalary ||
-                viewingMember.retiredDate ||
-                viewingMember.pensionDetails) && (
+              {viewingMember.memberType !== "student" &&
+                (viewingMember.isRetired ||
+                  viewingMember.pensionNumber ||
+                  viewingMember.pensionSalary ||
+                  viewingMember.retiredDate ||
+                  viewingMember.pensionDetails) && (
                 <div className="bg-pink-50 border border-pink-200 rounded-lg p-4 mt-4">
                   <h4 className="font-semibold text-pink-900 mb-3 flex items-center gap-2">
                     <Briefcase className="h-5 w-5" />
@@ -2058,20 +2092,34 @@ export function FamilyMembers() {
               )}
             </div>
           )}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setViewMemberDialog(false);
-                if (viewingMember) {
-                  handleEditMember(viewingMember);
-                }
-              }}
-              className="mr-auto"
-            >
-              <Pencil className="h-4 w-4 mr-2" />
-              {t("editMember")}
-            </Button>
+          <DialogFooter className="gap-2 sm:justify-between">
+            <div className="flex flex-wrap gap-2 mr-auto">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setViewMemberDialog(false);
+                  if (viewingMember) {
+                    handleEditMember(viewingMember);
+                  }
+                }}
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                {t("editMember")}
+              </Button>
+              {viewingMember?.id != null && (
+                <Button
+                  variant="destructive"
+                  className="bg-red-600 hover:bg-red-700"
+                  onClick={() => {
+                    setViewMemberDialog(false);
+                    handleDeleteMemberClick(viewingMember.id!);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t("deleteRecord")}
+                </Button>
+              )}
+            </div>
             <Button onClick={() => setViewMemberDialog(false)}>
               {t("close")}
             </Button>

@@ -5,6 +5,10 @@ import { useHouseholdData, Household } from "../context/HouseholdDataContext";
 import { useAuth } from "../context/AuthContext";
 import { isSameHouse, resolveUserDivision } from "../../lib/divisionScope";
 import {
+  getAnimalDisplayName,
+  getCategoryDisplayName,
+} from "../../lib/domesticAnimals";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -90,6 +94,7 @@ export function HouseholdManagement() {
     addHousehold,
     updateHousehold,
     deleteHousehold,
+    deleteFamilyMember,
     addHouseholdAnimal,
     deleteHouseholdAnimal,
     getBenefitsForHouse,
@@ -132,6 +137,9 @@ export function HouseholdManagement() {
   const [benefitsHousehold, setBenefitsHousehold] = useState<Household | null>(
     null,
   );
+  const [deleteMemberDialogOpen, setDeleteMemberDialogOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<number | null>(null);
+  const [deletingMember, setDeletingMember] = useState(false);
 
   const filteredHouseholds = households.filter(
     (h) =>
@@ -189,14 +197,37 @@ export function HouseholdManagement() {
       setDeletingHousehold(true);
       try {
         await deleteHousehold(householdToDelete);
-        toast.success(
-          t("householdDeleted") || "Household deleted successfully.",
-        );
+        toast.success(t("householdDeleted"));
         setDeleteDialogOpen(false);
         setHouseholdToDelete(null);
+        if (viewingHousehold?.id === householdToDelete) {
+          setViewDialog(false);
+          setViewingHousehold(null);
+        }
       } finally {
         setDeletingHousehold(false);
       }
+    }
+  };
+
+  const handleDeleteMemberClick = (id: number, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setMemberToDelete(id);
+    setDeleteMemberDialogOpen(true);
+  };
+
+  const confirmDeleteMember = async () => {
+    if (memberToDelete === null) return;
+    setDeletingMember(true);
+    try {
+      await deleteFamilyMember(memberToDelete);
+      toast.success(t("memberDeleted"));
+      setDeleteMemberDialogOpen(false);
+      setMemberToDelete(null);
+    } catch {
+      toast.error(t("error") || "Failed to delete member");
+    } finally {
+      setDeletingMember(false);
     }
   };
 
@@ -874,7 +905,10 @@ export function HouseholdManagement() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleManageBenefits(household)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleManageBenefits(household);
+                                }}
                                 title={t("sahanadara")}
                               >
                                 <HandHeart className="h-4 w-4 text-rose-600" />
@@ -882,14 +916,23 @@ export function HouseholdManagement() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleEdit(household)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEdit(household);
+                                }}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleDeleteClick(household.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (household.id != null) {
+                                    handleDeleteClick(household.id);
+                                  }
+                                }}
+                                title={t("deleteRecord")}
                               >
                                 <Trash2 className="h-4 w-4 text-red-500" />
                               </Button>
@@ -1147,7 +1190,8 @@ export function HouseholdManagement() {
                                   key={animal.id}
                                   value={animal.id.toString()}
                                 >
-                                  {animal.name} ({animal.category})
+                                  {getAnimalDisplayName(animal.name, t)} (
+                                  {getCategoryDisplayName(animal.category, t)})
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -1247,15 +1291,17 @@ export function HouseholdManagement() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                           <span className="text-blue-600 font-semibold text-sm">
-                            {animal.name.charAt(0).toUpperCase()}
+                            {getAnimalDisplayName(animal.name, t)
+                              .charAt(0)
+                              .toUpperCase()}
                           </span>
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">
-                            {animal.name}
+                            {getAnimalDisplayName(animal.name, t)}
                           </p>
                           <p className="text-xs text-gray-500 capitalize">
-                            {animal.category}
+                            {getCategoryDisplayName(animal.category, t)}
                           </p>
                         </div>
                       </div>
@@ -1749,8 +1795,8 @@ export function HouseholdManagement() {
                               : "bg-gray-50 border-gray-200"
                           }`}
                         >
-                          <div className="flex items-center justify-between">
-                            <div>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
                               <p className="font-medium text-sm">
                                 {member.fullName}
                                 {member.isHeadOfHousehold && (
@@ -1764,6 +1810,19 @@ export function HouseholdManagement() {
                                 {t(member.gender.toLowerCase())}
                               </p>
                             </div>
+                            {member.id != null && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="shrink-0 h-8 w-8"
+                                title={t("deleteRecord")}
+                                onClick={(e) =>
+                                  handleDeleteMemberClick(member.id!, e)
+                                }
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -1774,7 +1833,36 @@ export function HouseholdManagement() {
             </Card>
           </div>
 
-          <DialogFooter className="border-t pt-4">
+          <DialogFooter className="border-t pt-4 gap-2 sm:justify-between">
+            <div className="flex flex-wrap gap-2 mr-auto">
+              {viewingHousehold && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setViewDialog(false);
+                      handleEdit(viewingHousehold);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    {t("edit")}
+                  </Button>
+                  {viewingHousehold.id != null && (
+                    <Button
+                      variant="destructive"
+                      className="bg-red-600 hover:bg-red-700"
+                      onClick={() => {
+                        setViewDialog(false);
+                        handleDeleteClick(viewingHousehold.id!);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      {t("deleteRecord")}
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
             <Button
               onClick={() => setViewDialog(false)}
               className="bg-blue-600 hover:bg-blue-700"
@@ -1807,6 +1895,35 @@ export function HouseholdManagement() {
         }
         onSave={saveHouseholdBenefits}
       />
+
+      <Dialog open={deleteMemberDialogOpen} onOpenChange={setDeleteMemberDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              {t("confirmDelete")}
+            </DialogTitle>
+            <DialogDescription>{t("confirmDeleteMember")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteMemberDialogOpen(false)}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDeleteMember}
+              disabled={deletingMember}
+            >
+              {deletingMember && <Loader2 className="h-4 w-4 animate-spin" />}
+              {t("delete")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">

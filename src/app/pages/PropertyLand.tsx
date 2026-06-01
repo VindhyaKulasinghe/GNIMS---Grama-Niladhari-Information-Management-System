@@ -560,14 +560,22 @@ export function PropertyLand() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleEdit(property)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(property);
+                              }}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDeleteClick(property.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (property.id != null) {
+                                  handleDeleteClick(property.id);
+                                }
+                              }}
                             >
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
@@ -1027,7 +1035,34 @@ export function PropertyLand() {
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:justify-between">
+            <div className="flex gap-2 mr-auto">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (viewingProperty) {
+                    setViewDialog(false);
+                    handleEdit(viewingProperty);
+                  }
+                }}
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                {t("edit")}
+              </Button>
+              {viewingProperty?.id != null && (
+                <Button
+                  variant="destructive"
+                  className="bg-red-600 hover:bg-red-700"
+                  onClick={() => {
+                    setViewDialog(false);
+                    handleDeleteClick(viewingProperty.id!);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t("deleteRecord")}
+                </Button>
+              )}
+            </div>
             <Button
               onClick={() => setViewDialog(false)}
               className="bg-blue-600 hover:bg-blue-700"
